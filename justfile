@@ -32,7 +32,7 @@ test:
     go test -race ./...
 
 build:
-    go build -o output/repo-tutor ./binary
+    CGO_ENABLED=0 go build -trimpath -o output/repo-tutor ./binary
 
 run *args:
     go run ./binary {{ args }}
