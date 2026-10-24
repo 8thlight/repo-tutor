@@ -11,17 +11,17 @@ not a model dependency in the shipped product.
 
 ## Read the authority
 
-Read `AGENTS.md` and the complete
-[behavior judgment decision and product principles](../../../docs/decisions/0100-behavior-judgment.md),
-[ambiguous-plan rule](../../../docs/decisions/0110-reject-ambiguous-plans.md),
-and [default-acceptance rule](../../../docs/decisions/0120-defaults-require-acceptance.md).
-Then read the contracts and accepted decisions relevant to the question.
+Read `AGENTS.md`, `README.md`, and the accepted decisions in
+`docs/decisions/`. Then read the architecture and contracts relevant to the
+question. This repository has no separate behavior-delegation ADR. Use the
+person's current task authorization for bounded implementation choices;
+do not infer human approval of a new policy.
 Resolve paths from the repository root or this skill's canonical directory,
 not from a process's working directory. Vendor-specific discovery paths may
 be symlinks to this directory.
 
-The ADR contains the product principles and delegated authority. Do not
-duplicate them here or expand them through a skill edit. The person may
+The repository documents and current task supply the authority. Do not
+expand it through a skill edit. The person may
 authorize a narrower trial; label trial outcomes as trial judgments, not
 adopted policy or human approval.
 
@@ -70,6 +70,7 @@ from what the current contract already requires.
 
 This skill does not grant permission to change contracts, tests, implementation,
 accepted lists, issues, or approval rules. Follow the task's authorization and
-the repository's protected-artifact rules. Keep test and implementation
-authorship separate. Report contract conflicts rather than silently repairing
-them. Never mark a judge's decision as a person's approval.
+the repository's protected-artifact rules. Define expected behavior before
+implementing it, and verify it with observable examples. Report contract
+conflicts rather than silently repairing them. Never mark a judge's decision
+as a person's approval.

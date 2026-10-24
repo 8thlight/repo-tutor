@@ -2,6 +2,57 @@
 
 Reads a code repository and turns it into a fast onboarding course for a new developer.
 
+## Try it
+
+Install and sign in to Codex or Claude Code, then run:
+
+```sh
+nix develop
+just build
+./output/repo-tutor ../repowise --agent codex
+```
+
+Use `--agent claude` for Claude Code. Without `--agent`, the tutor chooses Codex when it is installed, then Claude. `just run ../repowise` also starts a session. Omit the path to study the current directory.
+
+The tutor starts with an overview and a comprehension question. Answer in plain text, ask a follow-up, or type a command:
+
+| Command | What it does |
+| -- | -- |
+| `/topics` or `/topics pipeline` | List topics, optionally matching a path |
+| `/topic 3` or `/topic internal/tutor` | Study a topic |
+| `/next` | Move to the next topic |
+| `/quiz` | Ask a fresh question |
+| `/progress` or `/review` | See recorded outcomes or revisit a weak topic |
+| `/hotspots` | Find files with churn and branching logic |
+| `/sources` or `/read README.md:1` | Inspect the source snapshot |
+| `/map` or `/glossary` | Show a dependency diagram or type index |
+| `/quit` | Save and exit |
+
+Completed turns save automatically. Run the same command to resume. Use `--new` to archive the previous session and start again, or `--goal "Trace the persistence pipeline"` when starting a course. `--model NAME` selects a model through the chosen CLI.
+
+## Scan without an agent
+
+```sh
+./output/repo-tutor scan ../repowise
+./output/repo-tutor scan ../repowise --json > output/scan.json
+./output/repo-tutor scan ../repowise --map > output/dependencies.mmd
+./output/repo-tutor doctor
+```
+
+Scanning and source browsing run locally. Tutor turns send selected source excerpts to your installed agent CLI. The tutor does not call a model API or edit the repository being studied.
+
+Go analysis uses the standard Go parser. Python and JavaScript/TypeScript analysis recognizes literal imports and declaration patterns. It can miss dynamic imports, aliases, and re-exports. Dependency order is a reading aid; the scan does not build or type-check the target.
+
+Hotspots combine recent local Git changes and branch counts. The counts help choose what to read and test. They do not predict defects. Git is optional, and shallow history can undercount churn.
+
+## Saved sessions
+
+Sessions live under `repo-tutor` in `XDG_STATE_HOME`, when set, or your operating system's user configuration directory. The startup output shows the exact file. Use `--state-dir DIRECTORY` to choose another location.
+
+Each repository has its own session, with the last 200 turns and per-topic outcomes. A changed source snapshot starts a fresh course and saves the old session as `previous.json`. Starting with `--new` also replaces that one archive. Agent, model, and goal changes require a new session. The turn timeout defaults to three minutes; change it with `--timeout 5m`.
+
+If a turn fails, its reply and assessment are not recorded. Check the reported login, quota, or format error, then retry. Choose another agent with `--agent codex --new` or `--agent claude --new`.
+
 ## Flow
 
 1. Scan the repository into a structured model: modules, entry points, dependencies, key terms.
@@ -17,4 +68,14 @@ A new developer becomes productive in a codebase in the shortest time.
 
 ## Status
 
-Prototype. See [docs/decisions](docs/decisions) and [docs/stack](docs/stack/README.md).
+Initial terminal tutor for Go, Python, and JavaScript/TypeScript repositories, on macOS and Linux. Diagrams and the type index are available in the terminal. Further work includes generated study guides and richer progress scheduling. See [architecture](docs/architecture/README.md), [decisions](docs/decisions), and [stack](docs/stack/README.md).
+
+## Development
+
+```sh
+nix develop
+just check
+just build
+```
+
+Checks cover formatting, documentation, source analysis, agent event protocols, session persistence, and terminal acceptance scenarios. Automated tests use fake agent processes and require no account or network connection.
