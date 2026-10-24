@@ -1,0 +1,9 @@
+extends: existence
+message: "Show the stakes instead of announcing importance: '%s'."
+level: error
+ignorecase: true
+tokens:
+  - this matters
+  - why [a-z ]+ matters
+  - it is important to note
+  - it's important to note

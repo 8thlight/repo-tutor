@@ -1,0 +1,19 @@
+extends: capitalization
+message: "Use sentence case for headings: '%s'."
+level: error
+scope: heading
+match: $sentence
+indicators:
+  - ':'
+exceptions:
+  - repo-tutor
+  - ADR
+  - ADRs
+  - Go
+  - JSON
+  - Markdown
+  - Nix
+  - TUI
+  - YAML
+  - Claude
+  - Codex

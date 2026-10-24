@@ -1,0 +1,15 @@
+extends: existence
+message: "Avoid '%s'. Say the plain thing."
+level: error
+ignorecase: true
+tokens:
+  - leverage
+  - leveraging
+  - optimize
+  - optimizing
+  - synergize
+  - synergy
+  - best-in-class
+  - utilize
+  - utilizing
+  - harness
