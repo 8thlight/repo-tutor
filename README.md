@@ -14,7 +14,27 @@ just build
 
 Use `--agent claude` for Claude Code. Without `--agent`, the tutor chooses Codex when it is installed, then Claude. `just run ../repowise` also starts a session. Omit the path to study the current directory.
 
-The tutor starts with an overview and a comprehension question. Answer in plain text, ask a follow-up, or type a command:
+In a terminal, the tutor opens a full-screen workspace with a lesson, the current question above your answer box, and your course progress. Answer in plain text, ask a follow-up, or browse with the keyboard:
+
+| Shortcut | What it does |
+| -- | -- |
+| `Enter` / `Alt+Enter` | Send your answer / add a line |
+| `Ctrl+N` / `Ctrl+G` | Next topic / new quiz |
+| `Ctrl+K` | Search topics |
+| `Ctrl+S` | Browse citations and open source at the cited line |
+| `Ctrl+O` / `Ctrl+P` | Hotspots / progress |
+| `Tab` / `Shift+Tab` | Switch views |
+| `PgUp` / `PgDown` | Scroll the lesson or source |
+| `Alt+Left` / `Alt+Right` | Read earlier or later saved turns |
+| `Esc` | Return to the lesson, or stop a running turn |
+| `Ctrl+R` | Retry a failed turn with your draft kept |
+| `F1` / `Ctrl+Q` | Help / save and quit |
+
+Topic and source lists support arrow keys and `/` to filter. Press `Enter` to confirm a filter, then `Enter` again to open an item. You can browse while the tutor thinks. A failed turn keeps your draft and completed progress.
+
+Use `--plain` for line input, terminal scrollback, or a screen reader. Pipes, redirected output, `TERM=dumb`, and `--ask TEXT` use plain output automatically. The full-screen interface adapts to terminal width and light or dark backgrounds; `NO_COLOR=1` disables styling.
+
+Slash commands also work in the answer box and in plain mode:
 
 | Command | What it does |
 | -- | -- |
