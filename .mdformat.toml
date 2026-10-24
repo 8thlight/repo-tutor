@@ -1,0 +1,6 @@
+wrap = "keep"
+number = true
+end_of_line = "lf"
+
+[plugin.tables]
+compact_tables = true

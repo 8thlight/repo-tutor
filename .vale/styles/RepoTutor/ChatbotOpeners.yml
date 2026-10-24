@@ -1,0 +1,10 @@
+extends: existence
+message: "Drop the opener '%s' and start with the point."
+level: error
+ignorecase: true
+tokens:
+  - great question
+  - let's dive in
+  - let us dive in
+  - certainly!
+  - absolutely!

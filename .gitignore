@@ -1,0 +1,13 @@
+.DS_Store
+*.local.md
+.idea/
+
+
+.direnv/
+
+# Generated plans and documents. Only the placeholder file is tracked.
+output/*
+!output/.gitkeep
+
+# Throwaway notes, for people and agents.
+.scratch/
