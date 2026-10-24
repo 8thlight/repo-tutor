@@ -1,0 +1,299 @@
+package terminal
+
+import (
+	"fmt"
+	"image/color"
+	"path/filepath"
+	"strings"
+	"time"
+
+	"charm.land/bubbles/v2/textarea"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/glamour/v2"
+	"charm.land/glamour/v2/styles"
+	"charm.land/lipgloss/v2"
+	"github.com/charmbracelet/x/ansi"
+
+	"repo-tutor/internal/tutor"
+)
+
+type interfacePalette struct{ accent, foreground, muted, border, warning color.Color }
+
+func (model interfaceModel) palette() interfacePalette {
+	if model.noColor {
+		return interfacePalette{}
+	}
+	if model.dark {
+		return interfacePalette{lipgloss.Color("#5EEAD4"), lipgloss.Color("#E4E4E7"), lipgloss.Color("#A1A1AA"), lipgloss.Color("#3F3F46"), lipgloss.Color("#FBBF24")}
+	}
+	return interfacePalette{lipgloss.Color("#0F766E"), lipgloss.Color("#18181B"), lipgloss.Color("#52525B"), lipgloss.Color("#D4D4D8"), lipgloss.Color("#92400E")}
+}
+
+func (model interfaceModel) bodyWidth() int {
+	width := max(1, model.width-4)
+	if model.width >= 108 {
+		width -= 29
+	}
+	return max(1, width)
+}
+func (model interfaceModel) bodyHeight() int {
+	return max(1, model.height-9-lipgloss.Height(model.composer()))
+}
+
+func (model *interfaceModel) resize() {
+	palette := model.palette()
+	model.input.SetWidth(max(1, model.bodyWidth()-4))
+	model.input.SetHeight(2)
+	inputStyles := textarea.DefaultStyles(model.dark)
+	inputStyles.Focused.Prompt = lipgloss.NewStyle().Foreground(palette.accent)
+	inputStyles.Focused.Text = lipgloss.NewStyle().Foreground(palette.foreground)
+	inputStyles.Focused.Placeholder = lipgloss.NewStyle().Foreground(palette.muted)
+	inputStyles.Blurred.Placeholder = lipgloss.NewStyle().Foreground(palette.muted)
+	model.input.SetStyles(inputStyles)
+	model.spinner.Style = lipgloss.NewStyle().Foreground(palette.accent)
+	model.viewport.SetWidth(model.bodyWidth())
+	model.viewport.SetHeight(max(1, model.bodyHeight()-2))
+	if model.isPicker() {
+		model.configurePicker(model.picker.FilterValue())
+	}
+	model.rebuildContent()
+}
+
+func (model *interfaceModel) rebuildContent() {
+	model.viewport.SetHeight(max(1, model.bodyHeight()-2))
+	if model.isPicker() {
+		return
+	}
+	if model.page == "lesson" {
+		model.viewport.SetContent(model.lessonContent())
+	} else {
+		model.viewport.SetContent(model.pageContent)
+	}
+}
+
+func (model interfaceModel) markdown(text string) string {
+	configuration := styles.DarkStyleConfig
+	if !model.dark {
+		configuration = styles.LightStyleConfig
+	}
+	if model.noColor {
+		configuration = styles.ASCIIStyleConfig
+	}
+	zero := uint(0)
+	configuration.Document.Margin = &zero
+	configuration.Document.BlockPrefix = ""
+	configuration.Document.BlockSuffix = ""
+	if !model.noColor {
+		codeColor := "#5EEAD4"
+		if !model.dark {
+			codeColor = "#0F766E"
+		}
+		configuration.Code.Color = &codeColor
+		configuration.Code.BackgroundColor = nil
+	}
+	options := []glamour.TermRendererOption{glamour.WithStyles(configuration), glamour.WithWordWrap(max(12, min(92, model.bodyWidth()-3)))}
+	renderer, err := glamour.NewTermRenderer(options...)
+	if err != nil {
+		return tutor.Plain(text)
+	}
+	rendered, err := renderer.Render(tutor.Plain(text))
+	if err != nil {
+		return tutor.Plain(text)
+	}
+	return strings.TrimSpace(rendered)
+}
+
+func (model interfaceModel) lessonContent() string {
+	palette := model.palette()
+	muted := lipgloss.NewStyle().Foreground(palette.muted)
+	heading := lipgloss.NewStyle().Foreground(palette.accent).Bold(true)
+	turns := model.application.state.Turns
+	if len(turns) == 0 {
+		if model.errorText != "" {
+			return heading.Render("Your progress is safe. Let's try again.") + "\n\n" + ansi.Wrap(model.errorText, model.bodyWidth(), "") + "\n\n" + muted.Render("Ctrl+R retries · Ctrl+Q exits · use --plain for line input")
+		}
+		return heading.Render("A codebase, one idea at a time.") + "\n\n" + model.markdown("Your tutor is preparing an overview grounded in this repository's files.\n\nThen you can ask questions, try a short quiz, or follow a citation into the code.") + "\n\n" + muted.Render("Browse topics with Ctrl+K or reading hotspots with Ctrl+O while you wait.")
+	}
+	index := max(0, min(model.history, len(turns)-1))
+	turn := turns[index]
+	var blocks []string
+	if model.errorText != "" {
+		blocks = append(blocks, lipgloss.NewStyle().Foreground(palette.warning).Bold(true).Render("Turn not recorded · Ctrl+R to retry")+"\n"+ansi.Wrap(model.errorText, model.bodyWidth(), ""))
+	}
+	if turn.Action == "answer" || turn.Action == "question" {
+		blocks = append(blocks, muted.Render("YOU ASKED / ANSWERED")+"\n"+model.markdown(turn.Message))
+	}
+	blocks = append(blocks, model.markdown(turn.Reply.Explanation))
+	if turn.Reply.Assessment != "none" {
+		title := map[string]string{"correct": "Correct", "partial": "Partly there", "incorrect": "Let's revisit this"}[turn.Reply.Assessment]
+		blocks = append(blocks, heading.Render(title)+"\n"+model.markdown(turn.Reply.Feedback))
+	} else if turn.Reply.Feedback != "" {
+		blocks = append(blocks, model.markdown(turn.Reply.Feedback))
+	}
+	if turn.Reply.Question != "" && index != len(turns)-1 {
+		question := heading.Render("YOUR TURN") + "\n" + lipgloss.NewStyle().Width(max(1, model.bodyWidth()-6)).Render(tutor.Plain(turn.Reply.Question))
+		blocks = append(blocks, lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(palette.border).Padding(1, 2).Width(max(1, model.bodyWidth()-2)).Render(question))
+	}
+	var sources []string
+	seen := map[string]bool{}
+	for _, citation := range turn.Reply.Citations {
+		name := fmt.Sprintf("%s:%d", citation.Path, citation.Line)
+		if !seen[name] {
+			sources = append(sources, tutor.Plain(name))
+			seen[name] = true
+		}
+	}
+	blocks = append(blocks, muted.Render("EVIDENCE · Ctrl+S to open source")+"\n"+muted.Render(strings.Join(sources, "\n")))
+	return strings.Join(blocks, "\n\n")
+}
+
+func (model interfaceModel) topicTitle() string {
+	identifier := model.application.state.Topic
+	if model.page == "lesson" && model.history >= 0 && model.history < len(model.application.state.Turns) {
+		identifier = model.application.state.Turns[model.history].Topic
+	}
+	for _, topic := range model.application.course {
+		if topic.ID == identifier {
+			return tutor.Plain(topic.Title)
+		}
+	}
+	return identifier
+}
+
+func (model interfaceModel) composer() string {
+	palette := model.palette()
+	muted := lipgloss.NewStyle().Foreground(palette.muted)
+	if model.page != "lesson" {
+		content := muted.Render("Esc returns to your lesson")
+		if model.input.Value() != "" {
+			content += "\n" + muted.Render(ansi.Truncate("Draft kept: "+tutor.Plain(model.input.Value()), model.bodyWidth(), "…"))
+		}
+		return content
+	}
+	label := "Your answer or question"
+	border := palette.accent
+	if model.application.state.Question != "" {
+		question := ansi.Wrap(tutor.Plain(model.application.state.Question), model.bodyWidth(), "")
+		lines := strings.Split(question, "\n")
+		if len(lines) > 2 {
+			lines = lines[:2]
+			lines[1] = ansi.Truncate(lines[1]+" …", model.bodyWidth(), "…")
+		}
+		label = "YOUR TURN\n" + strings.Join(lines, "\n")
+	}
+	if model.history < len(model.application.state.Turns)-1 {
+		label = "Earlier turn · Esc returns to the current question"
+	}
+	if model.busy {
+		label = "Preparing your next turn · Esc stops it"
+		border = palette.border
+	}
+	editor := lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(border).Width(max(1, model.bodyWidth()-2)).Render(model.input.View())
+	return muted.Render(ansi.Wrap(label, model.bodyWidth(), "")) + "\n" + editor
+}
+
+func (model interfaceModel) sidebar() string {
+	palette := model.palette()
+	muted := lipgloss.NewStyle().Foreground(palette.muted)
+	title := lipgloss.NewStyle().Foreground(palette.accent).Bold(true)
+	visited, correct, attempts := 0, 0, 0
+	for _, progress := range model.application.state.Progress {
+		if progress.Lessons > 0 {
+			visited++
+		}
+		correct += progress.Correct
+		attempts += progress.Correct + progress.Partial + progress.Missed
+	}
+	total := len(model.application.course)
+	filled := 0
+	if total > 0 {
+		filled = min(20, visited*20/total)
+	}
+	content := title.Render("YOUR COURSE") + "\n\n" + fmt.Sprintf("%d / %d topics read", visited, total) + "\n" + title.Render(strings.Repeat("━", filled)) + muted.Render(strings.Repeat("─", 20-filled)) + "\n\n" + fmt.Sprintf("%d assessed answers\n%d correct", attempts, correct) + "\n\n" + muted.Render("CURRENT TOPIC") + "\n" + lipgloss.NewStyle().Width(23).Render(model.topicTitle())
+	if model.bodyHeight() >= 19 {
+		content += "\n\n" + muted.Render("KEEP GOING") + "\n" + "Ctrl+N  Next topic\nCtrl+G  Quiz me\nCtrl+K  Choose a topic\nCtrl+S  Follow a citation"
+	}
+	return lipgloss.NewStyle().Width(26).Height(model.bodyHeight()).MaxHeight(model.bodyHeight()).BorderRight(true).BorderStyle(lipgloss.NormalBorder()).BorderForeground(palette.border).Render(content)
+}
+
+func (model interfaceModel) View() tea.View {
+	palette := model.palette()
+	accent := lipgloss.NewStyle().Foreground(palette.accent).Bold(true)
+	muted := lipgloss.NewStyle().Foreground(palette.muted)
+	if model.width < 44 || model.height < 18 {
+		view := tea.NewView(fmt.Sprintf("repo-tutor\n\nWiden to 44 columns and 18 rows.\nCurrent: %d × %d\n\nCtrl+Q quits; --plain works at any size.", model.width, model.height))
+		view.AltScreen = true
+		return view
+	}
+	width := model.width - 4
+	brand := accent.Render("repo-tutor") + muted.Render("  /  ") + tutor.Plain(filepath.Base(model.application.snapshot.Root))
+	status := model.application.state.Agent + " · saved"
+	if model.busy {
+		status = model.spinner.View() + " " + model.application.state.Agent + " is thinking"
+	}
+	brand = ansi.Truncate(brand, max(8, width-lipgloss.Width(status)-2), "…")
+	space := max(1, width-lipgloss.Width(brand)-lipgloss.Width(status))
+	header := ansi.Truncate(brand+strings.Repeat(" ", space)+muted.Render(status), width, "") + "\n" + muted.Render(ansi.Truncate("Goal  "+tutor.Plain(model.application.state.Goal), width, "…"))
+	pages := []struct{ page, label string }{{"lesson", "Learn"}, {"topics", "Topics"}, {"sources", "Sources"}, {"hotspots", "Hotspots"}, {"progress", "Progress"}}
+	var tabs []string
+	for _, page := range pages {
+		label := " " + page.label + " "
+		if model.page == page.page {
+			label = accent.Underline(true).Render(label)
+		} else {
+			label = muted.Render(label)
+		}
+		tabs = append(tabs, label)
+	}
+	navigation := ansi.Truncate(strings.Join(tabs, "  ")+muted.Render("    Tab to browse · F1 help"), width, "…")
+	title := tutor.Plain(model.pageTitle)
+	if model.page == "lesson" {
+		title = model.topicTitle()
+	}
+	if model.page == "lesson" && len(model.application.state.Turns) > 0 {
+		title += fmt.Sprintf("  ·  turn %d / %d", model.history+1, len(model.application.state.Turns))
+	}
+	body := model.viewport.View()
+	if model.isPicker() {
+		body = model.picker.View()
+	}
+	main := accent.Render(ansi.Truncate(title, model.bodyWidth(), "…")) + "\n\n" + body
+	main = lipgloss.NewStyle().Width(model.bodyWidth()).MaxWidth(model.bodyWidth()).Height(model.bodyHeight()).MaxHeight(model.bodyHeight()).Render(main)
+	if model.width >= 108 {
+		main = lipgloss.JoinHorizontal(lipgloss.Top, model.sidebar(), "  ", main)
+	}
+	composer := model.composer()
+	if model.width >= 108 {
+		composer = lipgloss.NewStyle().PaddingLeft(29).Render(composer)
+	}
+	notice := model.notice
+	if model.busy {
+		notice = fmt.Sprintf("%s Preparing a grounded %s · %s elapsed · limit %s", model.spinner.View(), model.intent.action, time.Since(model.started).Round(time.Second), model.application.timeout)
+	}
+	if model.page == "hotspots" {
+		notice = "Reading hints, not defect predictions · 180 days / 2000 local commits · branch estimates"
+		if !model.application.snapshot.History {
+			notice = "Git history unavailable · ranked by source branch estimates · reading hints, not defect predictions"
+		}
+	}
+	if model.isPicker() {
+		notice += " · / search · ↑↓ move · Enter open"
+	}
+	if model.page == "lesson" && model.history < len(model.application.state.Turns)-1 {
+		notice = "Earlier turn · Esc returns to the current question · Alt+←/→ reads history"
+	}
+	keys := "Enter send   Ctrl+N next   Ctrl+G quiz   Ctrl+K topics   Ctrl+S sources   Ctrl+Q quit"
+	if width < 80 {
+		keys = "Enter send · F1 help · Ctrl+Q quit"
+	}
+	footer := muted.Render(ansi.Truncate(notice, width, "…")) + "\n" + muted.Render(ansi.Truncate(keys, width, "…"))
+	content := lipgloss.JoinVertical(lipgloss.Left, header, "", navigation, "", main, "", composer, "", footer)
+	content = lipgloss.NewStyle().Padding(0, 2).MaxWidth(model.width).MaxHeight(model.height).Render(content)
+	if model.noColor {
+		content = ansi.Strip(content)
+	}
+	view := tea.NewView(content)
+	view.AltScreen = true
+	view.MouseMode = tea.MouseModeCellMotion
+	return view
+}

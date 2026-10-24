@@ -87,6 +87,9 @@ func TestTerminalCourseWithBothAgents(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			repository, stateDirectory := fixture(t), t.TempDir()
 			arguments := []string{repository, "--agent", name, "--state-dir", stateDirectory}
+			if name == "claude" {
+				arguments = append(arguments, "--plain")
+			}
 			output, err := run(t, "/topics\n/quiz\nIt reads files.\n/progress\n/read main.go:1\n/next\n/quit\n", arguments...)
 			if err != nil {
 				t.Fatalf("session failed: %v\n%s", err, output)

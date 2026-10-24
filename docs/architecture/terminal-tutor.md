@@ -1,5 +1,15 @@
 # Terminal tutor
 
+## Interactive workspace
+
+The default terminal driver uses Bubble Tea, Bubbles, Lip Gloss, and Glamour. It presents a scrollable lesson, a pinned current question and answer box, searchable topics and sources, progress, and reading hotspots. Wide terminals add a course sidebar; narrow terminals use a single column. Lesson history is available with `Alt+Left` and `Alt+Right`. Historical questions stay attached to their turn; a learner must return to the latest turn before submitting an answer.
+
+Each model update handles an input or a completed command. An agent command receives a snapshot of the saved state and returns a new state after validation and persistence. The screen never blocks on model output. It permits one active turn while allowing local browsing. The worker owns no screen state. A mutex and cancellation boundary ensure worker shutdown finishes before the session lock is released.
+
+Failed turns show recovery guidance and keep the current draft. `Esc` or `Ctrl+C` cancels a running turn; `Ctrl+R` retries the same intent. `Ctrl+Q` exits. Completed replies save before display. Drafts are kept while navigating within a running interface; they are not saved across process exits.
+
+Only real terminal input and output select the workspace. `--plain`, pipes, redirected output, `TERM=dumb`, and `--ask` retain the line-based behavior. Plain mode is also the screen-reader option. The workspace detects terminal background color, supports `NO_COLOR`, and uses words as well as colors for status and assessments. See [0020](../decisions/0020-interactive-terminal.md).
+
 ## Repository snapshot
 
 The reader walks the selected directory without following symlinks. It includes Go, Python, JavaScript, TypeScript, Markdown, and the `go.mod`, `pyproject.toml`, and `package.json` manifests. Hidden directories, dependencies, fixtures, and generated output directories are excluded. Git ignore rules apply when Git is available. Generated Go source is excluded from package analysis.
@@ -42,10 +52,12 @@ The canonical repository path selects the session directory. A nonblocking file 
 
 The source fingerprint includes file paths and contents, independent of Git history. Changed source starts a fresh course with the previous agent, model, and goal unless explicitly overridden. `previous.json` keeps one archived session. A fresh course resets quiz outcomes so stale assessments do not carry over to different source. The current transcript retains 200 turns, with a 16 MiB file limit. Corrupt or unsupported state requires `--new` rather than silently discarding progress.
 
-Ctrl-D or `/quit` exits after completed work is saved. Ctrl-C cancels an agent turn or an idle prompt. A per-turn deadline defaults to three minutes. Failure messages retain the CLI diagnostics and explain how to retry.
+In plain mode, Ctrl-D or `/quit` exits after completed work is saved, and Ctrl-C exits from an agent turn or an idle prompt. In the workspace, Ctrl-Q or `/quit` exits and Ctrl-C cancels an active turn, then exits when idle. A per-turn deadline defaults to three minutes. Failure messages retain the CLI diagnostics and explain how to retry.
 
 ## Verification
 
 `acceptance/terminal_test.go` builds the actual binary and exercises both agent protocols through fake executables. It covers lesson, quiz, grading, source reading, topic changes, explicit resume, offline scans, failed turns, timeouts, source changes, archives, and interruption at the input prompt. Unit tests check nested modules, mixed language imports, source exclusions, Git history, excerpt budgets, citation validation, immutable progress, and session locking.
+
+Interface model tests check terminal bounds, visible exit guidance, navigation without agent calls, retained drafts, topic filtering through resize, retries, and cancellation. Manual pseudo-terminal checks exercise actual raw input and rendering, including browsing during a turn, CLI failures, cancellation, saved progress, and resume. Visual captures belong in `output/`.
 
 Live smoke checks use onboard-kit and repowise as read-only targets. Their transcripts and scan output belong in `output/` and are not committed. These checks supplement the reproducible fake-agent tests; account access is not a test prerequisite.

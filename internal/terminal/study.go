@@ -27,8 +27,19 @@ type application struct {
 }
 
 func (application *application) turn(ctx context.Context, action, message, topic string) error {
+	fmt.Fprintf(application.diagnostics, "\nWaiting for %s (turn limit %s; Ctrl-C to exit)...\n", application.state.Agent, application.timeout)
+	updated, err := application.completeTurn(ctx, action, message, topic)
+	if err != nil {
+		return err
+	}
+	application.state = updated
+	application.show(updated.Turns[len(updated.Turns)-1].Reply)
+	return nil
+}
+
+func (application application) completeTurn(ctx context.Context, action, message, topic string) (session.State, error) {
 	if len(message) > 16000 {
-		return fmt.Errorf("message is too long; keep each turn under 16000 bytes")
+		return session.State{}, fmt.Errorf("message is too long; keep each turn under 16000 bytes")
 	}
 	request := tutor.Request{Topic: topic, Action: action, Message: message, Goal: application.state.Goal}
 	if topic == application.state.Topic {
@@ -39,7 +50,6 @@ func (application *application) turn(ctx context.Context, action, message, topic
 		}
 	}
 	prepared := tutor.Prepare(application.snapshot, request)
-	fmt.Fprintf(application.diagnostics, "\nWaiting for %s (turn limit %s; Ctrl-C to exit)...\n", application.state.Agent, application.timeout)
 	turnContext, cancel := context.WithTimeout(ctx, application.timeout)
 	defer cancel()
 	result, err := agent.Run(turnContext, agent.Request{
@@ -48,11 +58,11 @@ func (application *application) turn(ctx context.Context, action, message, topic
 		SessionID: application.state.SessionID, Prompt: prepared.Prompt,
 	})
 	if err != nil {
-		return fmt.Errorf("%w\nProgress is saved. Retry the same command; use --new if the agent session cannot resume", err)
+		return session.State{}, fmt.Errorf("%w\nProgress is saved. Retry the same command; use --new if the agent session cannot resume", err)
 	}
 	reply, err := tutor.DecodeReply(result.Content, prepared, request)
 	if err != nil {
-		return fmt.Errorf("%w\nThis turn was not recorded. Retry your message", err)
+		return session.State{}, fmt.Errorf("%w\nThis turn was not recorded. Retry your message", err)
 	}
 	updated := application.state
 	updated.SessionID = result.SessionID
@@ -64,11 +74,9 @@ func (application *application) turn(ctx context.Context, action, message, topic
 		updated.Turns = updated.Turns[len(updated.Turns)-200:]
 	}
 	if err := application.store.Save(updated); err != nil {
-		return fmt.Errorf("save tutor turn: %w", err)
+		return session.State{}, fmt.Errorf("save tutor turn: %w", err)
 	}
-	application.state = updated
-	application.show(reply)
-	return nil
+	return updated, nil
 }
 
 func (application *application) show(reply tutor.Reply) {

@@ -7,10 +7,13 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/charmbracelet/x/term"
 
 	"repo-tutor/internal/agent"
 	"repo-tutor/internal/repository"
@@ -35,6 +38,7 @@ Tutor options:
   --ask TEXT                Ask one question, save the reply, and exit
   --state-dir DIRECTORY     Store sessions in this directory
   --timeout DURATION        Limit each agent turn (default 3m)
+  --plain                   Use the line-based interface instead of the full-screen UI
 
 Examples:
   repo-tutor ../onboard-kit --agent codex
@@ -196,6 +200,7 @@ func study(ctx context.Context, arguments []string, input io.Reader, output, dia
 	ask := flags.String("ask", "", "ask once and exit")
 	stateDirectory := flags.String("state-dir", "", "session storage directory")
 	timeout := flags.Duration("timeout", 3*time.Minute, "turn timeout")
+	plain := flags.Bool("plain", false, "use the line-based interface")
 	directory, err := parse(flags, arguments)
 	if errors.Is(err, flag.ErrHelp) {
 		fmt.Fprint(output, usage)
@@ -272,6 +277,9 @@ func study(ctx context.Context, arguments []string, input io.Reader, output, dia
 		}
 	}
 	application := application{snapshot: snapshot, course: tutor.Course(snapshot), state: state, store: store, output: output, diagnostics: diagnostics, timeout: *timeout}
+	if !*plain && *ask == "" && interactiveStreams(input, output) {
+		return runInterface(ctx, application, input, output)
+	}
 	summary(output, snapshot)
 	fmt.Fprintf(output, "\nAgent: %s. Goal: %s\n", chosen, tutor.Plain(state.Goal))
 	fmt.Fprintf(output, "Session: %s\n", tutor.Plain(filepath.Join(store.Directory, "session.json")))
@@ -288,4 +296,10 @@ func study(ctx context.Context, arguments []string, input io.Reader, output, dia
 		application.show(state.Turns[len(state.Turns)-1].Reply)
 	}
 	return application.loop(ctx, input)
+}
+
+func interactiveStreams(input io.Reader, output io.Writer) bool {
+	reader, inputIsFile := input.(*os.File)
+	writer, outputIsFile := output.(*os.File)
+	return inputIsFile && outputIsFile && os.Getenv("TERM") != "dumb" && term.IsTerminal(reader.Fd()) && term.IsTerminal(writer.Fd())
 }
