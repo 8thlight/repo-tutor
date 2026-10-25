@@ -80,19 +80,22 @@ func (application application) completeTurn(ctx context.Context, action, message
 }
 
 func (application *application) show(reply tutor.Reply) {
-	fmt.Fprintf(application.output, "\n%s\n", tutor.Plain(reply.Explanation))
 	if reply.Assessment != "none" {
 		fmt.Fprintf(application.output, "\nAssessment: %s\n", reply.Assessment)
 	}
 	if reply.Feedback != "" {
 		fmt.Fprintf(application.output, "%s\n", tutor.Plain(reply.Feedback))
 	}
+	if reply.Assessment != "none" {
+		fmt.Fprintln(application.output, "\n--- Next idea ---")
+	}
+	fmt.Fprintf(application.output, "\n%s\n", tutor.Plain(reply.Explanation))
 	fmt.Fprintln(application.output, "\nSources:")
 	for _, citation := range reply.Citations {
 		fmt.Fprintf(application.output, "  %s:%d\n", tutor.Plain(citation.Path), citation.Line)
 	}
 	if reply.Question != "" {
-		fmt.Fprintf(application.output, "\nQuestion: %s\n", tutor.Plain(reply.Question))
+		fmt.Fprintf(application.output, "\n---\nQuestion: %s\n", tutor.Plain(reply.Question))
 	}
 }
 

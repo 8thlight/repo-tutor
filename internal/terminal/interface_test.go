@@ -1,6 +1,7 @@
 package terminal
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"strings"
@@ -108,9 +109,61 @@ func TestCurrentQuestionStaysVisibleWhileLessonScrolls(t *testing.T) {
 	for _, offset := range []int{0, 40, 200} {
 		model.viewport.SetYOffset(offset)
 		content := ansi.Strip(model.View().Content)
-		if !strings.Contains(content, model.application.state.Question) || !strings.Contains(content, "YOUR TURN") {
+		if !strings.Contains(content, model.application.state.Question) || !strings.Contains(content, "NEXT QUESTION") {
 			t.Fatalf("the current question disappeared at scroll offset %d", offset)
 		}
+	}
+}
+
+func TestGradedAnswerStaysWithItsQuestionAndFeedback(t *testing.T) {
+	model := interfaceFixture()
+	previousQuestion := model.application.state.Question
+	reply := tutor.Reply{Explanation: "Next idea: how a CLI command is wired up.", Assessment: "correct", Feedback: "Core is the shared engine.", Question: "Where are commands registered?"}
+	model.application.state.Turns = append(model.application.state.Turns, session.Turn{Topic: model.application.state.Topic, Action: "answer", Message: "core", Reply: reply})
+	model.application.state.Question = reply.Question
+	model.history = 1
+	content := ansi.Strip(model.lessonContent())
+	position := -1
+	for _, text := range []string{"QUESTION YOU ANSWERED", previousQuestion, "YOUR ANSWER", "core", "Correct", reply.Feedback, "── NEXT IDEA", reply.Explanation} {
+		next := strings.Index(content[position+1:], text)
+		if next < 0 {
+			t.Fatalf("missing or misplaced %q after position %d:\n%s", text, position, content)
+		}
+		position += next + 1
+	}
+	composer := ansi.Strip(model.composer())
+	if !strings.HasPrefix(composer, "────") || !strings.Contains(composer, "NEXT QUESTION") || !strings.Contains(composer, reply.Question) {
+		t.Fatalf("next question needs a separate boundary:\n%s", composer)
+	}
+	model.application.state.Turns = append(model.application.state.Turns, session.Turn{Topic: "another", Action: "lesson", Reply: tutor.Reply{Assessment: "none"}})
+	content = ansi.Strip(model.lessonContent())
+	if !strings.Contains(content, "NEXT QUESTION") || !strings.Contains(content, reply.Question) {
+		t.Fatalf("historical turn lost its next question:\n%s", content)
+	}
+	model.application.state.Turns[0].Topic = "another"
+	if strings.Contains(ansi.Strip(model.lessonContent()), previousQuestion) {
+		t.Fatal("answer was paired with a question from another topic")
+	}
+	model.application.state.Turns = model.application.state.Turns[1:]
+	model.history = 0
+	content = ansi.Strip(model.lessonContent())
+	if strings.Contains(content, "QUESTION YOU ANSWERED") || !strings.Contains(content, reply.Feedback) {
+		t.Fatalf("trimmed history must keep feedback without inventing a question:\n%s", content)
+	}
+}
+
+func TestPlainFeedbackPrecedesNextIdea(t *testing.T) {
+	var output bytes.Buffer
+	application := application{output: &output}
+	application.show(tutor.Reply{Explanation: "Next lesson content.", Assessment: "partial", Feedback: "Review the shared engine.", Question: "What calls it?"})
+	content := output.String()
+	position := -1
+	for _, text := range []string{"Assessment: partial", "Review the shared engine.", "--- Next idea ---", "Next lesson content.", "---\nQuestion: What calls it?"} {
+		next := strings.Index(content[position+1:], text)
+		if next < 0 {
+			t.Fatalf("missing or misplaced %q:\n%s", text, content)
+		}
+		position += next + 1
 	}
 }
 

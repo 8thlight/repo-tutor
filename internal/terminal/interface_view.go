@@ -120,18 +120,26 @@ func (model interfaceModel) lessonContent() string {
 	if model.errorText != "" {
 		blocks = append(blocks, lipgloss.NewStyle().Foreground(palette.warning).Bold(true).Render("Turn not recorded · Ctrl+R to retry")+"\n"+ansi.Wrap(model.errorText, model.bodyWidth(), ""))
 	}
-	if turn.Action == "answer" || turn.Action == "question" {
-		blocks = append(blocks, muted.Render("YOU ASKED / ANSWERED")+"\n"+model.markdown(turn.Message))
+	if turn.Action == "answer" {
+		if index > 0 && turns[index-1].Topic == turn.Topic && turns[index-1].Reply.Question != "" {
+			blocks = append(blocks, muted.Render("QUESTION YOU ANSWERED")+"\n"+model.markdown(turns[index-1].Reply.Question))
+		}
+		blocks = append(blocks, muted.Render("YOUR ANSWER")+"\n"+model.markdown(turn.Message))
+	} else if turn.Action == "question" {
+		blocks = append(blocks, muted.Render("YOUR QUESTION")+"\n"+model.markdown(turn.Message))
 	}
-	blocks = append(blocks, model.markdown(turn.Reply.Explanation))
 	if turn.Reply.Assessment != "none" {
 		title := map[string]string{"correct": "Correct", "partial": "Partly there", "incorrect": "Let's revisit this"}[turn.Reply.Assessment]
 		blocks = append(blocks, heading.Render(title)+"\n"+model.markdown(turn.Reply.Feedback))
 	} else if turn.Reply.Feedback != "" {
 		blocks = append(blocks, model.markdown(turn.Reply.Feedback))
 	}
+	if turn.Reply.Assessment != "none" {
+		blocks = append(blocks, model.sectionDivider("NEXT IDEA"))
+	}
+	blocks = append(blocks, model.markdown(turn.Reply.Explanation))
 	if turn.Reply.Question != "" && index != len(turns)-1 {
-		question := heading.Render("YOUR TURN") + "\n" + lipgloss.NewStyle().Width(max(1, model.bodyWidth()-6)).Render(tutor.Plain(turn.Reply.Question))
+		question := heading.Render("NEXT QUESTION") + "\n" + lipgloss.NewStyle().Width(max(1, model.bodyWidth()-6)).Render(tutor.Plain(turn.Reply.Question))
 		blocks = append(blocks, lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(palette.border).Padding(1, 2).Width(max(1, model.bodyWidth()-2)).Render(question))
 	}
 	var sources []string
@@ -145,6 +153,15 @@ func (model interfaceModel) lessonContent() string {
 	}
 	blocks = append(blocks, muted.Render("EVIDENCE · Ctrl+S to open source")+"\n"+muted.Render(strings.Join(sources, "\n")))
 	return strings.Join(blocks, "\n\n")
+}
+
+func (model interfaceModel) sectionDivider(label string) string {
+	text := ""
+	if label != "" {
+		text = "── " + label + " "
+	}
+	text += strings.Repeat("─", max(0, model.bodyWidth()-ansi.StringWidth(text)))
+	return lipgloss.NewStyle().Foreground(model.palette().muted).Render(text)
 }
 
 func (model interfaceModel) topicTitle() string {
@@ -179,7 +196,7 @@ func (model interfaceModel) composer() string {
 			lines = lines[:2]
 			lines[1] = ansi.Truncate(lines[1]+" …", model.bodyWidth(), "…")
 		}
-		label = "YOUR TURN\n" + strings.Join(lines, "\n")
+		label = "NEXT QUESTION\n" + strings.Join(lines, "\n")
 	}
 	if model.history < len(model.application.state.Turns)-1 {
 		label = "Earlier turn · Esc returns to the current question"
@@ -189,7 +206,7 @@ func (model interfaceModel) composer() string {
 		border = palette.border
 	}
 	editor := lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(border).Width(max(1, model.bodyWidth()-2)).Render(model.input.View())
-	return muted.Render(ansi.Wrap(label, model.bodyWidth(), "")) + "\n" + editor
+	return model.sectionDivider("") + "\n" + muted.Render(ansi.Wrap(label, model.bodyWidth(), "")) + "\n" + editor
 }
 
 func (model interfaceModel) sidebar() string {

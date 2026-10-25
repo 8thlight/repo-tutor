@@ -6,6 +6,8 @@ The default terminal driver uses Bubble Tea, Bubbles, Lip Gloss, and Glamour. It
 
 Each model update handles an input or a completed command. An agent command receives a snapshot of the saved state and returns a new state after validation and persistence. The screen never blocks on model output. It permits one active turn while allowing local browsing. The worker owns no screen state. A mutex and cancellation boundary ensure worker shutdown finishes before the session lock is released.
 
+An assessed turn groups the question answered, the learner's answer, and its feedback before introducing the next idea. A horizontal divider separates that next idea, and another separates the pinned next question from the lesson. If the answered question is no longer in saved history, the interface shows the answer and feedback without inventing context. Plain mode also places feedback before the next explanation.
+
 Failed turns show recovery guidance and keep the current draft. `Esc` or `Ctrl+C` cancels a running turn; `Ctrl+R` retries the same intent. `Ctrl+Q` exits. Completed replies save before display. Drafts are kept while navigating within a running interface; they are not saved across process exits.
 
 Only real terminal input and output select the workspace. `--plain`, pipes, redirected output, `TERM=dumb`, and `--ask` retain the line-based behavior. Plain mode is also the screen-reader option. The workspace detects terminal background color, supports `NO_COLOR`, and uses words as well as colors for status and assessments. See [0020](../decisions/0020-interactive-terminal.md).
