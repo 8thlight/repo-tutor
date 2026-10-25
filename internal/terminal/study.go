@@ -42,8 +42,13 @@ func (application application) completeTurn(ctx context.Context, action, message
 		return session.State{}, fmt.Errorf("message is too long; keep each turn under 16000 bytes")
 	}
 	request := tutor.Request{Topic: topic, Action: action, Message: message, Goal: application.state.Goal}
+	if action == "quiz-next" || action == "quiz-extend" {
+		request.Action = "quiz"
+	}
 	if topic == application.state.Topic {
-		request.Question = application.state.Question
+		if !reviewing(application.state) {
+			request.Question = application.state.Question
+		}
 		if len(application.state.Turns) > 0 {
 			previous := application.state.Turns[len(application.state.Turns)-1].Reply
 			request.Previous = &previous
@@ -64,10 +69,21 @@ func (application application) completeTurn(ctx context.Context, action, message
 	if err != nil {
 		return session.State{}, fmt.Errorf("%w\nThis turn was not recorded. Retry your message", err)
 	}
+	if action == "answer" && reply.Assessment != "none" {
+		reply.Question = ""
+	}
+	if action == "question" && reviewing(application.state) {
+		reply.Question = ""
+	}
 	updated := application.state
 	updated.SessionID = result.SessionID
 	updated.Topic = topic
 	updated.Question = reply.Question
+	updated.Review = action == "answer" && (reply.Assessment != "none" || reply.Question == "")
+	if action == "question" && reviewing(application.state) && reply.Question == "" {
+		updated.Review = true
+	}
+	updated.Quiz = tutor.RecordQuiz(updated.Quiz, topic, action, request.Question, reply)
 	updated.Progress = tutor.Record(updated.Progress, topic, action, reply)
 	updated.Turns = append(append([]session.Turn(nil), updated.Turns...), session.Turn{Topic: topic, Action: action, Message: message, Reply: reply})
 	if len(updated.Turns) > 200 {
@@ -86,15 +102,16 @@ func (application *application) show(reply tutor.Reply) {
 	if reply.Feedback != "" {
 		fmt.Fprintf(application.output, "%s\n", tutor.Plain(reply.Feedback))
 	}
-	if reply.Assessment != "none" {
-		fmt.Fprintln(application.output, "\n--- Next idea ---")
+	if reply.Assessment == "none" || reply.Feedback == "" {
+		fmt.Fprintf(application.output, "\n%s\n", tutor.Plain(reply.Explanation))
 	}
-	fmt.Fprintf(application.output, "\n%s\n", tutor.Plain(reply.Explanation))
 	fmt.Fprintln(application.output, "\nSources:")
 	for _, citation := range reply.Citations {
 		fmt.Fprintf(application.output, "  %s:%d\n", tutor.Plain(citation.Path), citation.Line)
 	}
-	if reply.Question != "" {
+	if reviewing(application.state) {
+		fmt.Fprintln(application.output, "\n--- End of question ---\nUse /continue when ready, or ask about this answer. /questions shows the quiz goal.")
+	} else if reply.Question != "" {
 		fmt.Fprintf(application.output, "\n---\nQuestion: %s\n", tutor.Plain(reply.Question))
 	}
 }
@@ -159,7 +176,7 @@ func (application *application) loop(ctx context.Context, input io.Reader) error
 			continue
 		}
 		action := "question"
-		if application.state.Question != "" {
+		if application.state.Question != "" && !reviewing(application.state) {
 			action = "answer"
 		}
 		if err := application.turn(ctx, action, message, application.state.Topic); err != nil {
@@ -178,6 +195,14 @@ func (application *application) command(ctx context.Context, text string) (bool,
 		argument = strings.TrimSpace(parts[1])
 	}
 	switch parts[0] {
+	case "/continue", "/extend":
+		intent, err := continueIntent(application.state, parts[0] == "/extend")
+		if err != nil {
+			return false, err
+		}
+		return false, application.turn(ctx, intent.action, intent.message, intent.topic)
+	case "/questions":
+		fmt.Fprintln(application.output, quizText(application.state.Quiz))
 	case "/quit", "/exit":
 		fmt.Fprintln(application.output, "Session saved. Run the same command to resume.")
 		return true, nil
@@ -186,7 +211,10 @@ func (application *application) command(ctx context.Context, text string) (bool,
 /topics [FILTER]     List topics in dependency order, optionally matching a path
 /topic NUMBER|PATH   Learn a chosen topic (number, directory, or import path)
 /next                Learn the next topic
-/quiz                Ask a fresh question on this topic
+/quiz                Start a five-question quiz on this topic
+/continue            Continue after reviewing an answer
+/questions           Show the quiz question index and goal
+/extend              Add five questions after finishing a quiz
 /review              Revisit a topic with missed or partial answers
 /progress            Show lessons and quiz outcomes
 /sources             List the excerpts available for this topic

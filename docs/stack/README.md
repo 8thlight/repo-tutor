@@ -9,6 +9,7 @@
 | Source analysis | Standard Go parser, plus literal import and declaration patterns for Python and JavaScript/TypeScript |
 | Dependencies | Go libraries compiled into the binary; no linked model SDK or runtime interpreter |
 | Terminal | Bubble Tea v2, Bubbles v2, Lip Gloss v2, and Glamour v2, with plain input for pipes and `--plain` |
+| Source highlighting | Chroma v2 lexers compiled into the binary; no language server |
 | Progress | Private JSON files in the user's state or configuration directory |
 | Reading hints | Local Git history and source branch counts |
 | Platforms | macOS and Linux |
