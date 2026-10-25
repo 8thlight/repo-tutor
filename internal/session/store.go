@@ -31,6 +31,8 @@ type State struct {
 	Goal        string                    `json:"goal"`
 	Topic       string                    `json:"topic"`
 	Question    string                    `json:"question"`
+	Review      bool                      `json:"review,omitempty"`
+	Quiz        *tutor.Quiz               `json:"quiz,omitempty"`
 	Progress    map[string]tutor.Progress `json:"progress"`
 	Turns       []Turn                    `json:"turns"`
 	Updated     time.Time                 `json:"updated"`

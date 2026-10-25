@@ -40,7 +40,7 @@ func TestInterfaceFitsTerminalAndKeepsExitDiscoverable(t *testing.T) {
 		model := interfaceFixture()
 		resized, _ := model.Update(tea.WindowSizeMsg{Width: size.width, Height: size.height})
 		model = resized.(interfaceModel)
-		pages := []string{"lesson", "topics", "sources", "hotspots", "progress", "help"}
+		pages := []string{"lesson", "topics", "quiz", "sources", "hotspots", "progress", "help"}
 		for _, page := range pages {
 			if page == "topics" || page == "sources" || page == "hotspots" {
 				opened, _ := model.openPicker(page, "")
@@ -124,7 +124,7 @@ func TestGradedAnswerStaysWithItsQuestionAndFeedback(t *testing.T) {
 	model.history = 1
 	content := ansi.Strip(model.lessonContent())
 	position := -1
-	for _, text := range []string{"QUESTION YOU ANSWERED", previousQuestion, "YOUR ANSWER", "core", "Correct", reply.Feedback, "── NEXT IDEA", reply.Explanation} {
+	for _, text := range []string{"QUESTION YOU ANSWERED", previousQuestion, "YOUR ANSWER", "core", "Correct", reply.Feedback, "── END OF QUESTION"} {
 		next := strings.Index(content[position+1:], text)
 		if next < 0 {
 			t.Fatalf("missing or misplaced %q after position %d:\n%s", text, position, content)
@@ -132,13 +132,13 @@ func TestGradedAnswerStaysWithItsQuestionAndFeedback(t *testing.T) {
 		position += next + 1
 	}
 	composer := ansi.Strip(model.composer())
-	if !strings.HasPrefix(composer, "────") || !strings.Contains(composer, "NEXT QUESTION") || !strings.Contains(composer, reply.Question) {
-		t.Fatalf("next question needs a separate boundary:\n%s", composer)
+	if !strings.HasPrefix(composer, "────") || !strings.Contains(composer, "Continue") || strings.Contains(composer, reply.Question) || strings.Contains(content, reply.Explanation) {
+		t.Fatalf("review must stop before the next idea or question:\n%s\n%s", content, composer)
 	}
 	model.application.state.Turns = append(model.application.state.Turns, session.Turn{Topic: "another", Action: "lesson", Reply: tutor.Reply{Assessment: "none"}})
 	content = ansi.Strip(model.lessonContent())
-	if !strings.Contains(content, "NEXT QUESTION") || !strings.Contains(content, reply.Question) {
-		t.Fatalf("historical turn lost its next question:\n%s", content)
+	if strings.Contains(content, reply.Question) || !strings.Contains(content, reply.Feedback) {
+		t.Fatalf("historical review should keep feedback without mixing in the next question:\n%s", content)
 	}
 	model.application.state.Turns[0].Topic = "another"
 	if strings.Contains(ansi.Strip(model.lessonContent()), previousQuestion) {
@@ -152,18 +152,21 @@ func TestGradedAnswerStaysWithItsQuestionAndFeedback(t *testing.T) {
 	}
 }
 
-func TestPlainFeedbackPrecedesNextIdea(t *testing.T) {
+func TestPlainFeedbackStopsBeforeNextIdea(t *testing.T) {
 	var output bytes.Buffer
-	application := application{output: &output}
+	application := application{output: &output, state: session.State{Review: true}}
 	application.show(tutor.Reply{Explanation: "Next lesson content.", Assessment: "partial", Feedback: "Review the shared engine.", Question: "What calls it?"})
 	content := output.String()
 	position := -1
-	for _, text := range []string{"Assessment: partial", "Review the shared engine.", "--- Next idea ---", "Next lesson content.", "---\nQuestion: What calls it?"} {
+	for _, text := range []string{"Assessment: partial", "Review the shared engine.", "--- End of question ---", "/continue"} {
 		next := strings.Index(content[position+1:], text)
 		if next < 0 {
 			t.Fatalf("missing or misplaced %q:\n%s", text, content)
 		}
 		position += next + 1
+	}
+	if strings.Contains(content, "Next lesson content.") || strings.Contains(content, "What calls it?") {
+		t.Fatal("plain output advanced before an explicit continue")
 	}
 }
 

@@ -161,6 +161,9 @@ func (model interfaceModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		if model.page == "progress" {
 			model.pageContent = model.progressText()
 		}
+		if model.page == "quiz" {
+			model.pageContent = quizText(model.application.state.Quiz)
+		}
 		if model.isPicker() {
 			model.configurePicker(model.picker.FilterValue())
 		}
@@ -208,6 +211,10 @@ func (model interfaceModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			return model.openPicker("hotspots", "")
 		case "ctrl+p":
 			return model.openDocument("progress", "Progress", model.progressText())
+		case "ctrl+b":
+			return model.openDocument("quiz", "Quiz questions", quizText(model.application.state.Quiz))
+		case "ctrl+f":
+			return model.continueQuiz(false)
 		case "f1":
 			return model.openDocument("help", "A few ways to keep learning", interfaceHelp)
 		case "ctrl+l":
@@ -288,6 +295,7 @@ func (model interfaceModel) begin(intent turnIntent) (tea.Model, tea.Cmd) {
 	model.page = "lesson"
 	model.input.Blur()
 	model.rebuildContent()
+	model.viewport.GotoTop()
 	turnContext, cancel := context.WithCancel(model.ctx)
 	model.cancel = cancel
 	state, runner := model.application.state, model.run
@@ -300,6 +308,9 @@ func (model interfaceModel) begin(intent turnIntent) (tea.Model, tea.Cmd) {
 func (model interfaceModel) submit() (tea.Model, tea.Cmd) {
 	text := strings.TrimSpace(model.input.Value())
 	if text == "" {
+		if reviewing(model.application.state) && model.history == len(model.application.state.Turns)-1 {
+			return model.continueQuiz(false)
+		}
 		return model, nil
 	}
 	if strings.HasPrefix(text, "/") {
@@ -310,7 +321,7 @@ func (model interfaceModel) submit() (tea.Model, tea.Cmd) {
 		return model, nil
 	}
 	action := "question"
-	if model.application.state.Question != "" {
+	if model.application.state.Question != "" && !reviewing(model.application.state) {
 		action = "answer"
 	}
 	return model.begin(turnIntent{action, text, model.application.state.Topic})

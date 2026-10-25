@@ -125,6 +125,7 @@ func (model interfaceModel) lessonContent() string {
 			blocks = append(blocks, muted.Render("QUESTION YOU ANSWERED")+"\n"+model.markdown(turns[index-1].Reply.Question))
 		}
 		blocks = append(blocks, muted.Render("YOUR ANSWER")+"\n"+model.markdown(turn.Message))
+		blocks = append(blocks, model.sectionDivider("FEEDBACK"))
 	} else if turn.Action == "question" {
 		blocks = append(blocks, muted.Render("YOUR QUESTION")+"\n"+model.markdown(turn.Message))
 	}
@@ -134,11 +135,13 @@ func (model interfaceModel) lessonContent() string {
 	} else if turn.Reply.Feedback != "" {
 		blocks = append(blocks, model.markdown(turn.Reply.Feedback))
 	}
-	if turn.Reply.Assessment != "none" {
-		blocks = append(blocks, model.sectionDivider("NEXT IDEA"))
+	if turn.Action != "answer" || turn.Reply.Feedback == "" {
+		blocks = append(blocks, model.markdown(turn.Reply.Explanation))
 	}
-	blocks = append(blocks, model.markdown(turn.Reply.Explanation))
-	if turn.Reply.Question != "" && index != len(turns)-1 {
+	if turn.Action == "answer" && (turn.Reply.Assessment != "none" || turn.Reply.Question == "") {
+		blocks = append(blocks, model.sectionDivider("END OF QUESTION"))
+	}
+	if turn.Reply.Question != "" && turn.Action != "answer" && index != len(turns)-1 {
 		question := heading.Render("NEXT QUESTION") + "\n" + lipgloss.NewStyle().Width(max(1, model.bodyWidth()-6)).Render(tutor.Plain(turn.Reply.Question))
 		blocks = append(blocks, lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(palette.border).Padding(1, 2).Width(max(1, model.bodyWidth()-2)).Render(question))
 	}
@@ -200,6 +203,11 @@ func (model interfaceModel) composer() string {
 	}
 	if model.history < len(model.application.state.Turns)-1 {
 		label = "Earlier turn · Esc returns to the current question"
+	} else if reviewing(model.application.state) {
+		label = "[ Continue → ] Enter empty / Ctrl+F\nAsk about this answer, or continue."
+		if quiz := model.application.state.Quiz; quiz != nil && quiz.Completed() >= quiz.Goal {
+			label = fmt.Sprintf("QUIZ COMPLETE · %d / %d answered\n/extend adds 5 · Ctrl+B results", quiz.Completed(), quiz.Goal)
+		}
 	}
 	if model.busy {
 		label = "Preparing your next turn · Esc stops it"
@@ -227,6 +235,9 @@ func (model interfaceModel) sidebar() string {
 		filled = min(20, visited*20/total)
 	}
 	content := title.Render("YOUR COURSE") + "\n\n" + fmt.Sprintf("%d / %d topics read", visited, total) + "\n" + title.Render(strings.Repeat("━", filled)) + muted.Render(strings.Repeat("─", 20-filled)) + "\n\n" + fmt.Sprintf("%d assessed answers\n%d correct", attempts, correct) + "\n\n" + muted.Render("CURRENT TOPIC") + "\n" + lipgloss.NewStyle().Width(23).Render(model.topicTitle())
+	if quiz := model.application.state.Quiz; quiz != nil {
+		content += "\n\n" + title.Render("QUIZ GOAL") + fmt.Sprintf("\n%d / %d answered\nCtrl+B  Question index", quiz.Completed(), quiz.Goal)
+	}
 	if model.bodyHeight() >= 19 {
 		content += "\n\n" + muted.Render("KEEP GOING") + "\n" + "Ctrl+N  Next topic\nCtrl+G  Quiz me\nCtrl+K  Choose a topic\nCtrl+S  Follow a citation"
 	}
@@ -251,7 +262,7 @@ func (model interfaceModel) View() tea.View {
 	brand = ansi.Truncate(brand, max(8, width-lipgloss.Width(status)-2), "…")
 	space := max(1, width-lipgloss.Width(brand)-lipgloss.Width(status))
 	header := ansi.Truncate(brand+strings.Repeat(" ", space)+muted.Render(status), width, "") + "\n" + muted.Render(ansi.Truncate("Goal  "+tutor.Plain(model.application.state.Goal), width, "…"))
-	pages := []struct{ page, label string }{{"lesson", "Learn"}, {"topics", "Topics"}, {"sources", "Sources"}, {"hotspots", "Hotspots"}, {"progress", "Progress"}}
+	pages := []struct{ page, label string }{{"lesson", "Learn"}, {"topics", "Topics"}, {"quiz", "Quiz"}, {"sources", "Sources"}, {"hotspots", "Hotspots"}, {"progress", "Progress"}}
 	var tabs []string
 	for _, page := range pages {
 		label := " " + page.label + " "
@@ -270,7 +281,20 @@ func (model interfaceModel) View() tea.View {
 	if model.page == "lesson" && len(model.application.state.Turns) > 0 {
 		title += fmt.Sprintf("  ·  turn %d / %d", model.history+1, len(model.application.state.Turns))
 	}
+	if model.page == "lesson" && model.application.state.Quiz != nil && model.history == len(model.application.state.Turns)-1 {
+		quiz := model.application.state.Quiz
+		title = fmt.Sprintf("Quiz · %d / %d answered · Ctrl+B index", quiz.Completed(), quiz.Goal)
+	}
 	body := model.viewport.View()
+	if model.busy && model.page == "lesson" {
+		title = "Preparing " + turnLabel(model.intent.action)
+		for _, topic := range model.application.course {
+			if topic.ID == model.intent.topic {
+				title += " · " + tutor.Plain(topic.Title)
+			}
+		}
+		body = accent.Render(model.spinner.View()+" Loading your next exercise…") + "\n\n" + muted.Render("Grounding the reply in repository sources.\n\nYou can browse topics and sources while you wait.\nEsc stops this request; your progress is saved.")
+	}
 	if model.isPicker() {
 		body = model.picker.View()
 	}
@@ -285,7 +309,7 @@ func (model interfaceModel) View() tea.View {
 	}
 	notice := model.notice
 	if model.busy {
-		notice = fmt.Sprintf("%s Preparing a grounded %s · %s elapsed · limit %s", model.spinner.View(), model.intent.action, time.Since(model.started).Round(time.Second), model.application.timeout)
+		notice = fmt.Sprintf("%s Preparing a grounded %s · %s elapsed · limit %s", model.spinner.View(), turnLabel(model.intent.action), time.Since(model.started).Round(time.Second), model.application.timeout)
 	}
 	if model.page == "hotspots" {
 		notice = "Reading hints, not defect predictions · 180 days / 2000 local commits · branch estimates"
@@ -300,6 +324,9 @@ func (model interfaceModel) View() tea.View {
 		notice = "Earlier turn · Esc returns to the current question · Alt+←/→ reads history"
 	}
 	keys := "Enter send   Ctrl+N next   Ctrl+G quiz   Ctrl+K topics   Ctrl+S sources   Ctrl+Q quit"
+	if reviewing(model.application.state) {
+		keys = "Ctrl+F continue   Ctrl+B quiz index   Ctrl+S sources   Ctrl+Q quit"
+	}
 	if width < 80 {
 		keys = "Enter send · F1 help · Ctrl+Q quit"
 	}
@@ -313,4 +340,17 @@ func (model interfaceModel) View() tea.View {
 	view.AltScreen = true
 	view.MouseMode = tea.MouseModeCellMotion
 	return view
+}
+
+func turnLabel(action string) string {
+	switch action {
+	case "quiz", "quiz-next", "quiz-extend":
+		return "quiz question"
+	case "answer":
+		return "answer review"
+	case "question":
+		return "reply"
+	default:
+		return "lesson"
+	}
 }

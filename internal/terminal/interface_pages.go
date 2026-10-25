@@ -18,7 +18,9 @@ const interfaceHelp = `Start with one idea, then try explaining it back.
 Enter           Send an answer, question, or slash command
 Alt+Enter       Add a line to your answer
 Ctrl+N          Learn the next topic
-Ctrl+G          Get a new quiz question
+Ctrl+G          Start a five-question quiz
+Ctrl+F          Continue after reviewing an answer
+Ctrl+B          Open the quiz question index and goal
 Ctrl+K          Browse and search topics
 Ctrl+S          Browse cited sources and open the code
 Ctrl+O          Explore churn and branching hotspots
@@ -37,6 +39,7 @@ then Enter opens the selected item. Esc returns to the lesson.
 
 Slash commands from the plain interface also work:
 /topics [filter]  /topic NUMBER|PATH  /next  /quiz  /review
+/continue  /questions  /extend
 /sources  /read PATH:LINE  /hotspots  /progress  /glossary
 /map  /help  /quit
 
@@ -169,16 +172,15 @@ func (model interfaceModel) openSource(location repository.Location) (tea.Model,
 		return model, nil
 	}
 	first := max(1, location.Line-12)
+	highlighted := model.highlightSource(location.Path, file.Content)
 	var content strings.Builder
 	palette := model.palette()
 	for index := first - 1; index < min(first+119, len(lines)); index++ {
-		line := fmt.Sprintf("%5d  %s", index+1, tutor.Plain(lines[index]))
+		prefix := fmt.Sprintf(" %5d  ", index+1)
 		if index+1 == location.Line {
-			line = lipgloss.NewStyle().Foreground(palette.accent).Bold(true).Render("›" + line)
-		} else {
-			line = " " + line
+			prefix = lipgloss.NewStyle().Foreground(palette.accent).Bold(true).Render(fmt.Sprintf("›%5d  ", index+1))
 		}
-		content.WriteString(line + "\n")
+		content.WriteString(prefix + highlighted[index] + "\n")
 	}
 	model, command := model.document("source", fmt.Sprintf("%s:%d", location.Path, location.Line), content.String())
 	model.notice = "Source snapshot · /read PATH:LINE opens another location · Esc returns to your lesson"
@@ -223,7 +225,7 @@ func (model interfaceModel) next() (tea.Model, tea.Cmd) {
 }
 
 func (model interfaceModel) cyclePage(backward bool) (tea.Model, tea.Cmd) {
-	pages := []string{"lesson", "topics", "sources", "hotspots", "progress"}
+	pages := []string{"lesson", "topics", "quiz", "sources", "hotspots", "progress"}
 	selected := 0
 	for index, page := range pages {
 		if page == model.page {
@@ -241,6 +243,9 @@ func (model interfaceModel) cyclePage(backward bool) (tea.Model, tea.Cmd) {
 	if page == "progress" {
 		return model.openDocument(page, "Progress", model.progressText())
 	}
+	if page == "quiz" {
+		return model.openDocument("quiz", "Quiz questions", quizText(model.application.state.Quiz))
+	}
 	return model.openPicker(page, "")
 }
 
@@ -251,6 +256,12 @@ func (model interfaceModel) slash(text string) (tea.Model, tea.Cmd) {
 		argument = strings.TrimSpace(parts[1])
 	}
 	switch parts[0] {
+	case "/continue", "/extend":
+		model.input.Reset()
+		return model.continueQuiz(parts[0] == "/extend")
+	case "/questions":
+		model.input.Reset()
+		return model.openDocument("quiz", "Quiz questions", quizText(model.application.state.Quiz))
 	case "/quit", "/exit":
 		return model, tea.Quit
 	case "/topics", "/sources", "/hotspots":

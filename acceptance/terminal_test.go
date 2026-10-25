@@ -134,6 +134,37 @@ func TestInvalidOrFailedTurnDoesNotChangeProgress(t *testing.T) {
 	}
 }
 
+func TestQuizGoalWaitsForContinueAndSurvivesResume(t *testing.T) {
+	repository, stateDirectory := fixture(t), t.TempDir()
+	arguments := []string{repository, "--agent", "codex", "--state-dir", stateDirectory, "--plain"}
+	input := "/quiz\nFirst attempt\n" + strings.Repeat("/continue\nAnother attempt\n", 4) + "/continue\n/questions\n/quit\n"
+	output, err := run(t, input, arguments...)
+	if err != nil || !strings.Contains(output, "QUIZ · 5 / 5 answered") || !strings.Contains(output, "Goal reached") {
+		t.Fatalf("five-question goal failed: %v\n%s", err, output)
+	}
+	state := saved(t, stateDirectory)
+	if state["review"] != true || state["question"] != "" || len(state["turns"].([]any)) != 11 {
+		t.Fatalf("quiz advanced automatically or did not save review: %+v", state)
+	}
+	output, err = run(t, "/questions\n/quit\n", arguments...)
+	if err != nil || strings.Contains(output, "Waiting for") || !strings.Contains(output, "QUIZ · 5 / 5 answered") {
+		t.Fatalf("resume lost the quiz goal or called the agent: %v\n%s", err, output)
+	}
+	output, err = run(t, "Can you clarify that answer?\n/quit\n", arguments...)
+	if err != nil || saved(t, stateDirectory)["review"] != true || saved(t, stateDirectory)["question"] != "" {
+		t.Fatalf("follow-up question advanced past review: %v\n%s", err, output)
+	}
+	output, err = run(t, "/extend\n/questions\n/quit\n", arguments...)
+	if err != nil || !strings.Contains(output, "QUIZ · 5 / 10 answered") {
+		t.Fatalf("quiz extension lost outcomes: %v\n%s", err, output)
+	}
+	state = saved(t, stateDirectory)
+	quiz := state["quiz"].(map[string]any)
+	if quiz["goal"] != float64(10) || len(quiz["questions"].([]any)) != 6 || len(state["turns"].([]any)) != 13 {
+		t.Fatalf("extension should generate only the sixth question: %+v", state)
+	}
+}
+
 func TestChangedSourceStartsFreshAndArchivesProgress(t *testing.T) {
 	repository, stateDirectory := fixture(t), t.TempDir()
 	arguments := []string{repository, "--agent", "codex", "--state-dir", stateDirectory, "--goal", "Trace the entry point"}
