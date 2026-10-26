@@ -52,6 +52,7 @@ type interfaceModel struct {
 	prefetchScheduled bool
 	prefetchID        int
 	prefetchTopic     string
+	edgeBump          string
 	prefetchCancel    context.CancelFunc
 	prefetchFailed    map[string]bool
 	prefetchSpinner   spinner.Model
@@ -347,14 +348,10 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "alt+left", "alt+right":
 			if model.page == "lesson" && len(model.application.state.Turns) > 0 {
-				step := 1
 				if message.String() == "alt+left" {
-					step = -1
+					return model.stepTurns(-1)
 				}
-				model.history = max(0, min(model.history+step, len(model.application.state.Turns)-1))
-				model.rebuildContent()
-				model.viewport.GotoTop()
-				return model, nil
+				return model.stepTurns(1)
 			}
 		case "v":
 			if model.page == "source" && isMarkdown(model.sourcePath) {

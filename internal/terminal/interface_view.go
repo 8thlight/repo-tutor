@@ -227,7 +227,7 @@ func (model interfaceModel) composer() string {
 		label = "NEXT QUESTION\n" + strings.Join(lines, "\n")
 	}
 	if model.history < len(model.application.state.Turns)-1 {
-		label = "Earlier turn · Esc returns to the current question"
+		label = "Earlier step · Esc returns to the current question"
 	} else if reviewing(model.application.state) {
 		label = "[ Continue → ] Enter empty / Ctrl+F\nAsk about this answer, or continue."
 		if quiz := model.application.state.Quiz; quiz != nil && quiz.Completed() >= quiz.Goal {
@@ -304,7 +304,7 @@ func (model interfaceModel) View() tea.View {
 		title = model.topicTitle()
 	}
 	if model.page == "lesson" && len(model.application.state.Turns) > 0 {
-		title += fmt.Sprintf("  ·  turn %d / %d", model.history+1, len(model.application.state.Turns))
+		title = model.historyTitle()
 	}
 	if quiz := model.application.state.Quiz; model.inQuiz() && quiz != nil {
 		title = fmt.Sprintf("Question %d / %d · %s · Ctrl+B index", quiz.Active+1, quiz.Goal, model.topicTitle())
@@ -345,7 +345,7 @@ func (model interfaceModel) View() tea.View {
 		notice += " · / search · ↑↓ move · Enter open"
 	}
 	if model.page == "lesson" && model.history < len(model.application.state.Turns)-1 {
-		notice = "Earlier turn · Esc returns to the current question · Alt+←/→ reads history"
+		notice = "Earlier step · Esc returns to the current question · Alt+←/→ steps through this topic"
 	}
 	keys := "Enter send   Ctrl+N next   Ctrl+G quiz   Ctrl+K topics   Ctrl+S sources   Ctrl+Q quit"
 	if reviewing(model.application.state) {

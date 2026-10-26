@@ -2,7 +2,7 @@
 
 ## Interactive workspace
 
-The default terminal driver uses Bubble Tea, Bubbles, Lip Gloss, and Glamour. It presents a scrollable lesson, a pinned current question and answer box, searchable topics and sources, progress, and reading hotspots. Wide terminals add a course sidebar; narrow terminals use a single column. Lesson history is available with `Alt+Left` and `Alt+Right`. Historical questions stay attached to their turn; a learner must return to the latest turn before submitting an answer.
+The default terminal driver uses Bubble Tea, Bubbles, Lip Gloss, and Glamour. It presents a scrollable lesson, a pinned current question and answer box, searchable topics and sources, progress, and reading hotspots. Wide terminals add a course sidebar; narrow terminals use a single column. The title gives the topic, its place in the course, and the step within the topic, such as `Topic 1 / 303 · Step 2 / 4`. `Alt+Left` and `Alt+Right` step through the topic on screen; at either end a second press moves to the neighboring topic that has steps, and landing on the current topic's last step restores the live question. Resumed copies and re-ask markers do not count as steps. See [0160](../decisions/0160-topic-history.md). Historical questions stay attached to their turn; a learner must return to the latest turn before submitting an answer.
 
 Each model update handles an input or a completed command. An agent command receives a snapshot of the saved state and returns a new state after validation and persistence. The screen never blocks on model output. It permits one active turn while allowing local browsing. The worker owns no screen state. A mutex and cancellation boundary ensure worker shutdown finishes before the session lock is released.
 

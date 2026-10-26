@@ -33,7 +33,7 @@ v               Switch a Markdown file between rendered and source
 Ctrl+P          See lessons and recorded answer outcomes
 Esc             Go back to where you opened this page (its key again also works)
 Ctrl+L          Return to the current lesson
-Alt+Left/Right  Read earlier or later turns
+Alt+Left/Right  Step through this topic; at its ends, press again for the neighbor
 PgUp / PgDown   Scroll the lesson or source
 Tab / Shift+Tab Switch between Home, learning, and browsing
 F1              Show this help
