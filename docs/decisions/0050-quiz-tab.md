@@ -1,6 +1,6 @@
 # 0050. Quiz tab
 
-Status: accepted. The tab set is now five under [0170](0170-tab-groups.md); the activity rule stands.
+Status: accepted. The Quiz tab is folded into Learn under [0180](0180-learn-and-hotspots.md).
 
 ## Context
 

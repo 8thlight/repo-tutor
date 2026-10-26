@@ -1,6 +1,6 @@
 # 0170. Tab groups
 
-Status: accepted
+Status: superseded by [0180](0180-learn-and-hotspots.md)
 
 ## Context
 
