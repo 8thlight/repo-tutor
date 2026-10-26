@@ -3,6 +3,7 @@ package about
 import (
 	_ "embed"
 	"fmt"
+	"regexp"
 	"runtime"
 	"runtime/debug"
 	"strings"
@@ -43,8 +44,8 @@ func FromBuildInfo(info *debug.BuildInfo, found bool, goos, goarch string) Build
 		return build
 	}
 	build.GoVersion = info.GoVersion
-	if info.Main.Version != "" && info.Main.Version != "(devel)" {
-		build.Version = info.Main.Version
+	if tagged := taggedVersion(info.Main.Version); tagged != "" {
+		build.Version = tagged
 	}
 	for _, setting := range info.Settings {
 		switch setting.Key {
@@ -57,6 +58,18 @@ func FromBuildInfo(info *debug.BuildInfo, found bool, goos, goarch string) Build
 		}
 	}
 	return build
+}
+
+var releaseVersion = regexp.MustCompile(`^v\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$`)
+
+var pseudoVersion = regexp.MustCompile(`\d{14}-[0-9a-f]{12}$`)
+
+func taggedVersion(version string) string {
+	version, _, _ = strings.Cut(version, "+")
+	if !releaseVersion.MatchString(version) || pseudoVersion.MatchString(version) {
+		return ""
+	}
+	return version
 }
 
 func (build Build) ShortRevision() string {
