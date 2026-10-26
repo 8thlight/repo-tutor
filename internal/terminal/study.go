@@ -70,6 +70,15 @@ func (application application) completeTurn(ctx context.Context, action, message
 	if err != nil {
 		return session.State{}, fmt.Errorf("%w\nThis turn was not recorded. Retry your message", err)
 	}
+	updated := application.recordReply(action, message, topic, request.Question, reply)
+	updated.SessionID = result.SessionID
+	if err := application.store.Save(updated); err != nil {
+		return session.State{}, fmt.Errorf("save tutor turn: %w", err)
+	}
+	return updated, nil
+}
+
+func (application application) recordReply(action, message, topic, pending string, reply tutor.Reply) session.State {
 	if action == "answer" && reply.Assessment != "none" {
 		reply.Question = ""
 	}
@@ -77,14 +86,13 @@ func (application application) completeTurn(ctx context.Context, action, message
 		reply.Question = ""
 	}
 	updated := application.state
-	updated.SessionID = result.SessionID
 	updated.Topic = topic
 	updated.Question = reply.Question
 	updated.Review = action == "answer" && (reply.Assessment != "none" || reply.Question == "")
 	if action == "question" && reviewing(application.state) && reply.Question == "" {
 		updated.Review = true
 	}
-	updated.Quiz = tutor.RecordQuiz(updated.Quiz, topic, action, request.Question, reply)
+	updated.Quiz = tutor.RecordQuiz(updated.Quiz, topic, action, pending, reply)
 	updated.Progress = tutor.Record(updated.Progress, topic, action, reply)
 	updated.Probe, updated.Progress = tutor.RecordProbe(updated.Probe, application.course, updated.Progress, action, topic, reply)
 	updated.Turns = append(append([]session.Turn(nil), updated.Turns...), session.Turn{Topic: topic, Action: action, Message: message, Reply: reply})
@@ -93,10 +101,7 @@ func (application application) completeTurn(ctx context.Context, action, message
 		updated.Turns = updated.Turns[trimmed:]
 		updated.Quiz = tutor.ShiftQuizTurns(updated.Quiz, trimmed)
 	}
-	if err := application.store.Save(updated); err != nil {
-		return session.State{}, fmt.Errorf("save tutor turn: %w", err)
-	}
-	return updated, nil
+	return updated
 }
 
 func lastLesson(turns []session.Turn, topic string) *tutor.Reply {
