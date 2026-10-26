@@ -29,7 +29,7 @@ Ctrl+P          See lessons and recorded answer outcomes
 Ctrl+L / Esc    Return to the current lesson
 Alt+Left/Right  Read earlier or later turns
 PgUp / PgDown   Scroll the lesson or source
-Tab / Shift+Tab Switch between learning and browsing
+Tab / Shift+Tab Switch between Home, learning, and browsing
 F1              Show this help
 Ctrl+R          Retry a failed turn, keeping your draft
 Esc / Ctrl+C    Stop a running turn
@@ -40,7 +40,7 @@ then Enter opens the selected item. Esc returns to the lesson.
 
 Slash commands from the plain interface also work:
 /topics [filter]  /topic NUMBER|PATH  /next  /quiz  /review
-/continue  /questions  /extend  /refresh
+/continue  /questions  /extend  /refresh  /home
 /sources  /read PATH:LINE  /hotspots  /progress  /glossary
 /map  /help  /quit
 
@@ -236,7 +236,7 @@ func (model interfaceModel) next() (tea.Model, tea.Cmd) {
 }
 
 func (model interfaceModel) cyclePage(backward bool) (tea.Model, tea.Cmd) {
-	pages := []string{"lesson", "topics", "quiz", "sources", "hotspots", "progress"}
+	pages := []string{"home", "lesson", "topics", "quiz", "sources", "hotspots", "progress"}
 	selected := 0
 	for index, page := range pages {
 		if page == model.page {
@@ -248,6 +248,9 @@ func (model interfaceModel) cyclePage(backward bool) (tea.Model, tea.Cmd) {
 		step = -1
 	}
 	page := pages[(selected+step+len(pages))%len(pages)]
+	if page == "home" {
+		return model.openHome()
+	}
 	if page == "lesson" {
 		return model.learn()
 	}
@@ -267,6 +270,9 @@ func (model interfaceModel) slash(text string) (tea.Model, tea.Cmd) {
 	case "/continue", "/extend":
 		model.input.Reset()
 		return model.continueQuiz(parts[0] == "/extend")
+	case "/home":
+		model.input.Reset()
+		return model.openHome()
 	case "/refresh":
 		model.input.Reset()
 		return model.begin(turnIntent{"lesson", openingMessage, tutor.Overview})

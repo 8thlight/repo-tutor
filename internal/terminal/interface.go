@@ -35,27 +35,28 @@ type turnFinished struct {
 }
 
 type interfaceModel struct {
-	application application
-	ctx         context.Context
-	run         turnRunner
-	input       textarea.Model
-	viewport    viewport.Model
-	picker      list.Model
-	spinner     spinner.Model
-	width       int
-	height      int
-	page        string
-	pageTitle   string
-	pageContent string
-	history     int
-	dark        bool
-	noColor     bool
-	busy        bool
-	cancel      context.CancelFunc
-	intent      turnIntent
-	errorText   string
-	notice      string
-	started     time.Time
+	application  application
+	ctx          context.Context
+	run          turnRunner
+	input        textarea.Model
+	viewport     viewport.Model
+	picker       list.Model
+	spinner      spinner.Model
+	width        int
+	height       int
+	page         string
+	homeSelected int
+	pageTitle    string
+	pageContent  string
+	history      int
+	dark         bool
+	noColor      bool
+	busy         bool
+	cancel       context.CancelFunc
+	intent       turnIntent
+	errorText    string
+	notice       string
+	started      time.Time
 }
 
 func runInterface(ctx context.Context, application application, input io.Reader, output io.Writer) error {
@@ -114,6 +115,10 @@ func newInterface(ctx context.Context, application application, runner turnRunne
 		notice: "Completed turns save automatically",
 	}
 	model.viewport.SoftWrap = true
+	if len(application.state.Turns) == 0 {
+		model.page, model.pageTitle = "home", "Welcome"
+		model.input.Blur()
+	}
 	model.resize()
 	return model
 }
@@ -142,7 +147,8 @@ func (model interfaceModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		if overview, found := model.application.cachedOverview(); found {
 			return model.openCached(overview)
 		}
-		return model.begin(turnIntent{"lesson", openingMessage, model.application.state.Topic})
+		started, command := model.begin(turnIntent{"lesson", openingMessage, model.application.state.Topic})
+		return started.(interfaceModel).showingHome(), command
 	case turnFinished:
 		model.busy = false
 		if model.cancel != nil {
@@ -238,9 +244,16 @@ func (model interfaceModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 				model.viewport.GotoTop()
 				return model, nil
 			}
+		case "up", "down", "j", "k", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+			if model.page == "home" {
+				return model.homeKey(message.String())
+			}
 		case "tab", "shift+tab":
 			return model.cyclePage(message.String() == "shift+tab")
 		case "enter":
+			if model.page == "home" {
+				return model.openSelectedHomeEntry()
+			}
 			if model.isPicker() {
 				if model.picker.SettingFilter() {
 					var command tea.Cmd
@@ -352,5 +365,15 @@ func (model interfaceModel) openCached(overview tutor.SavedOverview) (tea.Model,
 	}
 	model.rebuildContent()
 	model.viewport.GotoTop()
-	return model, model.input.Focus()
+	if model.page == "lesson" {
+		return model, model.input.Focus()
+	}
+	return model, nil
+}
+
+func (model interfaceModel) showingHome() interfaceModel {
+	model.page, model.pageTitle = "home", "Welcome"
+	model.input.Blur()
+	model.rebuildContent()
+	return model
 }
