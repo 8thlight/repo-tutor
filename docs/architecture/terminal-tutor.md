@@ -58,6 +58,8 @@ No driver uses an ambiguous latest-session flag or bypasses permissions. A proce
 
 The workspace passes the renderer `TERM=vt100` and the color profile detected from the real environment, so redraws avoid backward tabs and other optional cursor sequences that some IDE terminals mishandle. See [0130](../decisions/0130-plain-cursor-movement.md).
 
+Picking a topic that already has a saved turn resumes it with no request. The workspace makes it the current topic, appends a copy of that topic's latest turn so the composer and the next prompt work from it, and restores its pending question or review stage. Quiz and probe state end, and progress does not change. A topic with no saved turn requests its first lesson. See [0140](../decisions/0140-resume-topic.md).
+
 ## Overview cache
 
 The opening lesson on the repository overview is saved as `overview-<goal key>.md` beside `session.json`, one file per learning goal. A header comment holds the source fingerprint, question, and citations, and the body is the lesson Markdown. A new session loads this file instead of requesting a turn, and records it as a lesson. When the fingerprint differs, the saved overview still opens with a notice, and `/refresh` requests a new one. A damaged or unknown-format file counts as missing. See [0070](../decisions/0070-overview-cache.md).

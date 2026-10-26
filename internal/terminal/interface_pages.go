@@ -168,7 +168,7 @@ func (model interfaceModel) selectItem() (tea.Model, tea.Cmd) {
 		return model, nil
 	}
 	if model.page == "topics" {
-		return model.begin(turnIntent{"lesson", "Teach the next small idea in this topic.", item.value})
+		return model.openTopic(item.value)
 	}
 	if model.page == "quiz" {
 		return model.selectQuizSlot(item.line)
