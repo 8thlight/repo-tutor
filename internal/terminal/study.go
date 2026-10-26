@@ -28,33 +28,41 @@ type application struct {
 
 const openingMessage = "Start with the repository's purpose and a map of how it works."
 
+const firstLessonMessage = "Teach this topic and connect it to its foundations."
+
 const staleOverviewNotice = "Repository changed since this overview was written. /refresh regenerates it."
 
-func (application application) cachedOverview() (tutor.SavedOverview, bool) {
+func (application application) cachedLesson(topic string) (tutor.SavedLesson, bool) {
 	if application.store == nil {
-		return tutor.SavedOverview{}, false
+		return tutor.SavedLesson{}, false
 	}
-	data, found, err := application.store.LoadOverview(tutor.GoalKey(application.state.Goal))
+	data, found, err := application.store.LoadLesson(tutor.LessonKey(application.state.Goal, topic))
 	if err != nil || !found {
-		return tutor.SavedOverview{}, false
+		return tutor.SavedLesson{}, false
 	}
-	return tutor.DecodeOverview(data)
+	lesson, valid := tutor.DecodeLesson(data)
+	return lesson, valid && lesson.Topic == topic
 }
 
-func (application application) openWithOverview(overview tutor.SavedOverview) (session.State, error) {
-	opened := application.recordReply("lesson", openingMessage, tutor.Overview, "", overview.Reply)
+func (application application) openWithLesson(lesson tutor.SavedLesson, message string) (session.State, error) {
+	opened := application.recordReply("lesson", message, lesson.Topic, "", lesson.Reply)
 	if err := application.store.Save(opened); err != nil {
-		return session.State{}, fmt.Errorf("save cached overview: %w", err)
+		return session.State{}, fmt.Errorf("save cached lesson: %w", err)
 	}
 	return opened, nil
 }
 
+func (application application) saveLesson(topic string, reply tutor.Reply) {
+	lesson := tutor.SavedLesson{Fingerprint: application.snapshot.Fingerprint, Goal: tutor.GoalKey(application.state.Goal), Topic: topic, Reply: reply}
+	_ = application.store.SaveLesson(tutor.LessonKey(application.state.Goal, topic), tutor.EncodeLesson(lesson))
+}
+
 func (application *application) start(ctx context.Context) error {
-	overview, found := application.cachedOverview()
+	overview, found := application.cachedLesson(tutor.Overview)
 	if !found {
 		return application.turn(ctx, "lesson", openingMessage, application.state.Topic)
 	}
-	opened, err := application.openWithOverview(overview)
+	opened, err := application.openWithLesson(overview, openingMessage)
 	if err != nil {
 		return err
 	}
@@ -115,9 +123,8 @@ func (application application) completeTurn(ctx context.Context, action, message
 	if err := application.store.Save(updated); err != nil {
 		return session.State{}, fmt.Errorf("save tutor turn: %w", err)
 	}
-	if action == "lesson" && topic == tutor.Overview && message == openingMessage {
-		saved := tutor.SavedOverview{Fingerprint: application.snapshot.Fingerprint, Goal: tutor.GoalKey(application.state.Goal), Reply: reply}
-		_ = application.store.SaveOverview(saved.Goal, tutor.EncodeOverview(saved))
+	if action == "lesson" && (message == openingMessage || message == firstLessonMessage) {
+		application.saveLesson(topic, reply)
 	}
 	return updated, nil
 }

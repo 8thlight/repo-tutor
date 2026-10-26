@@ -235,7 +235,7 @@ func TestSavedOverviewOpensInstantlyAndRefreshRegenerates(t *testing.T) {
 	if output, err := run(t, "/quit\n", arguments...); err != nil || !strings.Contains(output, "Waiting for") {
 		t.Fatalf("the first run should request the overview: %v\n%s", err, output)
 	}
-	files, _ := filepath.Glob(filepath.Join(stateDirectory, "*", "overview-*.md"))
+	files, _ := filepath.Glob(filepath.Join(stateDirectory, "*", "lesson-*.md"))
 	if len(files) != 1 {
 		t.Fatalf("the overview should be saved as one Markdown file: %v", files)
 	}

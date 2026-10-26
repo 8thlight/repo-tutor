@@ -102,12 +102,12 @@ func (store *Store) Load() (State, bool, error) {
 	return state, true, nil
 }
 
-func (store *Store) overviewPath(goalKey string) string {
-	return filepath.Join(store.Directory, "overview-"+goalKey+".md")
+func (store *Store) lessonPath(key string) string {
+	return filepath.Join(store.Directory, "lesson-"+key+".md")
 }
 
-func (store *Store) LoadOverview(goalKey string) ([]byte, bool, error) {
-	data, err := os.ReadFile(store.overviewPath(goalKey))
+func (store *Store) LoadLesson(key string) ([]byte, bool, error) {
+	data, err := os.ReadFile(store.lessonPath(key))
 	if errors.Is(err, os.ErrNotExist) {
 		return nil, false, nil
 	}
@@ -117,8 +117,8 @@ func (store *Store) LoadOverview(goalKey string) ([]byte, bool, error) {
 	return data, true, nil
 }
 
-func (store *Store) SaveOverview(goalKey string, data []byte) error {
-	return store.write(filepath.Base(store.overviewPath(goalKey)), data)
+func (store *Store) SaveLesson(key string, data []byte) error {
+	return store.write(filepath.Base(store.lessonPath(key)), data)
 }
 
 func (store *Store) Archive() error {
