@@ -38,3 +38,26 @@ func TestQuizGoalAndImmutableOutcomes(t *testing.T) {
 		t.Fatal("a new topic must leave the quiz")
 	}
 }
+
+func TestSkippedSlotIsReopenedAndReplacedWithoutDoubleCounting(t *testing.T) {
+	quiz := RecordQuiz(nil, "core", "quiz", "", Reply{Question: "First?"})
+	quiz = RecordQuiz(quiz, "core", "answer", "First?", Reply{Assessment: "none"})
+	quiz = RecordQuiz(quiz, "core", "quiz-next", "", Reply{Question: "Second?"})
+	if quiz.Active != 1 || quiz.Questions[0].Assessment != "skipped" {
+		t.Fatal("the newest question should be active and the first should be skipped")
+	}
+	reopened, ok := Reopen(quiz, 0)
+	if !ok || reopened.Active != 0 || quiz.Active != 1 {
+		t.Fatal("reopening should select the skipped slot without mutating the saved quiz")
+	}
+	answered := RecordQuiz(reopened, "core", "answer", "First?", Reply{Assessment: "correct"})
+	if answered.Questions[0].Assessment != "correct" || answered.Completed() != 1 || len(answered.Questions) != 2 {
+		t.Fatal("answering a reopened slot should replace the skipped result once")
+	}
+	if _, ok := Reopen(answered, 0); ok {
+		t.Fatal("an answered slot must not be reopened")
+	}
+	if _, ok := Reopen(answered, 5); ok {
+		t.Fatal("a later slot has no question to reopen")
+	}
+}
