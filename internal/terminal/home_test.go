@@ -194,3 +194,39 @@ func TestPageKeyOnAnotherPageSwitchesInsteadOfClosing(t *testing.T) {
 		t.Fatal("a different page key should open that page")
 	}
 }
+
+func TestEscAndPageKeysReturnToWhereThePageWasOpened(t *testing.T) {
+	home := newLearnerFixture()
+	about := len(home.homeEntries())
+	opened, _ := press(home, rune('0'+about), 0)
+	if opened.page != "about" || opened.origin != "home" {
+		t.Fatalf("About opened from Home should remember Home: %s %q", opened.page, opened.origin)
+	}
+	if closed, _ := press(opened, tea.KeyEscape, 0); closed.page != "home" {
+		t.Fatalf("Esc should return to Home, got %s", closed.page)
+	}
+	if closed, _ := opened.Update(tea.KeyPressMsg{Code: tea.KeyF2}); closed.(interfaceModel).page != "home" {
+		t.Fatal("F2 again should return to Home")
+	}
+	if lesson, _ := press(opened, 'l', tea.ModCtrl); lesson.page != "lesson" {
+		t.Fatal("Ctrl+L should always go to the lesson")
+	}
+
+	browsed, _ := press(home, '2', 0)
+	switched, _ := press(browsed, 's', tea.ModCtrl)
+	if switched.page != "sources" || switched.origin != "home" {
+		t.Fatalf("switching pages directly should keep the original origin: %s %q", switched.page, switched.origin)
+	}
+	if closed, _ := press(switched, tea.KeyEscape, 0); closed.page != "home" {
+		t.Fatalf("one Esc should return to where the learner started, got %s", closed.page)
+	}
+
+	lesson := interfaceFixture()
+	fromLesson, _ := lesson.Update(tea.KeyPressMsg{Code: tea.KeyF2})
+	if fromLesson.(interfaceModel).origin != "lesson" {
+		t.Fatal("About opened from the lesson should remember the lesson")
+	}
+	if closed, _ := press(fromLesson.(interfaceModel), tea.KeyEscape, 0); closed.page != "lesson" {
+		t.Fatalf("Esc should return to the lesson, got %s", closed.page)
+	}
+}

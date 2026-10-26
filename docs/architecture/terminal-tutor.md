@@ -22,6 +22,8 @@ A session with no turns opens on Home, the first tab. Home makes no model reques
 
 the About entry on Home and `F2` from any page open the About page, and `repo-tutor --version` prints the same build facts as plain text. Both read `about.Read`, which uses the Go build information: module version, commit revision, commit time, and platform. A build without version control data prints `unknown` for those fields. The page adds the session's agent and model. `NOTICES.txt` embeds the license text of every linked third-party module; `just notices` regenerates it, `repo-tutor --version --notices` prints it, and a test fails when a linked module is missing from it. The About page shows an 80-column true color painting above the text when the terminal is at least 113 columns wide, true color is detected, and `NO_COLOR` is unset. The art is embedded as `internal/about/splash.ansi`. See [0100](../decisions/0100-about-page.md).
 
+Esc and a page's own key return to the page that opened it, either Home or the lesson. The workspace keeps one origin and does not save it; opening another secondary page directly keeps the original origin, and `Ctrl+L` always returns to the lesson. See [0110](../decisions/0110-page-origin.md).
+
 ## Repository snapshot
 
 The reader walks the selected directory without following symlinks. It includes Go, Python, JavaScript, TypeScript, Markdown, and the `go.mod`, `pyproject.toml`, and `package.json` manifests. Hidden directories, dependencies, fixtures, and generated output directories are excluded. Git ignore rules apply when Git is available. Generated Go source is excluded from package analysis.

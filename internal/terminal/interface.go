@@ -46,6 +46,7 @@ type interfaceModel struct {
 	height         int
 	page           string
 	homeSelected   int
+	origin         string
 	sourcePath     string
 	sourceLine     int
 	sourceRendered bool
@@ -139,6 +140,30 @@ func (model interfaceModel) Init() tea.Cmd {
 type beginFirstLesson struct{}
 
 func (model interfaceModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
+	next, command := model.update(message)
+	updated := next.(interfaceModel)
+	if model.primaryPage() && !updated.primaryPage() {
+		updated.origin = model.page
+	}
+	return updated, command
+}
+
+func (model interfaceModel) primaryPage() bool {
+	return model.page == "lesson" || model.page == "home"
+}
+
+func (model interfaceModel) back() (tea.Model, tea.Cmd) {
+	if model.origin == "home" {
+		model.page, model.pageTitle = "home", "Welcome"
+		model.input.Blur()
+		model.rebuildContent()
+		model.viewport.GotoTop()
+		return model, nil
+	}
+	return model.learn()
+}
+
+func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 	switch message := message.(type) {
 	case tea.WindowSizeMsg:
 		model.width, model.height = message.Width, message.Height
@@ -209,6 +234,9 @@ func (model interfaceModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return model, tea.Quit
 		case "esc":
+			if !model.primaryPage() {
+				return model.back()
+			}
 			if model.page != "lesson" || model.history != len(model.application.state.Turns)-1 {
 				return model.learn()
 			}
@@ -398,7 +426,7 @@ func (model interfaceModel) showingHome() interfaceModel {
 
 func (model interfaceModel) toggled(page string, open func() (tea.Model, tea.Cmd)) (tea.Model, tea.Cmd) {
 	if model.page == page {
-		return model.learn()
+		return model.back()
 	}
 	return open()
 }

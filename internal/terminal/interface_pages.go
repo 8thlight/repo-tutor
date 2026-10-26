@@ -31,7 +31,8 @@ Ctrl+S          Browse cited sources and open the code
 Ctrl+O          Explore churn and branching hotspots
 v               Switch a Markdown file between rendered and source
 Ctrl+P          See lessons and recorded answer outcomes
-Ctrl+L / Esc    Return to the current lesson (a page key again also closes it)
+Esc             Go back to where you opened this page (its key again also works)
+Ctrl+L          Return to the current lesson
 Alt+Left/Right  Read earlier or later turns
 PgUp / PgDown   Scroll the lesson or source
 Tab / Shift+Tab Switch between Home, learning, and browsing
@@ -42,7 +43,7 @@ Esc / Ctrl+C    Stop a running turn
 Ctrl+Q          Save and quit (Ctrl+C also quits when idle)
 
 In lists: arrows move, / filters, Enter confirms a filter,
-then Enter opens the selected item. Esc returns to the lesson.
+then Enter opens the selected item. Esc goes back.
 
 Slash commands from the plain interface also work:
 /topics [filter]  /topic NUMBER|PATH  /next  /quiz  /review
