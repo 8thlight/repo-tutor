@@ -352,3 +352,12 @@ func TestSourceViewKeepsTheWholeFileReachableAndScrollsToTheCitation(t *testing.
 		t.Fatal("the first line must be reachable by scrolling up")
 	}
 }
+
+func TestQuizTitleShowsPositionAndTopicNotAnsweredCount(t *testing.T) {
+	model := interfaceFixture()
+	model.application.state.Quiz = &tutor.Quiz{Topic: tutor.Overview, Goal: 5, Active: 1, Questions: []tutor.QuizQuestion{{Text: "One?", Assessment: "skipped"}, {Text: "Two?"}}}
+	content := ansi.Strip(model.View().Content)
+	if !strings.Contains(content, "Question 2 / 5 · Repository overview · Ctrl+B index") || strings.Contains(content, "answered ·") {
+		t.Fatalf("the title should give the question's position and topic:\n%s", content)
+	}
+}
