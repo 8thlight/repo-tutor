@@ -8,6 +8,7 @@ type QuizQuestion struct {
 type Quiz struct {
 	Topic     string         `json:"topic"`
 	Goal      int            `json:"goal"`
+	Active    int            `json:"active"`
 	Questions []QuizQuestion `json:"questions"`
 }
 
@@ -38,13 +39,15 @@ func RecordQuiz(previous *Quiz, topic, action, pending string, reply Reply) *Qui
 	}
 	if action == "quiz-next" || action == "quiz-extend" {
 		quiz.Questions = append(quiz.Questions, QuizQuestion{Text: reply.Question})
+		quiz.Active = len(quiz.Questions) - 1
 	}
-	if action == "answer" && len(quiz.Questions) > 0 {
-		index := len(quiz.Questions) - 1
-		if quiz.Questions[index].Text == pending && quiz.Questions[index].Assessment == "" && reply.Assessment == "none" && reply.Question != "" {
+	if action == "answer" && quiz.Active < len(quiz.Questions) {
+		index := quiz.Active
+		open := quiz.Questions[index].Assessment == "" || quiz.Questions[index].Assessment == "skipped"
+		if quiz.Questions[index].Text == pending && open && reply.Assessment == "none" && reply.Question != "" {
 			quiz.Questions[index].Text = reply.Question
 		}
-		if quiz.Questions[index].Text == pending && quiz.Questions[index].Assessment == "" && (reply.Assessment != "none" || reply.Question == "") {
+		if quiz.Questions[index].Text == pending && open && (reply.Assessment != "none" || reply.Question == "") {
 			assessment := reply.Assessment
 			if assessment == "none" {
 				assessment = "skipped"
@@ -53,4 +56,17 @@ func RecordQuiz(previous *Quiz, topic, action, pending string, reply Reply) *Qui
 		}
 	}
 	return &quiz
+}
+
+func Reopen(quiz *Quiz, slot int) (*Quiz, bool) {
+	if quiz == nil || slot < 0 || slot >= len(quiz.Questions) {
+		return nil, false
+	}
+	if assessment := quiz.Questions[slot].Assessment; assessment != "" && assessment != "skipped" {
+		return nil, false
+	}
+	reopened := *quiz
+	reopened.Questions = append([]QuizQuestion(nil), quiz.Questions...)
+	reopened.Active = slot
+	return &reopened, true
 }
