@@ -1,6 +1,6 @@
 # 0100. About page and version output
 
-Status: proposed
+Status: accepted
 
 ## Context
 
@@ -17,11 +17,12 @@ The facts are:
 - The Go version, operating system, and architecture.
 - In the workspace only, the agent and model of the current session.
 - The copyright notice, as one constant in the code.
+- A link to the company website, <https://8thlight.com>.
 - Third-party credits and the source of the splash image.
 
 Read build facts with `runtime/debug.ReadBuildInfo`. When the build has no version control data, print `unknown` for those fields and do not fail. The Nix build must be checked for this before the page ships.
 
-The copyright line is "Copyright © 2026 Eighth Light LLC." It follows the company's published wording. A person with authority over the company's legal text must confirm it, including the year and whether the repository needs a license file or an "all rights reserved" statement. Until then this record stays proposed and the code uses the line above.
+The copyright line is "Copyright © 2026 Eighth Light LLC." It follows the wording on the company website, which is the source of truth. The year is a constant that a person updates. The page prints the website address as plain text, because a terminal cannot be assumed to open links. Terminals that support hyperlinks also get it as a clickable link.
 
 Ship a generated notices file inside the binary that lists each third-party module and its license text. The About page shows a short credit line and `--version --notices` prints the full text. The dependencies in `go.mod` are the source, so a check in `just check` fails when a module is missing from the file.
 
@@ -29,4 +30,4 @@ The page may show the Jan Lievens painting, "Prince Charles Louis of the Palatin
 
 ## Consequences
 
-A bug report can carry the exact build. The binary gains a notices file and a small amount of embedded art, so its size grows by that much. The copyright constant needs a yearly check by a person. The legal line is not decided by this record. If the company's policy differs, the constant and this record change together.
+A bug report can carry the exact build. The binary gains a notices file and a small amount of embedded art, so its size grows by that much. The copyright constant needs a yearly check by a person. If the company changes its published notice, the constant and this record change together.
