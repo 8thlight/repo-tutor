@@ -295,7 +295,7 @@ func TestMarkdownAlwaysOpensRenderedAndTogglesToSourceAtTheCitedLine(t *testing.
 	location := repository.Location{Path: "README.md", Line: 2}
 	cited, _ := model.openSource(location)
 	model = cited.(interfaceModel)
-	if model.pageTitle != "README.md · rendered" || strings.Contains(model.pageContent, "    2  ") || !strings.Contains(model.notice, "Line 2 · v shows the source") {
+	if model.pageTitle != "README.md · rendered" || strings.Contains(model.pageContent, "    2  ") || !strings.Contains(model.notice, "Line 2 · ") || !strings.Contains(model.notice, "v shows the source at that line") {
 		t.Fatalf("a citation should open the rendered page and name its line: %q %q", model.pageTitle, model.notice)
 	}
 	model, _ = press(model, 'v', 0)

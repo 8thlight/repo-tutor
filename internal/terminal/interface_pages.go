@@ -246,11 +246,16 @@ func (model interfaceModel) rememberMarkdownView(path string, rendered bool) int
 }
 
 func (model interfaceModel) showRendered(file repository.File, line int, cited bool) (tea.Model, tea.Cmd) {
-	model, command := model.document("source", file.Path+" · rendered", model.markdown(file.Content))
+	rendered := model.markdown(file.Content)
+	model, command := model.document("source", file.Path+" · rendered", rendered)
 	model.sourcePath, model.sourceLine, model.sourceRendered = file.Path, line, true
 	model.notice = "Rendered Markdown · v shows the source · Esc goes back"
 	if cited {
-		model.notice = fmt.Sprintf("Line %d · v shows the source at that line · Esc goes back", line)
+		model.notice = fmt.Sprintf("Line %d · could not place it in this view · v shows the source at that line · Esc goes back", line)
+		if row, found := renderedRow(strings.Split(file.Content, "\n"), line, rendered); found {
+			model.viewport.SetYOffset(max(0, row-sourceContextRows/4))
+			model.notice = fmt.Sprintf("Line %d · scrolled to its text · v shows the source at that line · Esc goes back", line)
+		}
 	}
 	return model, command
 }
