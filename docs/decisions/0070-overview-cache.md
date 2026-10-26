@@ -1,10 +1,10 @@
 # 0070. Overview cache
 
-Status: proposed
+Status: accepted
 
 ## Context
 
-The first screen is the repository overview, and a model request produces it. That request takes long enough that the learner waits on a loading view before seeing anything. The saved session already keeps completed turns, so a resumed session shows its last turn at once. Two cases still pay for a new request. A new session has no overview yet. Any change to a source file changes the source fingerprint, and the tutor then archives the session and starts a fresh course, which discards the overview along with the learner's progress.
+The Learn page opens on the repository overview, and a model request produces it. That request takes long enough that the learner waits on a loading view before seeing anything. The saved session already keeps completed turns, so a resumed session shows its last turn at once. Two cases still pay for a new request. A new session has no overview yet. Any change to a source file changes the source fingerprint, and the tutor then archives the session and starts a fresh course, which discards the overview along with the learner's progress.
 
 ## Decision
 
