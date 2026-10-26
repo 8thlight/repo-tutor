@@ -35,28 +35,32 @@ type turnFinished struct {
 }
 
 type interfaceModel struct {
-	application  application
-	ctx          context.Context
-	run          turnRunner
-	input        textarea.Model
-	viewport     viewport.Model
-	picker       list.Model
-	spinner      spinner.Model
-	width        int
-	height       int
-	page         string
-	homeSelected int
-	pageTitle    string
-	pageContent  string
-	history      int
-	dark         bool
-	noColor      bool
-	busy         bool
-	cancel       context.CancelFunc
-	intent       turnIntent
-	errorText    string
-	notice       string
-	started      time.Time
+	application    application
+	ctx            context.Context
+	run            turnRunner
+	input          textarea.Model
+	viewport       viewport.Model
+	picker         list.Model
+	spinner        spinner.Model
+	width          int
+	height         int
+	page           string
+	homeSelected   int
+	sourcePath     string
+	sourceLine     int
+	sourceRendered bool
+	markdownViews  map[string]bool
+	pageTitle      string
+	pageContent    string
+	history        int
+	dark           bool
+	noColor        bool
+	busy           bool
+	cancel         context.CancelFunc
+	intent         turnIntent
+	errorText      string
+	notice         string
+	started        time.Time
 }
 
 func runInterface(ctx context.Context, application application, input io.Reader, output io.Writer) error {
@@ -243,6 +247,10 @@ func (model interfaceModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 				model.rebuildContent()
 				model.viewport.GotoTop()
 				return model, nil
+			}
+		case "v":
+			if model.page == "source" && isMarkdown(model.sourcePath) {
+				return model.toggleMarkdownView()
 			}
 		case "up", "down", "j", "k", "1", "2", "3", "4", "5", "6", "7", "8", "9":
 			if model.page == "home" {

@@ -53,6 +53,9 @@ func (model *interfaceModel) resize() {
 	model.spinner.Style = lipgloss.NewStyle().Foreground(palette.accent)
 	model.viewport.SetWidth(model.bodyWidth())
 	model.viewport.SetHeight(max(1, model.bodyHeight()-2))
+	if file, found := model.application.snapshot.File(model.sourcePath); found && model.page == "source" && model.sourceRendered {
+		model.pageContent = model.markdown(file.Content)
+	}
 	if model.isPicker() {
 		model.configurePicker(model.picker.FilterValue())
 	}

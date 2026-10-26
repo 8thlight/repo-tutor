@@ -9,6 +9,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/x/ansi"
 
+	"repo-tutor/internal/repository"
 	"repo-tutor/internal/session"
 	"repo-tutor/internal/tutor"
 )
@@ -285,5 +286,45 @@ func TestFirstLessonLoadsSavedOverviewWithoutAgentAndMarksStaleness(t *testing.T
 		if model.busy || len(model.application.state.Turns) != 1 || model.application.state.Progress[tutor.Overview].Lessons != 1 || stale != (fingerprint == "older") {
 			t.Fatalf("saved overview (%s) should open with no request: busy=%v turns=%d notice=%q", fingerprint, model.busy, len(model.application.state.Turns), model.notice)
 		}
+	}
+}
+
+func TestMarkdownOpensRenderedFromListAndSourceFromCitationWithToggle(t *testing.T) {
+	model := interfaceFixture()
+	location := repository.Location{Path: "README.md", Line: 2}
+	cited, _ := model.openSource(location)
+	model = cited.(interfaceModel)
+	if model.pageTitle != "README.md:2" || !strings.Contains(ansi.Strip(model.pageContent), "›    2  A repository for developers.") {
+		t.Fatalf("a citation should open the source view at its line: %q\n%s", model.pageTitle, model.pageContent)
+	}
+	model, _ = press(model, 'v', 0)
+	if model.pageTitle != "README.md · rendered" || strings.Contains(model.pageContent, "    2  ") || !strings.Contains(ansi.Strip(model.pageContent), "A repository for developers.") {
+		t.Fatalf("v should show the rendered page: %q\n%s", model.pageTitle, model.pageContent)
+	}
+	model, _ = press(model, 'v', 0)
+	if model.pageTitle != "README.md:2" {
+		t.Fatalf("v should return to the source at the cited line, got %q", model.pageTitle)
+	}
+	listed, _ := model.openFile(repository.Location{Path: "README.md", Line: 1}, false)
+	if listed.(interfaceModel).pageTitle != "README.md:1" {
+		t.Fatal("a file whose view was chosen should keep that view")
+	}
+	fresh, _ := interfaceFixture().openFile(repository.Location{Path: "README.md", Line: 1}, false)
+	if fresh.(interfaceModel).pageTitle != "README.md · rendered" {
+		t.Fatal("a Markdown file chosen from a list should open rendered")
+	}
+	code, _ := model.openFile(repository.Location{Path: "main.go", Line: 1}, false)
+	toggled, _ := press(code.(interfaceModel), 'v', 0)
+	if toggled.pageTitle != "main.go:1" {
+		t.Fatal("code files have no rendered view")
+	}
+}
+
+func TestVKeyStillTypesInTheLessonComposer(t *testing.T) {
+	model := interfaceFixture()
+	typed, _ := model.Update(tea.KeyPressMsg{Code: 'v', Text: "v"})
+	model = typed.(interfaceModel)
+	if model.page != "lesson" || model.input.Value() != "v" {
+		t.Fatalf("v must reach the answer box outside Markdown sources, got %q on %s", model.input.Value(), model.page)
 	}
 }

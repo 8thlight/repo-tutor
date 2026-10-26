@@ -3,6 +3,7 @@ package terminal
 import (
 	"bytes"
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"charm.land/bubbles/v2/list"
@@ -25,6 +26,7 @@ Ctrl+B          Open the quiz question index and goal
 Ctrl+K          Browse and search topics
 Ctrl+S          Browse cited sources and open the code
 Ctrl+O          Explore churn and branching hotspots
+v               Switch a Markdown file between rendered and source
 Ctrl+P          See lessons and recorded answer outcomes
 Ctrl+L / Esc    Return to the current lesson
 Alt+Left/Right  Read earlier or later turns
@@ -166,15 +168,27 @@ func (model interfaceModel) selectItem() (tea.Model, tea.Cmd) {
 	if model.page == "quiz" {
 		return model.selectQuizSlot(item.line)
 	}
-	return model.openSource(repository.Location{Path: item.value, Line: item.line})
+	byCitation := model.page != "sources" || !strings.HasPrefix(item.description, "Available")
+	return model.openFile(repository.Location{Path: item.value, Line: item.line}, byCitation)
 }
 
 func (model interfaceModel) openSource(location repository.Location) (tea.Model, tea.Cmd) {
+	return model.openFile(location, true)
+}
+
+func (model interfaceModel) openFile(location repository.Location, byCitation bool) (tea.Model, tea.Cmd) {
 	file, found := model.application.snapshot.File(location.Path)
 	if !found {
 		model.notice = "This file is not in the source snapshot."
 		return model, nil
 	}
+	if isMarkdown(file.Path) && model.rendersMarkdown(file.Path, byCitation) {
+		return model.showRendered(file, location.Line)
+	}
+	return model.showSource(file, location)
+}
+
+func (model interfaceModel) showSource(file repository.File, location repository.Location) (tea.Model, tea.Cmd) {
 	lines := strings.Split(strings.TrimSuffix(file.Content, "\n"), "\n")
 	if location.Line < 1 || location.Line > len(lines) {
 		model.notice = fmt.Sprintf("Choose a line between 1 and %d.", len(lines))
@@ -192,8 +206,54 @@ func (model interfaceModel) openSource(location repository.Location) (tea.Model,
 		content.WriteString(prefix + highlighted[index] + "\n")
 	}
 	model, command := model.document("source", fmt.Sprintf("%s:%d", location.Path, location.Line), content.String())
+	model.sourcePath, model.sourceLine, model.sourceRendered = file.Path, location.Line, false
 	model.notice = "Source snapshot · /read PATH:LINE opens another location · Esc returns to your lesson"
+	if isMarkdown(file.Path) {
+		model.notice = "Source snapshot · v shows the rendered page · Esc returns to your lesson"
+	}
 	return model, command
+}
+
+func isMarkdown(path string) bool {
+	extension := strings.ToLower(filepath.Ext(path))
+	return extension == ".md" || extension == ".markdown"
+}
+
+func (model interfaceModel) rendersMarkdown(path string, byCitation bool) bool {
+	if rendered, chosen := model.markdownViews[path]; chosen {
+		return rendered
+	}
+	return !byCitation
+}
+
+func (model interfaceModel) rememberMarkdownView(path string, rendered bool) interfaceModel {
+	views := make(map[string]bool, len(model.markdownViews)+1)
+	for name, chosen := range model.markdownViews {
+		views[name] = chosen
+	}
+	views[path] = rendered
+	model.markdownViews = views
+	return model
+}
+
+func (model interfaceModel) showRendered(file repository.File, line int) (tea.Model, tea.Cmd) {
+	model, command := model.document("source", file.Path+" · rendered", model.markdown(file.Content))
+	model.sourcePath, model.sourceLine, model.sourceRendered = file.Path, line, true
+	model.notice = "Rendered Markdown · v shows the source · Esc returns to your lesson"
+	return model, command
+}
+
+func (model interfaceModel) toggleMarkdownView() (tea.Model, tea.Cmd) {
+	file, found := model.application.snapshot.File(model.sourcePath)
+	if !found {
+		return model, nil
+	}
+	if model.sourceRendered {
+		model = model.rememberMarkdownView(file.Path, false)
+		return model.showSource(file, repository.Location{Path: file.Path, Line: max(1, model.sourceLine)})
+	}
+	model = model.rememberMarkdownView(file.Path, true)
+	return model.showRendered(file, model.sourceLine)
 }
 
 func (model interfaceModel) openDocument(page, title, content string) (tea.Model, tea.Cmd) {
