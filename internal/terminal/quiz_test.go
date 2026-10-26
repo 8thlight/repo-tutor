@@ -273,8 +273,8 @@ func TestFirstLessonLoadsSavedOverviewWithoutAgentAndMarksStaleness(t *testing.T
 		}
 		defer store.Close()
 		reply := model.application.state.Turns[0].Reply
-		saved := tutor.SavedOverview{Fingerprint: fingerprint, Goal: tutor.GoalKey(model.application.state.Goal), Reply: reply}
-		if err := store.SaveOverview(saved.Goal, tutor.EncodeOverview(saved)); err != nil {
+		saved := tutor.SavedLesson{Fingerprint: fingerprint, Goal: tutor.GoalKey(model.application.state.Goal), Topic: tutor.Overview, Reply: reply}
+		if err := store.SaveLesson(tutor.LessonKey(model.application.state.Goal, tutor.Overview), tutor.EncodeLesson(saved)); err != nil {
 			t.Fatal(err)
 		}
 		model.application.store = store

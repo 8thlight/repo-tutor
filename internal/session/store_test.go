@@ -53,31 +53,31 @@ func TestPersistenceLockAndArchive(t *testing.T) {
 	}
 }
 
-func TestOverviewIsKeptPerGoalAndReplacedInPlace(t *testing.T) {
+func TestLessonIsKeptPerKeyAndReplacedInPlace(t *testing.T) {
 	store, err := session.Open(t.TempDir(), "/repository")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer store.Close()
-	if _, found, err := store.LoadOverview("goal-a"); err != nil || found {
+	if _, found, err := store.LoadLesson("goal-a"); err != nil || found {
 		t.Fatal("a missing overview should be a miss, not an error")
 	}
-	if err := store.SaveOverview("goal-a", []byte("first\n")); err != nil {
+	if err := store.SaveLesson("goal-a", []byte("first\n")); err != nil {
 		t.Fatal(err)
 	}
-	if err := store.SaveOverview("goal-b", []byte("other goal\n")); err != nil {
+	if err := store.SaveLesson("goal-b", []byte("other goal\n")); err != nil {
 		t.Fatal(err)
 	}
-	if err := store.SaveOverview("goal-a", []byte("second\n")); err != nil {
+	if err := store.SaveLesson("goal-a", []byte("second\n")); err != nil {
 		t.Fatal(err)
 	}
-	data, found, err := store.LoadOverview("goal-a")
+	data, found, err := store.LoadLesson("goal-a")
 	if err != nil || !found || string(data) != "second\n" {
-		t.Fatalf("the newest overview for a goal should replace the older one: %q %v", data, err)
+		t.Fatalf("the newest overview for a key should replace the older one: %q %v", data, err)
 	}
-	files, _ := filepath.Glob(filepath.Join(store.Directory, "overview-*.md"))
+	files, _ := filepath.Glob(filepath.Join(store.Directory, "lesson-*.md"))
 	if len(files) != 2 {
-		t.Fatalf("expected one file per goal, found %v", files)
+		t.Fatalf("expected one file per key, found %v", files)
 	}
 	information, err := os.Stat(files[0])
 	if err != nil || information.Mode().Perm() != 0600 {

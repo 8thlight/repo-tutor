@@ -192,7 +192,7 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 		model.resize()
 		return model, nil
 	case beginFirstLesson:
-		if overview, found := model.application.cachedOverview(); found {
+		if overview, found := model.application.cachedLesson(tutor.Overview); found {
 			return model.openCached(overview)
 		}
 		started, command := model.begin(turnIntent{"lesson", openingMessage, model.application.state.Topic})
@@ -419,8 +419,8 @@ func (model interfaceModel) learn() (tea.Model, tea.Cmd) {
 	return model, nil
 }
 
-func (model interfaceModel) openCached(overview tutor.SavedOverview) (tea.Model, tea.Cmd) {
-	opened, err := model.application.openWithOverview(overview)
+func (model interfaceModel) openCached(overview tutor.SavedLesson) (tea.Model, tea.Cmd) {
+	opened, err := model.application.openWithLesson(overview, openingMessage)
 	if err != nil {
 		model.errorText = tutor.Plain(err.Error())
 		return model, nil
