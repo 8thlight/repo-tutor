@@ -22,7 +22,7 @@ The facts are:
 
 Read build facts with `runtime/debug.ReadBuildInfo`. When the build has no version control data, print `unknown` for those fields and do not fail. The Nix build must be checked for this before the page ships.
 
-The copyright line is "Copyright © 2026 Eighth Light LLC." It follows the wording on the company website, which is the source of truth. The year is a constant that a person updates. The page prints the website address as plain text, because a terminal cannot be assumed to open links. Terminals that support hyperlinks also get it as a clickable link.
+The copyright line is "Copyright © 2026 Eighth Light LLC." It follows the wording on the company website, which is the source of truth. The repository's `LICENSE` file says all rights reserved. It stays that way until the company reviews the project for open source release. The year is a constant that a person updates. The page prints the website address as plain text, because a terminal cannot be assumed to open links. Terminals that support hyperlinks also get it as a clickable link.
 
 Ship a generated notices file inside the binary that lists each third-party module and its license text. The About page shows a short credit line and `--version --notices` prints the full text. The dependencies in `go.mod` are the source, so a check in `just check` fails when a module is missing from the file.
 
