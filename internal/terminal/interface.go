@@ -51,6 +51,7 @@ type interfaceModel struct {
 	sourcePath     string
 	sourceLine     int
 	sourceRendered bool
+	sourceCited    bool
 	markdownViews  map[string]bool
 	pageTitle      string
 	pageContent    string
