@@ -28,7 +28,7 @@ Ctrl+F          Continue after reviewing an answer
 Ctrl+B          Open the quiz question index and goal
 Ctrl+K          Browse and search topics
 Ctrl+S          Browse cited sources and open the code
-Ctrl+O          Explore churn and branching hotspots
+Ctrl+O          Open the Hotspots tab: churn and branching
 v               Switch a Markdown file between rendered and source
 Ctrl+P          See lessons and recorded answer outcomes
 Esc             Go back to where you opened this page (its key again also works)
@@ -121,7 +121,7 @@ func (model *interfaceModel) configurePicker(filter string) {
 			items = append(items, slot)
 		}
 	case "sources":
-		model.pageTitle = "Sources · Follow the evidence · Ctrl+O hotspots"
+		model.pageTitle = "Sources · Follow the evidence"
 		seen := map[string]bool{}
 		if len(model.application.state.Turns) > 0 {
 			turn := model.application.state.Turns[max(0, model.history)]
@@ -140,7 +140,7 @@ func (model *interfaceModel) configurePicker(filter string) {
 			}
 		}
 	case "hotspots":
-		model.pageTitle = "Hotspots · Where to pay attention · Ctrl+S sources"
+		model.pageTitle = "Hotspots · Where to pay attention"
 		for _, hotspot := range model.application.snapshot.Hotspots {
 			description := fmt.Sprintf("%d recent commits · %d branch points · %d lines", hotspot.Commits, hotspot.Branches, hotspot.Lines)
 			if !model.application.snapshot.History {
@@ -199,6 +199,13 @@ func (model interfaceModel) openSource(location repository.Location) (tea.Model,
 }
 
 func (model interfaceModel) openFile(location repository.Location) (tea.Model, tea.Cmd) {
+	switch model.page {
+	case "sources", "hotspots":
+		model.sourceList = model.page
+	case "source":
+	default:
+		model.sourceList = ""
+	}
 	file, found := model.application.snapshot.File(location.Path)
 	if !found {
 		model.notice = "This file is not in the source snapshot."
@@ -375,7 +382,7 @@ func (model interfaceModel) next() (tea.Model, tea.Cmd) {
 }
 
 func (model interfaceModel) cyclePage(backward bool) (tea.Model, tea.Cmd) {
-	tabs := []string{"home", "learn", "quiz", "explore", "progress"}
+	tabs := []string{"home", "learn", "hotspots", "progress"}
 	selected := 0
 	for index, tab := range tabs {
 		if tab == model.activeTab() {
@@ -391,10 +398,8 @@ func (model interfaceModel) cyclePage(backward bool) (tea.Model, tea.Cmd) {
 		return model.openHome()
 	case "learn":
 		return model.learn()
-	case "quiz":
-		return model.openPicker("quiz", "")
-	case "explore":
-		return model.openPicker("sources", "")
+	case "hotspots":
+		return model.openPicker("hotspots", "")
 	}
 	return model.openDocument("progress", "Progress", model.progressText())
 }

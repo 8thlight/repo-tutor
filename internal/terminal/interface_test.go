@@ -89,6 +89,7 @@ func TestNavigationRetainsDraftAndDoesNotCallAgent(t *testing.T) {
 		t.Fatalf("citation did not open actual source: %s", model.pageContent)
 	}
 	model, _ = press(model, tea.KeyEscape, 0)
+	model, _ = press(model, tea.KeyEscape, 0)
 	if model.page != "lesson" || model.input.Value() != "My unfinished answer" || calls != 0 {
 		t.Fatal("browsing lost the draft or called an agent")
 	}

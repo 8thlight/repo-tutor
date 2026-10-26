@@ -178,26 +178,17 @@ func TestSourceHighlightingPreservesCodeAndLineNumbers(t *testing.T) {
 	}
 }
 
-func TestQuizTabStaysActiveAcrossStartAndIndex(t *testing.T) {
+func TestQuizKeepsTheLearnTab(t *testing.T) {
 	model := interfaceFixture()
 	started, _ := model.begin(turnIntent{"quiz", "Start a quiz", tutor.Overview})
 	model = started.(interfaceModel)
 	defer model.cancel()
-	if model.activeTab() != "quiz" {
-		t.Fatalf("starting a quiz should select the Quiz tab, got %s", model.activeTab())
+	if model.activeTab() != "learn" {
+		t.Fatalf("starting a quiz should keep the Learn tab, got %s", model.activeTab())
 	}
-	idle := interfaceFixture()
-	idle.application.state.Quiz = &tutor.Quiz{Topic: tutor.Overview, Goal: 5, Questions: []tutor.QuizQuestion{{Text: "First?"}}}
-	if idle.activeTab() != "quiz" {
-		t.Fatal("an active quiz should select the Quiz tab")
-	}
-	index, _ := idle.openDocument("quiz", "Quiz questions", quizText(idle.application.state.Quiz))
-	returned, _ := index.(interfaceModel).learn()
-	if returned.(interfaceModel).activeTab() != "quiz" {
-		t.Fatal("leaving the index should return to the Quiz tab")
-	}
-	if interfaceFixture().activeTab() != "learn" {
-		t.Fatal("a lesson should keep the Learn tab")
+	opened, _ := model.openPicker("quiz", "")
+	if opened.(interfaceModel).activeTab() != "learn" {
+		t.Fatal("the quiz index should keep the Learn tab")
 	}
 }
 
@@ -208,7 +199,7 @@ func TestSelectingSkippedSlotReturnsToItsQuestion(t *testing.T) {
 	model.application.state.Question, model.application.state.Review = "", true
 	opened, _ := model.openPicker("quiz", "")
 	model = opened.(interfaceModel)
-	if !model.isPicker() || model.activeTab() != "quiz" || len(model.picker.Items()) != 5 {
+	if !model.isPicker() || model.activeTab() != "learn" || len(model.picker.Items()) != 5 {
 		t.Fatal("the index should list every goal slot as a selectable item")
 	}
 	selected, command := model.selectQuizSlot(0)
