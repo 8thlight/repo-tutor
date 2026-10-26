@@ -1,6 +1,6 @@
 # 0080. Landing page
 
-Status: proposed
+Status: accepted
 
 ## Context
 
