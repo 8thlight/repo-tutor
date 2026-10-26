@@ -85,6 +85,7 @@ func (application application) completeTurn(ctx context.Context, action, message
 	}
 	updated.Quiz = tutor.RecordQuiz(updated.Quiz, topic, action, request.Question, reply)
 	updated.Progress = tutor.Record(updated.Progress, topic, action, reply)
+	updated.Probe, updated.Progress = tutor.RecordProbe(updated.Probe, application.course, updated.Progress, action, topic, reply)
 	updated.Turns = append(append([]session.Turn(nil), updated.Turns...), session.Turn{Topic: topic, Action: action, Message: message, Reply: reply})
 	if len(updated.Turns) > 200 {
 		updated.Turns = updated.Turns[len(updated.Turns)-200:]
@@ -196,7 +197,13 @@ func (application *application) command(ctx context.Context, text string) (bool,
 	}
 	switch parts[0] {
 	case "/continue", "/extend":
-		intent, err := continueIntent(application.state, parts[0] == "/extend")
+		intent, err := continueIntent(application.state, application.course, parts[0] == "/extend")
+		if err != nil {
+			return false, err
+		}
+		return false, application.turn(ctx, intent.action, intent.message, intent.topic)
+	case "/probe":
+		intent, err := probeIntent(application.state, application.course)
 		if err != nil {
 			return false, err
 		}
@@ -211,6 +218,7 @@ func (application *application) command(ctx context.Context, text string) (bool,
 /topics [FILTER]     List topics in dependency order, optionally matching a path
 /topic NUMBER|PATH   Learn a chosen topic (number, directory, or import path)
 /next                Learn the next topic
+/probe               Ask three short questions and skip topics you already know
 /quiz                Start a five-question quiz on this topic
 /continue            Continue after reviewing an answer
 /questions           Show the quiz question index and goal
@@ -266,15 +274,12 @@ Each lesson is saved before it is displayed. Ctrl-C exits; completed turns remai
 		}
 		return false, application.turn(ctx, "lesson", "Teach the next small idea in this topic.", topic.ID)
 	case "/next":
-		for index, topic := range application.course {
-			if topic.ID == application.state.Topic {
-				if index+1 == len(application.course) {
-					fmt.Fprintln(application.output, "You reached the last topic. Use /review, /quiz, or /topic to keep practicing.")
-					return false, nil
-				}
-				return false, application.turn(ctx, "lesson", "Teach this topic and connect it to its foundations.", application.course[index+1].ID)
-			}
+		topic, found := tutor.NextUnheld(application.course, application.state.Progress, application.state.Topic)
+		if !found {
+			fmt.Fprintln(application.output, "You reached the last topic. Use /review, /quiz, or /topic to keep practicing.")
+			return false, nil
 		}
+		return false, application.turn(ctx, "lesson", "Teach this topic and connect it to its foundations.", topic.ID)
 	case "/review":
 		var selected tutor.Topic
 		highest := 0
@@ -330,7 +335,11 @@ func (application *application) topics(progressOnly bool, filter string) {
 		if topic.ID == application.state.Topic {
 			marker = ">"
 		}
-		fmt.Fprintf(application.output, "%s %d. %s: %d lessons; answers: %d correct, %d partial, %d incorrect\n", marker, index+1, tutor.Plain(topic.Title), progress.Lessons, progress.Correct, progress.Partial, progress.Missed)
+		known := ""
+		if progress.Held {
+			known = " (known)"
+		}
+		fmt.Fprintf(application.output, "%s %d. %s%s: %d lessons; answers: %d correct, %d partial, %d incorrect\n", marker, index+1, tutor.Plain(topic.Title), known, progress.Lessons, progress.Correct, progress.Partial, progress.Missed)
 	}
 	if progressOnly {
 		fmt.Fprintln(application.output, "Quiz outcomes are the agent's assessments, not a certification of mastery.")

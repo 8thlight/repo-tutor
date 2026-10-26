@@ -42,6 +42,9 @@ func main() {
 			panic("answer without a question")
 		}
 		assessment, feedback = "partial", "Find the delegation in main.go:2."
+		if request.Message == "that is correct" {
+			assessment = "correct"
+		}
 	}
 	line := 2
 	if request.Message == "invent a citation" {

@@ -15,7 +15,7 @@ import (
 
 func TestContinueRequiresReviewAndStopsAtQuizGoal(t *testing.T) {
 	model := interfaceFixture()
-	if _, err := continueIntent(model.application.state, false); err == nil {
+	if _, err := continueIntent(model.application.state, model.application.course, false); err == nil {
 		t.Fatal("continued past an unanswered question")
 	}
 	model.application.state.Review = true
@@ -46,10 +46,10 @@ func TestContinueRequiresReviewAndStopsAtQuizGoal(t *testing.T) {
 	for len(quiz.Questions) < 5 {
 		quiz.Questions = append(quiz.Questions, tutor.QuizQuestion{Text: "Next?", Assessment: "correct"})
 	}
-	if _, err := continueIntent(model.application.state, false); err == nil {
+	if _, err := continueIntent(model.application.state, model.application.course, false); err == nil {
 		t.Fatal("continued beyond the quiz goal without an extension")
 	}
-	intent, err := continueIntent(model.application.state, true)
+	intent, err := continueIntent(model.application.state, model.application.course, true)
 	if err != nil || intent.action != "quiz-extend" || !strings.Contains(quizText(quiz), "Goal reached") {
 		t.Fatal("completed quiz should offer an explicit extension")
 	}

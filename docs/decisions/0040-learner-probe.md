@@ -10,9 +10,9 @@ The LearnHarness project measures where a learner's understanding ends before it
 
 ## Decision
 
-Add a probe that runs before the first lesson and on request. A probe asks one question per turn about a foundation topic, using the existing question and assessment flow. A correct answer marks the topic as held. A partial or incorrect answer leaves it to be taught. The probe stops after three questions or when the learner asks to stop. Probing uses the same agent driver and reply schema as quizzes, with a new action named `probe`.
+Add a probe that the learner starts with `/probe`. A probe asks one question per turn about a foundation topic, using the existing question and assessment flow. A correct answer marks the topic as held. A partial or incorrect answer leaves it to be taught. The probe stops after three questions or when the learner asks to stop. Probing uses the same agent driver and reply schema as quizzes, with a new action named `probe`.
 
-Topics marked held stay in the course list and in progress, with a label. The next-topic order skips them. Study and quiz still work on a held topic, and a later incorrect answer clears the mark. A `--goal` narrows the probe to the topics the goal depends on.
+Topics marked held stay in the course list and in progress, with a label. The next-topic order skips them. Study and quiz still work on a held topic, and a later incorrect answer clears the mark. Narrowing the probe to a `--goal` is deferred, because a free-text goal does not map to topics without a model call.
 
 The probe adds no reply fields. It records outcomes through the existing assessment. Confidence and free-text reasoning from the learner are out of scope until the probe proves useful.
 
