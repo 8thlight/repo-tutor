@@ -46,7 +46,7 @@ then Enter opens the selected item. Esc returns to the lesson.
 
 Slash commands from the plain interface also work:
 /topics [filter]  /topic NUMBER|PATH  /next  /quiz  /review
-/continue  /questions  /extend  /refresh  /home  /about
+/continue  /questions  /extend  /refresh  /home
 /sources  /read PATH:LINE  /hotspots  /progress  /glossary
 /map  /help  /quit
 
@@ -353,9 +353,6 @@ func (model interfaceModel) slash(text string) (tea.Model, tea.Cmd) {
 	case "/continue", "/extend":
 		model.input.Reset()
 		return model.continueQuiz(parts[0] == "/extend")
-	case "/about":
-		model.input.Reset()
-		return model.openAbout()
 	case "/home":
 		model.input.Reset()
 		return model.openHome()

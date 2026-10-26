@@ -93,9 +93,8 @@ func TestResumedSessionOpensOnLearnNotHome(t *testing.T) {
 
 func TestAboutPageShowsBuildCopyrightAndSessionAgent(t *testing.T) {
 	model := interfaceFixture()
-	model.input.SetValue("/about")
-	next, _ := model.submit()
-	model = next.(interfaceModel)
+	opened, _ := model.Update(tea.KeyPressMsg{Code: tea.KeyF2})
+	model = opened.(interfaceModel)
 	content := ansi.Strip(model.View().Content)
 	for _, expected := range []string{"About repo-tutor", "Copyright © 2026 Eighth Light LLC.", "https://8thlight.com", "This session uses codex (default model)."} {
 		if !strings.Contains(content, expected) {
@@ -122,8 +121,7 @@ func TestAboutShowsThePaintingOnlyOnWideTrueColorTerminals(t *testing.T) {
 		colored, _ := model.Update(tea.ColorProfileMsg{Profile: map[bool]colorprofile.Profile{true: colorprofile.TrueColor, false: colorprofile.ANSI256}[test.trueColor]})
 		model = colored.(interfaceModel)
 		model.noColor = test.noColor
-		model.input.SetValue("/about")
-		next, _ := model.submit()
+		next, _ := model.Update(tea.KeyPressMsg{Code: tea.KeyF2})
 		model = next.(interfaceModel)
 		text := model.pageContent
 		if shown := strings.Contains(text, "Jan Lievens, 1631"); shown != test.shown {
