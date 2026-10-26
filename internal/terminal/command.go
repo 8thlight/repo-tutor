@@ -15,6 +15,7 @@ import (
 
 	"github.com/charmbracelet/x/term"
 
+	"repo-tutor/internal/about"
 	"repo-tutor/internal/agent"
 	"repo-tutor/internal/repository"
 	"repo-tutor/internal/session"
@@ -56,7 +57,7 @@ func Run(ctx context.Context, arguments []string, input io.Reader, output io.Wri
 			fmt.Fprint(output, usage)
 			return nil
 		case "--version", "version":
-			fmt.Fprintln(output, "repo-tutor 0.1.0-dev")
+			fmt.Fprint(output, about.Read().Text())
 			return nil
 		case "scan", "tutor", "doctor":
 			command, arguments = arguments[0], arguments[1:]

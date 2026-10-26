@@ -299,3 +299,10 @@ func TestInterruptAtPromptPreservesCompletedLesson(t *testing.T) {
 		t.Fatal("Ctrl-C lost the completed lesson")
 	}
 }
+
+func TestVersionPrintsBuildFactsAndCopyright(t *testing.T) {
+	output, err := run(t, "", "--version")
+	if err != nil || !strings.HasPrefix(output, "repo-tutor ") || !strings.Contains(output, "Copyright © 2026 Eighth Light LLC.") || !strings.Contains(output, "https://8thlight.com") || strings.Contains(output, "Waiting for") {
+		t.Fatalf("version output is incomplete: %v\n%s", err, output)
+	}
+}
