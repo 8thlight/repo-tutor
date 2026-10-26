@@ -354,7 +354,11 @@ func (model interfaceModel) View() tea.View {
 	if width < 80 {
 		keys = "Enter send · F1 help · Ctrl+Q quit"
 	}
-	footer := muted.Render(ansi.Truncate(notice, width, "…")) + "\n" + muted.Render(ansi.Truncate(keys, width, "…"))
+	indicator := ""
+	if model.prefetching {
+		indicator = model.prefetchSpinner.View() + " Preparing next lesson"
+	}
+	footer := model.footerLine(notice, indicator, width, muted) + "\n" + muted.Render(ansi.Truncate(keys, width, "…"))
 	content := lipgloss.JoinVertical(lipgloss.Left, header, "", navigation, "", main, "", composer, "", footer)
 	content = lipgloss.NewStyle().Padding(0, 2).MaxWidth(model.width).MaxHeight(model.height).Render(content)
 	if model.noColor {

@@ -40,6 +40,7 @@ Tutor options:
   --state-dir DIRECTORY     Store sessions in this directory
   --timeout DURATION        Limit each agent turn (default 3m)
   --plain                   Use the line-based interface instead of the full-screen UI
+  --no-prefetch             Do not prepare the next lesson in the background
 
 Examples:
   repo-tutor ../onboard-kit --agent codex
@@ -206,6 +207,7 @@ func study(ctx context.Context, arguments []string, input io.Reader, output, dia
 	stateDirectory := flags.String("state-dir", "", "session storage directory")
 	timeout := flags.Duration("timeout", 3*time.Minute, "turn timeout")
 	plain := flags.Bool("plain", false, "use the line-based interface")
+	noPrefetch := flags.Bool("no-prefetch", false, "do not prepare the next lesson in the background")
 	directory, err := parse(flags, arguments)
 	if errors.Is(err, flag.ErrHelp) {
 		fmt.Fprint(output, usage)
@@ -286,7 +288,7 @@ func study(ctx context.Context, arguments []string, input io.Reader, output, dia
 			return err
 		}
 	}
-	application := application{snapshot: snapshot, course: tutor.Course(snapshot), state: state, store: store, output: output, diagnostics: diagnostics, timeout: *timeout}
+	application := application{snapshot: snapshot, course: tutor.Course(snapshot), state: state, store: store, output: output, diagnostics: diagnostics, timeout: *timeout, prefetch: !*noPrefetch}
 	if !*plain && *ask == "" && interactiveStreams(input, output) {
 		return runInterface(ctx, application, input, output)
 	}
