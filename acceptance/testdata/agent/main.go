@@ -37,6 +37,7 @@ func main() {
 		os.Exit(1)
 	}
 	assessment, feedback := "none", ""
+	question := "What does the entry point delegate?"
 	if request.Action == "answer" {
 		if request.Question == "" {
 			panic("answer without a question")
@@ -45,6 +46,10 @@ func main() {
 		if request.Message == "that is correct" {
 			assessment = "correct"
 		}
+		if request.Message == "Can you clarify the question?" {
+			assessment, feedback = "none", ""
+			question = "What does main.go:2 do when the program starts?"
+		}
 	}
 	line := 2
 	if request.Message == "invent a citation" {
@@ -52,7 +57,7 @@ func main() {
 	}
 	reply := map[string]any{
 		"explanation": "Execution starts at main.go:2.",
-		"question":    "What does the entry point delegate?", "assessment": assessment,
+		"question":    question, "assessment": assessment,
 		"feedback": feedback, "citations": []map[string]any{{"path": "main.go", "line": line}},
 	}
 	arguments, _ := json.Marshal(os.Args[1:])

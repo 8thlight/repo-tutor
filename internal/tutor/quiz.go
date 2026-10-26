@@ -41,6 +41,9 @@ func RecordQuiz(previous *Quiz, topic, action, pending string, reply Reply) *Qui
 	}
 	if action == "answer" && len(quiz.Questions) > 0 {
 		index := len(quiz.Questions) - 1
+		if quiz.Questions[index].Text == pending && quiz.Questions[index].Assessment == "" && reply.Assessment == "none" && reply.Question != "" {
+			quiz.Questions[index].Text = reply.Question
+		}
 		if quiz.Questions[index].Text == pending && quiz.Questions[index].Assessment == "" && (reply.Assessment != "none" || reply.Question == "") {
 			assessment := reply.Assessment
 			if assessment == "none" {

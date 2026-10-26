@@ -165,6 +165,26 @@ func TestQuizGoalWaitsForContinueAndSurvivesResume(t *testing.T) {
 	}
 }
 
+func TestClarifiedQuizQuestionStaysOpenAndCanBeAnswered(t *testing.T) {
+	repository, stateDirectory := fixture(t), t.TempDir()
+	arguments := []string{repository, "--agent", "codex", "--state-dir", stateDirectory, "--plain"}
+	output, err := run(t, "/quiz\nCan you clarify the question?\n/quit\n", arguments...)
+	if err != nil {
+		t.Fatalf("clarification failed: %v\n%s", err, output)
+	}
+	state := saved(t, stateDirectory)
+	quiz := state["quiz"].(map[string]any)
+	questions := quiz["questions"].([]any)
+	question := questions[0].(map[string]any)
+	if len(questions) != 1 || question["assessment"] != nil || state["review"] == true || state["question"] != "What does main.go:2 do when the program starts?" || question["text"] != state["question"] {
+		t.Fatalf("clarification was skipped, graded, or lost from the index: %+v", state)
+	}
+	output, err = run(t, "that is correct\n/questions\n/quit\n", arguments...)
+	if err != nil || !strings.Contains(output, "QUIZ · 1 / 5 answered") || !strings.Contains(output, "[correct] What does main.go:2 do") {
+		t.Fatalf("revised exercise could not be answered: %v\n%s", err, output)
+	}
+}
+
 func TestProbeMarksKnownTopicAndSurvivesResume(t *testing.T) {
 	repository, stateDirectory := fixture(t), t.TempDir()
 	arguments := []string{repository, "--agent", "codex", "--state-dir", stateDirectory, "--plain"}

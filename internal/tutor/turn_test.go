@@ -79,6 +79,40 @@ func TestContextIsBoundedAndRelevant(t *testing.T) {
 	}
 }
 
+func TestQuizContextRetainsTeachingSeparateFromLastFeedback(t *testing.T) {
+	snapshot := repository.Analyze([]repository.File{
+		{Path: "go.mod", Content: "module learning\n"},
+		{Path: "core/value.go", Content: "package core\nfunc Calculate() int { return 42 }\n"},
+		{Path: "cli/main.go", Content: "package cli\nfunc Run() {}\n"},
+	})
+	lesson := tutor.Reply{Explanation: "Core owns calculations; CLI handles commands.", Assessment: "none", Citations: []repository.Location{{Path: "core/value.go", Line: 2}}}
+	feedback := tutor.Reply{Explanation: "That is correct.", Assessment: "correct", Feedback: "You identified core."}
+	prepared := tutor.Prepare(snapshot, tutor.Request{Topic: "overview", Action: "quiz", Lesson: &lesson, Previous: &feedback})
+	_, payload, found := strings.Cut(prepared.Prompt, "Turn and source excerpts:\n")
+	if !found {
+		t.Fatal("missing structured tutor context")
+	}
+	var context struct {
+		Lesson   tutor.Reply `json:"last_lesson"`
+		Previous tutor.Reply `json:"previous_reply"`
+	}
+	if err := json.Unmarshal([]byte(payload), &context); err != nil {
+		t.Fatal(err)
+	}
+	if context.Lesson.Explanation != lesson.Explanation || context.Previous.Feedback != feedback.Feedback {
+		t.Fatal("a subsequent quiz lost the taught material behind the latest feedback")
+	}
+	found = false
+	for _, excerpt := range prepared.Excerpts {
+		if excerpt.Path == "core/value.go" && excerpt.StartLine <= 2 && excerpt.EndLine >= 2 {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("quiz context omitted the code cited by its lesson")
+	}
+}
+
 func TestProgressIsEvidenceBasedAndImmutable(t *testing.T) {
 	previous := map[string]tutor.Progress{"overview": {Lessons: 1}}
 	read := tutor.Record(previous, "course/value", "lesson", tutor.Reply{Assessment: "none"})
