@@ -238,8 +238,10 @@ func study(ctx context.Context, arguments []string, input io.Reader, output, dia
 	if found && state.Repository != snapshot.Root {
 		return fmt.Errorf("saved session belongs to a different repository; use --new")
 	}
+	var carriedProgress map[string]tutor.Progress
 	if found && state.Fingerprint != snapshot.Fingerprint {
-		fmt.Fprintln(output, "Repository sources changed. Archiving the old session and starting a fresh course.")
+		fmt.Fprintln(output, "Repository sources changed. Archiving the old session and starting a fresh course. Your progress carries over.")
+		carriedProgress = state.Progress
 		if *preference == "auto" {
 			*preference = state.Agent
 		}
@@ -272,6 +274,9 @@ func study(ctx context.Context, arguments []string, input io.Reader, output, dia
 			learningGoal = "Understand the architecture and become ready to make a small change."
 		}
 		state = session.State{Version: session.Version, Repository: snapshot.Root, Fingerprint: snapshot.Fingerprint, Agent: chosen, Model: *model, Goal: learningGoal, Topic: tutor.Overview, Progress: map[string]tutor.Progress{}}
+		for topic, progress := range carriedProgress {
+			state.Progress[topic] = progress
+		}
 		if err := store.Save(state); err != nil {
 			return err
 		}

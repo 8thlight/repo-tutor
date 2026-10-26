@@ -222,8 +222,10 @@ func TestChangedSourceStartsFreshAndArchivesProgress(t *testing.T) {
 		t.Fatalf("source changes were not detected: %v\n%s", err, output)
 	}
 	files, _ := filepath.Glob(filepath.Join(stateDirectory, "*", "previous.json"))
-	if len(files) != 1 || saved(t, stateDirectory)["goal"] != "Trace the entry point" {
-		t.Fatal("source refresh lost the previous session or learning goal")
+	refreshed := saved(t, stateDirectory)
+	overview := refreshed["progress"].(map[string]any)["overview"].(map[string]any)
+	if len(files) != 1 || refreshed["goal"] != "Trace the entry point" || overview["lessons"] != float64(2) {
+		t.Fatalf("source refresh lost the previous session, learning goal, or progress: %+v", refreshed)
 	}
 }
 
