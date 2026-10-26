@@ -16,7 +16,7 @@ Add a Home page, shown first in the tab order. It renders at once and makes no m
 
 Enter takes the recommendation. Number keys and arrows choose another. The recommended entry carries a marker and the word "Recommended", so `NO_COLOR` and screen readers lose nothing.
 
-List only places that have something to show. A command with no key opens from Home when it applies: Check what you know (the probe from 0040) appears until a probe has run, and Refresh appears when the saved overview is out of date under 0070. Progress and Quiz appear after an outcome or a quiz exists. Topics, Sources, and Hotspots appear as one entry named Browse.
+List only places that have something to show. A command with no key opens from Home when it applies: Check what you know (the probe from 0040) appears after the overview has been opened and until a probe has run, marked optional so a learner new to the repository skips it, and Refresh appears when the saved overview is out of date under 0070. Progress and Quiz appear after an outcome or a quiz exists. Topics, Sources, and Hotspots appear as one entry named Browse.
 
 The recommendation is a pure function of the saved state and lives in `internal/tutor`:
 
