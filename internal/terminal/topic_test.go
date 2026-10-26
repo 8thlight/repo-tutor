@@ -102,3 +102,22 @@ func TestNextTopicOpensAFreshCachedLessonWithoutARequestAndIgnoresAStaleOne(t *t
 		}
 	}
 }
+
+func TestTopicsAndQuizListsOpenOnTheCurrentItem(t *testing.T) {
+	model := twoTopicFixture()
+	model.application.state.Topic = "learning/core"
+	opened, _ := model.openPicker("topics", "")
+	topics := opened.(interfaceModel)
+	if item := topics.picker.SelectedItem().(browserItem); item.value != "learning/core" {
+		t.Fatalf("the topics list should open on the current topic, got %q", item.value)
+	}
+	model.application.state.Quiz = &tutor.Quiz{Topic: "learning/core", Goal: 5, Active: 2, Questions: []tutor.QuizQuestion{{Text: "a", Assessment: "skipped"}, {Text: "b", Assessment: "correct"}, {Text: "c"}}}
+	opened, _ = model.openPicker("quiz", "")
+	if item := opened.(interfaceModel).picker.SelectedItem().(browserItem); item.line != 2 {
+		t.Fatalf("the quiz index should open on the active question, got slot %d", item.line)
+	}
+	opened, _ = model.openPicker("topics", "core")
+	if _, ok := opened.(interfaceModel).picker.SelectedItem().(browserItem); !ok {
+		t.Fatal("a filtered list should still select its first match")
+	}
+}

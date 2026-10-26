@@ -76,7 +76,25 @@ func (model interfaceModel) openPicker(page, filter string) (tea.Model, tea.Cmd)
 	model.page = page
 	model.input.Blur()
 	model.configurePicker(filter)
+	if filter == "" {
+		model.selectCurrent()
+	}
 	return model, nil
+}
+
+func (model *interfaceModel) selectCurrent() {
+	state := model.application.state
+	for index, current := range model.picker.VisibleItems() {
+		item := current.(browserItem)
+		switch {
+		case model.page == "topics" && item.value == state.Topic:
+			model.picker.Select(index)
+			return
+		case model.page == "quiz" && state.Quiz != nil && item.line == state.Quiz.Active:
+			model.picker.Select(index)
+			return
+		}
+	}
 }
 
 func (model *interfaceModel) configurePicker(filter string) {
