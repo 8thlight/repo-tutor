@@ -1,6 +1,6 @@
 # 0020. Interactive terminal
 
-Status: accepted
+Status: accepted. One foreground turn plus one cancellable background turn, under [0150](0150-prefetch-next-lesson.md).
 
 ## Context
 
