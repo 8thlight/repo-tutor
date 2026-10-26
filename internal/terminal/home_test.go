@@ -103,28 +103,27 @@ func TestAboutPageShowsBuildCopyrightAndSessionAgent(t *testing.T) {
 	}
 }
 
-func TestAboutShowsThePaintingOnlyOnWideTrueColorTerminals(t *testing.T) {
+func TestAboutShowsThePaintingOnlyOnWideTerminalsWithRichColor(t *testing.T) {
 	for name, test := range map[string]struct {
-		width     int
-		trueColor bool
-		noColor   bool
-		shown     bool
+		width   int
+		profile colorprofile.Profile
+		noColor bool
+		shown   bool
 	}{
-		"wide truecolor": {113, true, false, true},
-		"too narrow":     {112, true, false, false},
-		"256 colors":     {140, false, false, false},
-		"NO_COLOR":       {140, true, true, false},
+		"wide truecolor": {113, colorprofile.TrueColor, false, true},
+		"wide 256 color": {113, colorprofile.ANSI256, false, true},
+		"too narrow":     {112, colorprofile.TrueColor, false, false},
+		"16 colors":      {140, colorprofile.ANSI, false, false},
+		"NO_COLOR":       {140, colorprofile.TrueColor, true, false},
 	} {
 		model := interfaceFixture()
 		model.width, model.height = test.width, 60
-		model.noColor = test.noColor
-		colored, _ := model.Update(tea.ColorProfileMsg{Profile: map[bool]colorprofile.Profile{true: colorprofile.TrueColor, false: colorprofile.ANSI256}[test.trueColor]})
+		colored, _ := model.Update(tea.ColorProfileMsg{Profile: test.profile})
 		model = colored.(interfaceModel)
 		model.noColor = test.noColor
 		next, _ := model.Update(tea.KeyPressMsg{Code: tea.KeyF2})
 		model = next.(interfaceModel)
-		text := model.pageContent
-		if shown := strings.Contains(text, "Jan Lievens, 1631"); shown != test.shown {
+		if shown := strings.Contains(model.pageContent, "Jan Lievens, 1631"); shown != test.shown {
 			t.Fatalf("%s: painting shown=%v, want %v", name, shown, test.shown)
 		}
 		if test.shown {

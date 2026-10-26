@@ -275,7 +275,7 @@ func (model interfaceModel) document(page, title, content string) (interfaceMode
 const splashMinimumWidth = 113
 
 func (model interfaceModel) showsSplash() bool {
-	return model.trueColor && !model.noColor && model.width >= splashMinimumWidth
+	return model.richColor && !model.noColor && model.width >= splashMinimumWidth
 }
 
 func (model interfaceModel) aboutText() string {
