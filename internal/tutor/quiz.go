@@ -3,6 +3,7 @@ package tutor
 type QuizQuestion struct {
 	Text       string `json:"text"`
 	Assessment string `json:"assessment,omitempty"`
+	Turn       int    `json:"turn,omitempty"`
 }
 
 type Quiz struct {
@@ -69,4 +70,32 @@ func Reopen(quiz *Quiz, slot int) (*Quiz, bool) {
 	reopened.Questions = append([]QuizQuestion(nil), quiz.Questions...)
 	reopened.Active = slot
 	return &reopened, true
+}
+
+func RecordAnswerTurn(before, after *Quiz, turn int) *Quiz {
+	if before == nil || after == nil {
+		return after
+	}
+	recorded := *after
+	recorded.Questions = append([]QuizQuestion(nil), after.Questions...)
+	for slot := range recorded.Questions {
+		answered := recorded.Questions[slot].Assessment != "" && recorded.Questions[slot].Assessment != "skipped"
+		open := slot >= len(before.Questions) || before.Questions[slot].Assessment == "" || before.Questions[slot].Assessment == "skipped"
+		if answered && open {
+			recorded.Questions[slot].Turn = turn
+		}
+	}
+	return &recorded
+}
+
+func ShiftQuizTurns(quiz *Quiz, trimmed int) *Quiz {
+	if quiz == nil {
+		return nil
+	}
+	shifted := *quiz
+	shifted.Questions = append([]QuizQuestion(nil), quiz.Questions...)
+	for slot := range shifted.Questions {
+		shifted.Questions[slot].Turn = max(0, shifted.Questions[slot].Turn-trimmed)
+	}
+	return &shifted
 }

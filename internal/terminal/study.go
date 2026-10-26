@@ -88,8 +88,10 @@ func (application application) completeTurn(ctx context.Context, action, message
 	updated.Progress = tutor.Record(updated.Progress, topic, action, reply)
 	updated.Probe, updated.Progress = tutor.RecordProbe(updated.Probe, application.course, updated.Progress, action, topic, reply)
 	updated.Turns = append(append([]session.Turn(nil), updated.Turns...), session.Turn{Topic: topic, Action: action, Message: message, Reply: reply})
-	if len(updated.Turns) > 200 {
-		updated.Turns = updated.Turns[len(updated.Turns)-200:]
+	updated.Quiz = tutor.RecordAnswerTurn(application.state.Quiz, updated.Quiz, len(updated.Turns)-1)
+	if trimmed := len(updated.Turns) - 200; trimmed > 0 {
+		updated.Turns = updated.Turns[trimmed:]
+		updated.Quiz = tutor.ShiftQuizTurns(updated.Quiz, trimmed)
 	}
 	if err := application.store.Save(updated); err != nil {
 		return session.State{}, fmt.Errorf("save tutor turn: %w", err)

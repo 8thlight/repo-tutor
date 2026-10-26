@@ -107,7 +107,7 @@ func quizSlotItems(state session.State) []browserItem {
 			case "skipped":
 				description = "Skipped · Enter answers it again"
 			default:
-				description = "Answered " + question.Assessment
+				description = "Answered " + question.Assessment + " · Enter shows the feedback"
 			}
 		} else if slot == len(quiz.Questions) && reviewing(state) && quiz.Completed() < quiz.Goal {
 			description = "Next · Enter generates this question"
@@ -144,8 +144,7 @@ func (model interfaceModel) selectQuizSlot(slot int) (tea.Model, tea.Cmd) {
 	}
 	reopened, ok := reopenQuestion(state, slot)
 	if !ok {
-		model.notice = "This question is already answered."
-		return model, nil
+		return model.viewAnswer(quiz.Questions[slot].Turn)
 	}
 	if model.application.store != nil {
 		if err := model.application.store.Save(reopened); err != nil {
@@ -156,4 +155,16 @@ func (model interfaceModel) selectQuizSlot(slot int) (tea.Model, tea.Cmd) {
 	model.application.state = reopened
 	model.history = len(reopened.Turns) - 1
 	return model.learn()
+}
+
+func (model interfaceModel) viewAnswer(turn int) (tea.Model, tea.Cmd) {
+	turns := model.application.state.Turns
+	if turn <= 0 || turn >= len(turns) || turns[turn].Action != "answer" {
+		model.notice = "The feedback for this answer is no longer saved."
+		return model, nil
+	}
+	model.page, model.history = "lesson", turn
+	model.rebuildContent()
+	model.viewport.GotoTop()
+	return model, nil
 }

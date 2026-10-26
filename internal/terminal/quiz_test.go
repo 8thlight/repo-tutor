@@ -218,9 +218,10 @@ func TestSelectingSkippedSlotReturnsToItsQuestion(t *testing.T) {
 	if model.page != "lesson" || state.Question != "Where?" || state.Quiz.Active != 0 || reviewing(state) || strings.Contains(model.composer(), "Continue") {
 		t.Fatalf("the skipped question should be current and answerable: %+v", state)
 	}
+	model.application.state.Quiz.Questions[1].Turn = 1
 	answered, _ := model.selectQuizSlot(1)
-	if !strings.Contains(answered.(interfaceModel).notice, "already answered") {
-		t.Fatal("an answered slot must not be reopened")
+	if viewed := answered.(interfaceModel); viewed.page != "lesson" || viewed.history != 1 || viewed.application.state.Question != "Where?" {
+		t.Fatal("an answered slot should show its feedback and stay unopened")
 	}
 	later, _ := model.selectQuizSlot(4)
 	if !strings.Contains(later.(interfaceModel).notice, "generated when you reach it") {
@@ -243,4 +244,20 @@ func TestSelectingNextSlotGeneratesItOnlyAfterReview(t *testing.T) {
 		t.Fatal("selecting the next slot should continue the quiz")
 	}
 	started.(interfaceModel).cancel()
+}
+
+func TestAnswerTurnIsRecordedOnceAndShiftsWithTrimmedHistory(t *testing.T) {
+	before := &tutor.Quiz{Goal: 5, Questions: []tutor.QuizQuestion{{Text: "First?", Assessment: "skipped"}, {Text: "Second?"}}}
+	after := &tutor.Quiz{Goal: 5, Questions: []tutor.QuizQuestion{{Text: "First?", Assessment: "skipped"}, {Text: "Second?", Assessment: "correct"}}}
+	recorded := tutor.RecordAnswerTurn(before, after, 7)
+	if recorded.Questions[1].Turn != 7 || recorded.Questions[0].Turn != 0 || after.Questions[1].Turn != 0 {
+		t.Fatal("only the newly answered slot should record its turn without mutating the input")
+	}
+	again := tutor.RecordAnswerTurn(recorded, recorded, 9)
+	if again.Questions[1].Turn != 7 {
+		t.Fatal("an answered slot must keep the turn that answered it")
+	}
+	if shifted := tutor.ShiftQuizTurns(recorded, 10); shifted.Questions[1].Turn != 0 || recorded.Questions[1].Turn != 7 {
+		t.Fatal("a trimmed turn must read as no longer saved")
+	}
 }
