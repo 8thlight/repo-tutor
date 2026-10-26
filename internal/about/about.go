@@ -1,6 +1,7 @@
 package about
 
 import (
+	_ "embed"
 	"fmt"
 	"runtime"
 	"runtime/debug"
@@ -14,6 +15,13 @@ const (
 	developmentVersion = "0.1.0-dev"
 	unknown            = "unknown"
 )
+
+//go:embed NOTICES.txt
+var notices string
+
+func Notices() string {
+	return notices
+}
 
 type Build struct {
 	Version   string

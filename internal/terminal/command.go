@@ -57,6 +57,10 @@ func Run(ctx context.Context, arguments []string, input io.Reader, output io.Wri
 			fmt.Fprint(output, usage)
 			return nil
 		case "--version", "version":
+			if len(arguments) == 2 && arguments[1] == "--notices" {
+				fmt.Fprint(output, about.Notices())
+				return nil
+			}
 			fmt.Fprint(output, about.Read().Text())
 			return nil
 		case "scan", "tutor", "doctor":

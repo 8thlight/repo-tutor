@@ -1,6 +1,7 @@
 package about
 
 import (
+	"os/exec"
 	"runtime/debug"
 	"strings"
 	"testing"
@@ -24,5 +25,22 @@ func TestBuildFactsComeFromBuildInfoAndDegradeToUnknown(t *testing.T) {
 	}
 	if missing := FromBuildInfo(nil, false, "linux", "amd64"); missing.GoVersion != unknown || missing.System != "linux/amd64" {
 		t.Fatalf("a binary without build info must still describe itself: %+v", missing)
+	}
+}
+
+func TestNoticesCoverEveryLinkedModule(t *testing.T) {
+	data, err := exec.Command("go", "list", "-deps", "-f", "{{with .Module}}{{if not .Main}}{{.Path}}{{end}}{{end}}", "../../binary").Output()
+	if err != nil {
+		t.Fatal(err)
+	}
+	checked := 0
+	for _, path := range strings.Fields(string(data)) {
+		checked++
+		if !strings.Contains(Notices(), "\n"+path+" ") {
+			t.Fatalf("%s is linked into the binary but missing from NOTICES.txt; run just notices", path)
+		}
+	}
+	if checked == 0 || !strings.Contains(Notices(), "MIT License") {
+		t.Fatal("the notices should list modules and carry their license text")
 	}
 }

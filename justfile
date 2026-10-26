@@ -31,6 +31,9 @@ lint-go:
 test:
     go test -race -count=1 ./...
 
+notices:
+    go run ./internal/about/generate internal/about/NOTICES.txt
+
 build:
     CGO_ENABLED=0 go build -trimpath -o output/repo-tutor ./binary
 

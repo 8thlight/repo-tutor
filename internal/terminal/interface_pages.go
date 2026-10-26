@@ -274,7 +274,7 @@ func (model interfaceModel) aboutText() string {
 	if modelName == "" {
 		modelName = "default model"
 	}
-	return about.Read().Text() + fmt.Sprintf("\nThis session uses %s (%s).\n", state.Agent, modelName)
+	return about.Read().Text() + fmt.Sprintf("\nThis session uses %s (%s).\nBuilt with Bubble Tea, Bubbles, Lip Gloss, Glamour, and Chroma, which are MIT licensed.\nrepo-tutor --version --notices prints every third-party license.\n", state.Agent, modelName)
 }
 
 func (model interfaceModel) progressText() string {

@@ -306,3 +306,10 @@ func TestVersionPrintsBuildFactsAndCopyright(t *testing.T) {
 		t.Fatalf("version output is incomplete: %v\n%s", err, output)
 	}
 }
+
+func TestVersionNoticesPrintsThirdPartyLicenses(t *testing.T) {
+	output, err := run(t, "", "--version", "--notices")
+	if err != nil || !strings.Contains(output, "charm.land/bubbletea/v2") || !strings.Contains(output, "MIT License") {
+		t.Fatalf("notices are missing: %v\n%.300s", err, output)
+	}
+}
