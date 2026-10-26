@@ -196,7 +196,7 @@ func TestQuizTabStaysActiveAcrossStartAndIndex(t *testing.T) {
 	if returned.(interfaceModel).activeTab() != "quiz" {
 		t.Fatal("leaving the index should return to the Quiz tab")
 	}
-	if interfaceFixture().activeTab() != "lesson" {
+	if interfaceFixture().activeTab() != "learn" {
 		t.Fatal("a lesson should keep the Learn tab")
 	}
 }

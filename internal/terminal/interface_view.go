@@ -189,6 +189,14 @@ func (model interfaceModel) activeTab() string {
 	if model.inQuiz() {
 		return "quiz"
 	}
+	switch model.page {
+	case "lesson", "topics":
+		return "learn"
+	case "quiz":
+		return "quiz"
+	case "sources", "source", "hotspots":
+		return "explore"
+	}
 	return model.page
 }
 
@@ -287,7 +295,7 @@ func (model interfaceModel) View() tea.View {
 	brand = ansi.Truncate(brand, max(8, width-lipgloss.Width(status)-2), "…")
 	space := max(1, width-lipgloss.Width(brand)-lipgloss.Width(status))
 	header := ansi.Truncate(brand+strings.Repeat(" ", space)+muted.Render(status), width, "") + "\n" + muted.Render(ansi.Truncate("Goal  "+tutor.Plain(model.application.state.Goal), width, "…"))
-	pages := []struct{ page, label string }{{"home", "Home"}, {"lesson", "Learn"}, {"topics", "Topics"}, {"quiz", "Quiz"}, {"sources", "Sources"}, {"hotspots", "Hotspots"}, {"progress", "Progress"}}
+	pages := []struct{ page, label string }{{"home", "Home"}, {"learn", "Learn"}, {"quiz", "Quiz"}, {"explore", "Explore"}, {"progress", "Progress"}}
 	var tabs []string
 	for _, page := range pages {
 		label := " " + page.label + " "

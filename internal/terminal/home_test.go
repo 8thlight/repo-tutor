@@ -35,7 +35,7 @@ func homeNumber(model interfaceModel, place string) rune {
 func TestHomeRecommendsLearnFirstAndStartsTheOverviewInTheBackground(t *testing.T) {
 	model := newLearnerFixture()
 	content := ansi.Strip(model.View().Content)
-	for _, expected := range []string{"Recommended: You have not started.", "› 1  Learn", "Browse", "Home"} {
+	for _, expected := range []string{"Recommended: You have not started.", "› 1  Learn", "Explore", "Home"} {
 		if !strings.Contains(content, expected) {
 			t.Fatalf("home is missing %q:\n%s", expected, content)
 		}
@@ -44,7 +44,7 @@ func TestHomeRecommendsLearnFirstAndStartsTheOverviewInTheBackground(t *testing.
 	for _, entry := range model.homeEntries() {
 		places = append(places, entry.place)
 	}
-	if strings.Join(places, ",") != "learn,browse,about" {
+	if strings.Join(places, ",") != "learn,topics,explore,about" {
 		t.Fatalf("a new learner should see only places with something to show: %v", places)
 	}
 	started, command := model.Update(beginFirstLesson{})
@@ -61,7 +61,7 @@ func TestHomeKeysOpenTheRecommendationOrAnotherPlace(t *testing.T) {
 	if model.homeSelected != 1 {
 		t.Fatal("down should move the selection")
 	}
-	browsed, _ := press(model, homeNumber(model, placeBrowse), 0)
+	browsed, _ := press(model, homeNumber(model, placeTopics), 0)
 	if browsed.page != "topics" {
 		t.Fatalf("number keys should open that entry, got %s", browsed.page)
 	}
@@ -222,7 +222,7 @@ func TestEscAndPageKeysReturnToWhereThePageWasOpened(t *testing.T) {
 		t.Fatal("Ctrl+L should always go to the lesson")
 	}
 
-	browsed, _ := press(home, homeNumber(home, placeBrowse), 0)
+	browsed, _ := press(home, homeNumber(home, placeTopics), 0)
 	switched, _ := press(browsed, 's', tea.ModCtrl)
 	if switched.page != "sources" || switched.origin != "home" {
 		t.Fatalf("switching pages directly should keep the original origin: %s %q", switched.page, switched.origin)
@@ -298,5 +298,44 @@ func TestHomeOffersProbeAndRefreshOnlyWhenTheyApply(t *testing.T) {
 	model.application.state.Probe = &tutor.Probe{Topics: []string{"a"}}
 	if strings.Contains(places(), placeProbe) {
 		t.Fatal("the probe entry should end once a probe has run")
+	}
+}
+
+func TestTabsGroupPagesByActivity(t *testing.T) {
+	model := interfaceFixture()
+	for page, want := range map[string]string{"home": "home", "lesson": "learn", "topics": "learn", "quiz": "quiz", "sources": "explore", "source": "explore", "hotspots": "explore", "progress": "progress", "help": "help", "about": "about"} {
+		model.page = page
+		if got := model.activeTab(); got != want {
+			t.Fatalf("%s page should highlight %s, got %s", page, want, got)
+		}
+	}
+	opened, _ := model.openPicker("topics", "")
+	content := ansi.Strip(opened.(interfaceModel).View().Content)
+	if strings.Contains(content, "Topics    Quiz") || !strings.Contains(content, "Learn    Quiz    Explore    Progress") {
+		t.Fatalf("the tab bar should show five tabs:\n%s", content)
+	}
+}
+
+func TestTabKeyStepsThroughTheFiveTabs(t *testing.T) {
+	model := newLearnerFixture()
+	var visited []string
+	for index := 0; index < 5; index++ {
+		model, _ = press(model, tea.KeyTab, 0)
+		visited = append(visited, model.activeTab())
+	}
+	if strings.Join(visited, ",") != "learn,quiz,explore,progress,home" {
+		t.Fatalf("Tab should step Home, Learn, Quiz, Explore, Progress and wrap: %v", visited)
+	}
+	if model.page != "home" {
+		t.Fatalf("wrapping should land on Home, got %s", model.page)
+	}
+	back, _ := press(model, tea.KeyTab, tea.ModShift)
+	if back.activeTab() != "progress" {
+		t.Fatalf("Shift+Tab should go back one tab, got %s", back.activeTab())
+	}
+	explore, _ := press(newLearnerFixture(), 's', tea.ModCtrl)
+	next, _ := press(explore, tea.KeyTab, 0)
+	if next.activeTab() != "progress" || next.page != "progress" {
+		t.Fatalf("Tab from Explore should leave it, got %s", next.page)
 	}
 }
