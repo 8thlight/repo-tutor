@@ -1,6 +1,6 @@
 # 0050. Quiz tab
 
-Status: accepted
+Status: accepted. The tab set is now five under [0170](0170-tab-groups.md); the activity rule stands.
 
 ## Context
 
