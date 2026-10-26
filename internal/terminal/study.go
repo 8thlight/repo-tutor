@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"repo-tutor/internal/about"
 	"repo-tutor/internal/agent"
 	"repo-tutor/internal/repository"
 	"repo-tutor/internal/session"
@@ -271,8 +270,6 @@ func (application *application) command(ctx context.Context, text string) (bool,
 			return false, err
 		}
 		return false, application.turn(ctx, intent.action, intent.message, intent.topic)
-	case "/about":
-		fmt.Fprint(application.output, about.Read().Text())
 	case "/refresh":
 		return false, application.turn(ctx, "lesson", openingMessage, tutor.Overview)
 	case "/questions":

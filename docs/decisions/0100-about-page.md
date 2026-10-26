@@ -8,7 +8,7 @@ A learner or maintainer cannot tell which build they run, when it was built, or 
 
 ## Decision
 
-Add an About page that the learner opens from the last entry on Home, with `F2` from any page, or with `/about`. List it on the help page. It is not a tab. A slash command alone is not enough, because it can be typed only where the answer box is. Add `repo-tutor --version`, which prints the same facts as plain text and exits. Both read one function, so they cannot disagree.
+Add an About page that the learner opens from the last entry on Home, or with `F2` from any page. List it on the help page. It is not a tab. A slash command is not offered, because it can be typed only where the answer box is. Add `repo-tutor --version`, which prints the same facts as plain text and exits. Both read one function, so they cannot disagree.
 
 The facts are:
 
