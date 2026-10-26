@@ -24,6 +24,7 @@ type application struct {
 	output      io.Writer
 	diagnostics io.Writer
 	timeout     time.Duration
+	prefetch    bool
 }
 
 const openingMessage = "Start with the repository's purpose and a map of how it works."

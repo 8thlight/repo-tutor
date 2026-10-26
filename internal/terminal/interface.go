@@ -35,35 +35,42 @@ type turnFinished struct {
 }
 
 type interfaceModel struct {
-	application    application
-	ctx            context.Context
-	run            turnRunner
-	input          textarea.Model
-	viewport       viewport.Model
-	picker         list.Model
-	spinner        spinner.Model
-	width          int
-	height         int
-	page           string
-	homeSelected   int
-	origin         string
-	overviewStale  bool
-	sourcePath     string
-	sourceLine     int
-	sourceRendered bool
-	markdownViews  map[string]bool
-	pageTitle      string
-	pageContent    string
-	history        int
-	dark           bool
-	richColor      bool
-	noColor        bool
-	busy           bool
-	cancel         context.CancelFunc
-	intent         turnIntent
-	errorText      string
-	notice         string
-	started        time.Time
+	application       application
+	ctx               context.Context
+	run               turnRunner
+	input             textarea.Model
+	viewport          viewport.Model
+	picker            list.Model
+	spinner           spinner.Model
+	width             int
+	height            int
+	page              string
+	homeSelected      int
+	origin            string
+	prefetcher        lessonPrefetcher
+	prefetching       bool
+	prefetchScheduled bool
+	prefetchID        int
+	prefetchCancel    context.CancelFunc
+	prefetchFailed    map[string]bool
+	prefetchSpinner   spinner.Model
+	overviewStale     bool
+	sourcePath        string
+	sourceLine        int
+	sourceRendered    bool
+	markdownViews     map[string]bool
+	pageTitle         string
+	pageContent       string
+	history           int
+	dark              bool
+	richColor         bool
+	noColor           bool
+	busy              bool
+	cancel            context.CancelFunc
+	intent            turnIntent
+	errorText         string
+	notice            string
+	started           time.Time
 }
 
 func runInterface(ctx context.Context, application application, input io.Reader, output io.Writer) error {
@@ -86,6 +93,21 @@ func runInterface(ctx context.Context, application application, input io.Reader,
 	}
 	_, noColor := os.LookupEnv("NO_COLOR")
 	model := newInterface(runningContext, application, runner, noColor)
+	if application.prefetch {
+		model.prefetcher = func(prefetchContext context.Context, state session.State, topic string) error {
+			running.Lock()
+			defer running.Unlock()
+			if err := runningContext.Err(); err != nil {
+				return err
+			}
+			if err := prefetchContext.Err(); err != nil {
+				return err
+			}
+			worker := application
+			worker.state = state
+			return worker.prefetchLesson(prefetchContext, topic)
+		}
+	}
 	environment := os.Environ()
 	options := []tea.ProgramOption{
 		tea.WithContext(runningContext), tea.WithInput(input), tea.WithOutput(output),
@@ -128,9 +150,11 @@ func newInterface(ctx context.Context, application application, runner turnRunne
 	input.Focus()
 	activity := spinner.New()
 	activity.Spinner = spinner.MiniDot
+	background := spinner.New()
+	background.Spinner = spinner.MiniDot
 	model := interfaceModel{
 		application: application, ctx: ctx, run: runner,
-		input: input, viewport: viewport.New(), spinner: activity,
+		input: input, viewport: viewport.New(), spinner: activity, prefetchSpinner: background,
 		width: 100, height: 32, dark: true, noColor: noColor,
 		page: "lesson", history: len(application.state.Turns) - 1,
 		notice: "Completed turns save automatically",
@@ -149,6 +173,9 @@ func (model interfaceModel) Init() tea.Cmd {
 	if len(model.application.state.Turns) == 0 {
 		return tea.Batch(append(commands, func() tea.Msg { return beginFirstLesson{} })...)
 	}
+	if _, wanted := model.prefetchTarget(); wanted {
+		commands = append(commands, tea.Tick(prefetchDelay, func(time.Time) tea.Msg { return prefetchDue{} }))
+	}
 	return tea.Batch(commands...)
 }
 
@@ -157,6 +184,8 @@ type beginFirstLesson struct{}
 func (model interfaceModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	next, command := model.update(message)
 	updated := next.(interfaceModel)
+	scheduled, schedule := updated.schedulePrefetch(model)
+	updated, command = scheduled, tea.Batch(command, schedule)
 	if model.primaryPage() && !updated.primaryPage() {
 		updated.origin = model.page
 	}
@@ -230,19 +259,31 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 			return model, model.input.Focus()
 		}
 		return model, nil
+	case prefetchDue:
+		model.prefetchScheduled = false
+		return model.startPrefetch()
+	case prefetchFinished:
+		return model.finishPrefetch(message), nil
 	case spinner.TickMsg:
+		var commands []tea.Cmd
 		if model.busy {
 			var command tea.Cmd
 			model.spinner, command = model.spinner.Update(message)
-			return model, command
+			commands = append(commands, command)
 		}
-		return model, nil
+		if model.prefetching {
+			var command tea.Cmd
+			model.prefetchSpinner, command = model.prefetchSpinner.Update(message)
+			commands = append(commands, command)
+		}
+		return model, tea.Batch(commands...)
 	case tea.KeyPressMsg:
 		switch message.String() {
 		case "ctrl+q":
 			if model.cancel != nil {
 				model.cancel()
 			}
+			model = model.stopPrefetch()
 			return model, tea.Quit
 		case "ctrl+c":
 			if model.busy {
@@ -250,6 +291,7 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 				model.notice = "Stopping this turn. Completed progress is saved."
 				return model, nil
 			}
+			model = model.stopPrefetch()
 			return model, tea.Quit
 		case "esc":
 			if !model.primaryPage() {
@@ -369,6 +411,7 @@ func (model interfaceModel) begin(intent turnIntent) (tea.Model, tea.Cmd) {
 		model.notice = "Keep each message under 16000 bytes. Your draft is still here."
 		return model, nil
 	}
+	model = model.stopPrefetch()
 	model.busy = true
 	model.started = time.Now()
 	model.intent = intent
