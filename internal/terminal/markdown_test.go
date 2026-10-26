@@ -61,13 +61,30 @@ func TestCitationScrollsRenderedMarkdownToItsText(t *testing.T) {
 	}
 }
 
-func TestRenderedMarkdownHasNoMarkerWhenNothingMatches(t *testing.T) {
+func TestRenderedMarkdownAlwaysMarksARow(t *testing.T) {
 	model := interfaceFixture()
-	model.application.snapshot.Files = append(model.application.snapshot.Files, repository.File{Path: "rule.md", Content: "# Title\n\n***\n"})
-	opened, _ := model.openSource(repository.Location{Path: "rule.md", Line: 3})
-	page := opened.(interfaceModel)
-	if strings.Contains(ansi.Strip(page.pageContent), "› ") || !strings.Contains(page.notice, "could not place it") {
-		t.Fatalf("an unmatched citation should show no marker: %q", page.notice)
+	model.application.snapshot.Files = append(model.application.snapshot.Files,
+		repository.File{Path: "rule.md", Content: "# Title\n\n***\n"},
+		repository.File{Path: "comment.md", Content: "<!-- generated -->\n\n# Real Heading Here\n"})
+	for name, test := range map[string]struct {
+		path, row, notice string
+		line              int
+	}{
+		"unmatched citation":         {"rule.md", "› Title", "so the top is marked", 3},
+		"list pick on a hidden line": {"comment.md", "› Real Heading Here", "so the top is marked", 1},
+		"matched line":               {"comment.md", "› Real Heading Here", "marked with ›", 3},
+	} {
+		opened, _ := model.openSource(repository.Location{Path: test.path, Line: test.line})
+		page := opened.(interfaceModel)
+		var marked []string
+		for _, row := range strings.Split(ansi.Strip(page.pageContent), "\n") {
+			if strings.HasPrefix(row, "› ") {
+				marked = append(marked, strings.TrimRight(row, " "))
+			}
+		}
+		if len(marked) != 1 || !strings.Contains(marked[0], strings.TrimPrefix(test.row, "› ")) || !strings.Contains(page.notice, test.notice) {
+			t.Fatalf("%s: marked %q, notice %q", name, marked, page.notice)
+		}
 	}
 }
 
