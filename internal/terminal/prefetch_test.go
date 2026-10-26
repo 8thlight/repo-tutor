@@ -146,9 +146,9 @@ func TestPrefetchSkipsStudiedCachedAndFailedTopicsAndNeverRetriesAFailure(t *tes
 
 func TestForegroundRequestForTheSameTopicWaitsForThePrefetchInsteadOfCancellingIt(t *testing.T) {
 	model, topic := prefetchFixture(t)
-	var prefetchContext context.Context
+	contexts := make(chan context.Context, 1)
 	model.prefetcher = func(ctx context.Context, _ session.State, _ string) error {
-		prefetchContext = ctx
+		contexts <- ctx
 		<-ctx.Done()
 		return ctx.Err()
 	}
@@ -156,14 +156,15 @@ func TestForegroundRequestForTheSameTopicWaitsForThePrefetchInsteadOfCancellingI
 	model = started
 	results := make(chan prefetchFinished, 1)
 	go func() { results <- runPrefetchCommand(t, command) }()
+	prefetchContext := <-contexts
 	waiting, _ := model.begin(turnIntent{"lesson", firstLessonMessage, topic})
 	model = waiting.(interfaceModel)
 	defer model.cancel()
-	if !model.busy || !model.prefetching || model.prefetchCancel == nil {
+	if !model.busy || !model.prefetching || prefetchContext.Err() != nil {
 		t.Fatal("a request for the prefetched topic should wait behind the prefetch")
 	}
 	stopped, _ := press(model, tea.KeyEscape, 0)
-	if stopped.prefetching || prefetchContext == nil {
+	if stopped.prefetching {
 		t.Fatal("Esc while waiting should stop the prefetch it waits on")
 	}
 	<-results
