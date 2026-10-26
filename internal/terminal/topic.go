@@ -40,7 +40,7 @@ func resumeTopic(state session.State, topic string) (session.State, bool) {
 func (model interfaceModel) openTopic(topic string) (tea.Model, tea.Cmd) {
 	resumed, found := resumeTopic(model.application.state, topic)
 	if !found {
-		return model.begin(turnIntent{"lesson", "Teach the next small idea in this topic.", topic})
+		return model.openFirstLesson(topic)
 	}
 	if model.application.store != nil {
 		if err := model.application.store.Save(resumed); err != nil {
@@ -51,5 +51,21 @@ func (model interfaceModel) openTopic(topic string) (tea.Model, tea.Cmd) {
 	model.application.state = resumed
 	model.history = len(resumed.Turns) - 1
 	model.notice = "Resumed this topic. Answer, or continue when you are ready."
+	return model.learn()
+}
+
+func (model interfaceModel) openFirstLesson(topic string) (tea.Model, tea.Cmd) {
+	lesson, cached := model.application.cachedLesson(topic)
+	if !cached || !lesson.Fresh(model.application.snapshot.Fingerprint) {
+		return model.begin(turnIntent{"lesson", firstLessonMessage, topic})
+	}
+	opened, err := model.application.openWithLesson(lesson, firstLessonMessage)
+	if err != nil {
+		model.notice = tutor.Plain(err.Error())
+		return model, nil
+	}
+	model.application.state = opened
+	model.history = len(opened.Turns) - 1
+	model.notice = "Opened a lesson prepared earlier"
 	return model.learn()
 }

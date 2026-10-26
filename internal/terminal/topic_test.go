@@ -71,3 +71,34 @@ func TestPickingAnUnstudiedTopicStillRequestsItsFirstLesson(t *testing.T) {
 	}
 	next.cancel()
 }
+
+func TestNextTopicOpensAFreshCachedLessonWithoutARequestAndIgnoresAStaleOne(t *testing.T) {
+	for _, fingerprint := range []string{"current", "older"} {
+		model := twoTopicFixture()
+		store, err := session.Open(t.TempDir(), "/work/repowise")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer store.Close()
+		model.application.store = store
+		model.application.snapshot.Fingerprint = "current"
+		reply := tutor.Reply{Explanation: "The CLI parses flags.", Question: "Which flag sets the goal?", Assessment: "none", Citations: model.application.state.Turns[0].Reply.Citations}
+		lesson := tutor.SavedLesson{Fingerprint: fingerprint, Goal: tutor.GoalKey(model.application.state.Goal), Topic: "cli", Reply: reply}
+		if err := store.SaveLesson(tutor.LessonKey(model.application.state.Goal, "cli"), tutor.EncodeLesson(lesson)); err != nil {
+			t.Fatal(err)
+		}
+		opened, command := model.openTopic("cli")
+		next := opened.(interfaceModel)
+		if fingerprint == "older" {
+			if command == nil || !next.busy {
+				t.Fatal("a lesson for changed source must be requested again")
+			}
+			next.cancel()
+			continue
+		}
+		state := next.application.state
+		if next.busy || state.Topic != "cli" || state.Question != reply.Question || state.Progress["cli"].Lessons != 1 || len(state.Turns) != 3 {
+			t.Fatalf("a fresh cached lesson should open with no request: busy=%v %+v", next.busy, state)
+		}
+	}
+}
