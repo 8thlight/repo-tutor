@@ -1,10 +1,11 @@
 package tutor
 
 type Progress struct {
-	Lessons int `json:"lessons"`
-	Correct int `json:"correct"`
-	Partial int `json:"partial"`
-	Missed  int `json:"missed"`
+	Lessons int  `json:"lessons"`
+	Correct int  `json:"correct"`
+	Partial int  `json:"partial"`
+	Missed  int  `json:"missed"`
+	Held    bool `json:"held,omitempty"`
 }
 
 func Record(previous map[string]Progress, topic string, action string, reply Reply) map[string]Progress {
@@ -23,6 +24,7 @@ func Record(previous map[string]Progress, topic string, action string, reply Rep
 		progress.Partial++
 	case "incorrect":
 		progress.Missed++
+		progress.Held = false
 	}
 	result[topic] = progress
 	return result

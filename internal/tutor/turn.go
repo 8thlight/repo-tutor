@@ -84,6 +84,8 @@ Cite at least one provided source using its exact relative path and a line in it
 In explanation and feedback use path:line references for factual code claims. The citations
 array must include the supporting locations. Never cite an unprovided line.
 For action lesson, explain the current topic and end with one comprehension question.
+For action probe, ask one short question that tests whether the learner already knows what this
+topic does, without teaching it; use explanation for one framing sentence and assessment none.
 For action quiz, ask one practical question about this topic without giving away its answer;
 use explanation only to frame the exercise. For action answer, assess the learner's answer
 to pending_question and give specific corrective feedback. Do not introduce a new idea or
@@ -136,7 +138,7 @@ func DecodeReply(content string, prepared Context, request Request) (Reply, erro
 	if reply.Assessment != "none" && (request.Action != "answer" || request.Question == "" || strings.TrimSpace(reply.Feedback) == "") {
 		return Reply{}, fmt.Errorf("agent graded an answer without a pending question and feedback")
 	}
-	if (request.Action == "lesson" || request.Action == "quiz") && strings.TrimSpace(reply.Question) == "" {
+	if (request.Action == "lesson" || request.Action == "quiz" || request.Action == "probe") && strings.TrimSpace(reply.Question) == "" {
 		return Reply{}, fmt.Errorf("agent omitted the comprehension question")
 	}
 	if len(reply.Citations) == 0 || len(reply.Citations) > 32 {

@@ -31,7 +31,15 @@ func reviewing(state session.State) bool {
 	return false
 }
 
-func continueIntent(state session.State, extend bool) (turnIntent, error) {
+func probeIntent(state session.State, course []tutor.Topic) (turnIntent, error) {
+	topics := tutor.ProbeTopics(course, state.Progress)
+	if len(topics) == 0 {
+		return turnIntent{}, fmt.Errorf("every topic is already marked as known; use /topic or /quiz")
+	}
+	return turnIntent{"probe", "Ask one short question that tests whether I already know this topic.", topics[0]}, nil
+}
+
+func continueIntent(state session.State, course []tutor.Topic, extend bool) (turnIntent, error) {
 	quiz := state.Quiz
 	if extend {
 		if quiz == nil || quiz.Completed() < quiz.Goal {
@@ -41,6 +49,15 @@ func continueIntent(state session.State, extend bool) (turnIntent, error) {
 	}
 	if !reviewing(state) {
 		return turnIntent{}, fmt.Errorf("answer the current question before continuing")
+	}
+	if probe := state.Probe; probe != nil {
+		if next, more := probe.Next(); more {
+			return turnIntent{"probe", "Ask one short question that tests whether I already know this topic.", next}, nil
+		}
+		if topic, found := tutor.FirstUnheld(course, state.Progress); found {
+			return turnIntent{"lesson", "Teach this topic and connect it to its foundations.", topic.ID}, nil
+		}
+		return turnIntent{}, fmt.Errorf("every topic is marked as known; use /topic or /quiz")
 	}
 	if quiz != nil {
 		if quiz.Completed() >= quiz.Goal {
@@ -75,7 +92,7 @@ func quizText(quiz *tutor.Quiz) string {
 }
 
 func (model interfaceModel) continueQuiz(extend bool) (tea.Model, tea.Cmd) {
-	intent, err := continueIntent(model.application.state, extend)
+	intent, err := continueIntent(model.application.state, model.application.course, extend)
 	if err != nil {
 		model.notice = err.Error()
 		return model, nil

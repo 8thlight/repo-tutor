@@ -165,6 +165,29 @@ func TestQuizGoalWaitsForContinueAndSurvivesResume(t *testing.T) {
 	}
 }
 
+func TestProbeMarksKnownTopicAndSurvivesResume(t *testing.T) {
+	repository, stateDirectory := fixture(t), t.TempDir()
+	arguments := []string{repository, "--agent", "codex", "--state-dir", stateDirectory, "--plain"}
+	output, err := run(t, "/probe\nthat is correct\n/topics\n/continue\n/next\n/quit\n", arguments...)
+	if err != nil {
+		t.Fatalf("probe session failed: %v\n%s", err, output)
+	}
+	for _, expected := range []string{"Assessment: correct", "(known)", "every topic is marked as known", "You reached the last topic"} {
+		if !strings.Contains(output, expected) {
+			t.Fatalf("missing %q in probe output:\n%s", expected, output)
+		}
+	}
+	state := saved(t, stateDirectory)
+	probe := state["probe"].(map[string]any)
+	if probe["answered"] != float64(1) || len(state["turns"].([]any)) != 3 || state["version"] != float64(2) {
+		t.Fatalf("probe was not saved after one answer: %+v", state)
+	}
+	output, err = run(t, "/topics\n/quit\n", arguments...)
+	if err != nil || strings.Contains(output, "Waiting for") || !strings.Contains(output, "(known)") {
+		t.Fatalf("resume lost the known topic: %v\n%s", err, output)
+	}
+}
+
 func TestChangedSourceStartsFreshAndArchivesProgress(t *testing.T) {
 	repository, stateDirectory := fixture(t), t.TempDir()
 	arguments := []string{repository, "--agent", "codex", "--state-dir", stateDirectory, "--goal", "Trace the entry point"}

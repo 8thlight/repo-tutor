@@ -346,6 +346,8 @@ func turnLabel(action string) string {
 	switch action {
 	case "quiz", "quiz-next", "quiz-extend":
 		return "quiz question"
+	case "probe":
+		return "knowledge check"
 	case "answer":
 		return "answer review"
 	case "question":

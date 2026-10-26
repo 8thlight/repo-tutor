@@ -271,7 +271,7 @@ func study(ctx context.Context, arguments []string, input io.Reader, output, dia
 		if learningGoal == "" {
 			learningGoal = "Understand the architecture and become ready to make a small change."
 		}
-		state = session.State{Version: 1, Repository: snapshot.Root, Fingerprint: snapshot.Fingerprint, Agent: chosen, Model: *model, Goal: learningGoal, Topic: tutor.Overview, Progress: map[string]tutor.Progress{}}
+		state = session.State{Version: session.Version, Repository: snapshot.Root, Fingerprint: snapshot.Fingerprint, Agent: chosen, Model: *model, Goal: learningGoal, Topic: tutor.Overview, Progress: map[string]tutor.Progress{}}
 		if err := store.Save(state); err != nil {
 			return err
 		}

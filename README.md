@@ -47,6 +47,7 @@ Slash commands also work in the answer box and in plain mode:
 | `/topics` or `/topics pipeline` | List topics, optionally matching a path |
 | `/topic 3` or `/topic internal/tutor` | Study a topic |
 | `/next` | Move to the next topic |
+| `/probe` | Answer three short questions; topics you know are marked known and skipped by `/next` |
 | `/quiz` | Start a five-question quiz |
 | `/continue` | Move on after reviewing an answer |
 | `/questions` or `/extend` | Show the quiz index or add five questions after finishing |

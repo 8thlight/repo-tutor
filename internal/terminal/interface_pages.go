@@ -19,6 +19,7 @@ Enter           Send an answer, question, or slash command
 Alt+Enter       Add a line to your answer
 Ctrl+N          Learn the next topic
 Ctrl+G          Start a five-question quiz
+/probe           Check what you already know and skip those topics
 Ctrl+F          Continue after reviewing an answer
 Ctrl+B          Open the quiz question index and goal
 Ctrl+K          Browse and search topics
@@ -205,7 +206,11 @@ func (model interfaceModel) progressText() string {
 		if progress == (tutor.Progress{}) {
 			continue
 		}
-		fmt.Fprintf(&text, "%s\n  %d lessons   %d correct   %d partial   %d incorrect\n\n", topic.Title, progress.Lessons, progress.Correct, progress.Partial, progress.Missed)
+		title := topic.Title
+		if progress.Held {
+			title += " (known)"
+		}
+		fmt.Fprintf(&text, "%s\n  %d lessons   %d correct   %d partial   %d incorrect\n\n", title, progress.Lessons, progress.Correct, progress.Partial, progress.Missed)
 	}
 	if text.Len() == 0 {
 		text.WriteString("Your first lesson is a good place to start.\n\n")
@@ -215,10 +220,8 @@ func (model interfaceModel) progressText() string {
 }
 
 func (model interfaceModel) next() (tea.Model, tea.Cmd) {
-	for index, topic := range model.application.course {
-		if topic.ID == model.application.state.Topic && index+1 < len(model.application.course) {
-			return model.begin(turnIntent{"lesson", "Teach this topic and connect it to its foundations.", model.application.course[index+1].ID})
-		}
+	if topic, found := tutor.NextUnheld(model.application.course, model.application.state.Progress, model.application.state.Topic); found {
+		return model.begin(turnIntent{"lesson", "Teach this topic and connect it to its foundations.", topic.ID})
 	}
 	model.notice = "You reached the last topic. Try a quiz, choose another topic, or use /review."
 	return model, nil
@@ -259,6 +262,14 @@ func (model interfaceModel) slash(text string) (tea.Model, tea.Cmd) {
 	case "/continue", "/extend":
 		model.input.Reset()
 		return model.continueQuiz(parts[0] == "/extend")
+	case "/probe":
+		intent, err := probeIntent(model.application.state, model.application.course)
+		if err != nil {
+			model.notice = err.Error()
+			return model, nil
+		}
+		model.input.Reset()
+		return model.begin(intent)
 	case "/questions":
 		model.input.Reset()
 		return model.openDocument("quiz", "Quiz questions", quizText(model.application.state.Quiz))

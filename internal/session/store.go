@@ -14,6 +14,8 @@ import (
 	"repo-tutor/internal/tutor"
 )
 
+const Version = 2
+
 type Turn struct {
 	Topic   string      `json:"topic"`
 	Action  string      `json:"action"`
@@ -33,6 +35,7 @@ type State struct {
 	Question    string                    `json:"question"`
 	Review      bool                      `json:"review,omitempty"`
 	Quiz        *tutor.Quiz               `json:"quiz,omitempty"`
+	Probe       *tutor.Probe              `json:"probe,omitempty"`
 	Progress    map[string]tutor.Progress `json:"progress"`
 	Turns       []Turn                    `json:"turns"`
 	Updated     time.Time                 `json:"updated"`
@@ -93,7 +96,7 @@ func (store *Store) Load() (State, bool, error) {
 	if err := decoder.Decode(&trailing); err != io.EOF {
 		return State{}, false, fmt.Errorf("saved session contains extra data; use --new to archive it and start again")
 	}
-	if state.Version != 1 || state.Repository == "" || state.Topic == "" || (state.Agent != "claude" && state.Agent != "codex") {
+	if state.Version != Version || state.Repository == "" || state.Topic == "" || (state.Agent != "claude" && state.Agent != "codex") {
 		return State{}, false, fmt.Errorf("saved session has an unsupported format; use --new to archive it and start again")
 	}
 	return state, true, nil

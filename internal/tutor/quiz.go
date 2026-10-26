@@ -25,7 +25,7 @@ func RecordQuiz(previous *Quiz, topic, action, pending string, reply Reply) *Qui
 	if action == "quiz" {
 		return &Quiz{Topic: topic, Goal: 5, Questions: []QuizQuestion{{Text: reply.Question}}}
 	}
-	if action == "lesson" || (previous != nil && previous.Topic != topic) {
+	if action == "lesson" || action == "probe" || (previous != nil && previous.Topic != topic) {
 		return nil
 	}
 	if previous == nil {
