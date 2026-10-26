@@ -21,6 +21,7 @@ type Turn struct {
 	Action  string      `json:"action"`
 	Message string      `json:"message"`
 	Reply   tutor.Reply `json:"reply"`
+	Resumed bool        `json:"resumed,omitempty"`
 }
 
 type State struct {

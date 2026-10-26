@@ -38,6 +38,9 @@ func TestPickingAStudiedTopicResumesItWithoutARequest(t *testing.T) {
 	if state.Progress[tutor.Overview] != before[tutor.Overview] || state.Progress["core"] != before["core"] {
 		t.Fatal("a resume must not change progress")
 	}
+	if !state.Turns[2].Resumed || state.Turns[1].Resumed {
+		t.Fatal("only the appended copy should be marked resumed")
+	}
 	again, _ := model.openTopic("core")
 	state = again.(interfaceModel).application.state
 	if state.Topic != "core" || state.Question != "Where is the calculation?" || len(state.Turns) != 4 {
