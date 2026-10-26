@@ -31,7 +31,7 @@ Ctrl+S          Browse cited sources and open the code
 Ctrl+O          Explore churn and branching hotspots
 v               Switch a Markdown file between rendered and source
 Ctrl+P          See lessons and recorded answer outcomes
-Ctrl+L / Esc    Return to the current lesson
+Ctrl+L / Esc    Return to the current lesson (a page key again also closes it)
 Alt+Left/Right  Read earlier or later turns
 PgUp / PgDown   Scroll the lesson or source
 Tab / Shift+Tab Switch between Home, learning, and browsing
