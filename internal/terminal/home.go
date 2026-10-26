@@ -12,7 +12,8 @@ import (
 )
 
 const (
-	placeBrowse   = "browse"
+	placeTopics   = "topics"
+	placeExplore  = "explore"
 	placeProgress = "progress"
 	placeAbout    = "about"
 	placeProbe    = "probe"
@@ -40,7 +41,9 @@ func (model interfaceModel) homeEntries() []homeEntry {
 	if state.Quiz != nil {
 		entries = append(entries, homeEntry{tutor.PlaceQuiz, "Quiz", "Answer five questions on this topic and revisit any you skipped.", ""})
 	}
-	entries = append(entries, homeEntry{placeBrowse, "Browse", "Topics, cited sources, and reading hotspots.", ""})
+	entries = append(entries,
+		homeEntry{placeTopics, "Topics", "Pick any topic to study or revisit.", ""},
+		homeEntry{placeExplore, "Explore", "Cited sources, the code itself, and reading hotspots.", ""})
 	if model.overviewStale {
 		entries = append(entries, homeEntry{placeRefresh, "Refresh the overview", "The repository changed since the overview was written. Generate a new one.", ""})
 	}
@@ -149,8 +152,10 @@ func (model interfaceModel) openHomeEntry(entry homeEntry) (tea.Model, tea.Cmd) 
 		return model.learn()
 	case tutor.PlaceQuiz:
 		return model.learn()
-	case placeBrowse:
+	case placeTopics:
 		return model.openPicker("topics", "")
+	case placeExplore:
+		return model.openPicker("sources", "")
 	case placeAbout:
 		return model.openAbout()
 	case placeProbe:

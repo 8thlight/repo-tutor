@@ -121,7 +121,7 @@ func (model *interfaceModel) configurePicker(filter string) {
 			items = append(items, slot)
 		}
 	case "sources":
-		model.pageTitle = "Follow the evidence"
+		model.pageTitle = "Sources · Follow the evidence · Ctrl+O hotspots"
 		seen := map[string]bool{}
 		if len(model.application.state.Turns) > 0 {
 			turn := model.application.state.Turns[max(0, model.history)]
@@ -140,7 +140,7 @@ func (model *interfaceModel) configurePicker(filter string) {
 			}
 		}
 	case "hotspots":
-		model.pageTitle = "Where to pay attention"
+		model.pageTitle = "Hotspots · Where to pay attention · Ctrl+S sources"
 		for _, hotspot := range model.application.snapshot.Hotspots {
 			description := fmt.Sprintf("%d recent commits · %d branch points · %d lines", hotspot.Commits, hotspot.Branches, hotspot.Lines)
 			if !model.application.snapshot.History {
@@ -375,10 +375,10 @@ func (model interfaceModel) next() (tea.Model, tea.Cmd) {
 }
 
 func (model interfaceModel) cyclePage(backward bool) (tea.Model, tea.Cmd) {
-	pages := []string{"home", "lesson", "topics", "quiz", "sources", "hotspots", "progress"}
+	tabs := []string{"home", "learn", "quiz", "explore", "progress"}
 	selected := 0
-	for index, page := range pages {
-		if page == model.page {
+	for index, tab := range tabs {
+		if tab == model.activeTab() {
 			selected = index
 		}
 	}
@@ -386,17 +386,17 @@ func (model interfaceModel) cyclePage(backward bool) (tea.Model, tea.Cmd) {
 	if backward {
 		step = -1
 	}
-	page := pages[(selected+step+len(pages))%len(pages)]
-	if page == "home" {
+	switch tabs[(selected+step+len(tabs))%len(tabs)] {
+	case "home":
 		return model.openHome()
-	}
-	if page == "lesson" {
+	case "learn":
 		return model.learn()
+	case "quiz":
+		return model.openPicker("quiz", "")
+	case "explore":
+		return model.openPicker("sources", "")
 	}
-	if page == "progress" {
-		return model.openDocument(page, "Progress", model.progressText())
-	}
-	return model.openPicker(page, "")
+	return model.openDocument("progress", "Progress", model.progressText())
 }
 
 func (model interfaceModel) slash(text string) (tea.Model, tea.Cmd) {
