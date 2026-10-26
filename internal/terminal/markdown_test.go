@@ -70,3 +70,32 @@ func TestRenderedMarkdownHasNoMarkerWhenNothingMatches(t *testing.T) {
 		t.Fatalf("an unmatched citation should show no marker: %q", page.notice)
 	}
 }
+
+func TestRenderedRowSeesThroughHTMLTagsAndEntities(t *testing.T) {
+	source := []string{`<h1 align="center">Understand your codebase without paying</h1>`, `<td><sub><strong>less agent output</strong><br />p&lt;0.0001</sub></td>`}
+	rendered := "Understand your codebase without paying your agent\nless agent outputp<0.0001\n"
+	if row, found := renderedRow(source, 1, rendered); !found || row != 0 {
+		t.Fatalf("a heading wrapped in HTML should match its rendered text: %d %v", row, found)
+	}
+	if markdownWords(source[1]) != "less agent output p<0.0001" {
+		t.Fatalf("tags and entities should not reach the match: %q", markdownWords(source[1]))
+	}
+}
+
+func TestRenderedPagesDropTrailingPadding(t *testing.T) {
+	padded := "text" + strings.Repeat("\x1b[38;5;252m \x1b[m", 80)
+	if got := trimPadding(padded); ansi.StringWidth(got) != 4 || strings.Count(got, "\x1b[") > 2 {
+		t.Fatalf("trailing padding cells should be removed: %q", got)
+	}
+	if trimPadding("  indented") != "  indented" {
+		t.Fatal("leading spaces are content and must stay")
+	}
+}
+
+func TestRenderedRowMatchesATableRowThroughItsRules(t *testing.T) {
+	source := []string{"| Name | Value |", "|---|---|", "| **Output tokens** | -31.6% |"}
+	rendered := "│ Name          │ Value  │\n│ Output tokens │ -31.6% │\n"
+	if row, found := renderedRow(source, 3, rendered); !found || row != 1 {
+		t.Fatalf("a table row should match its rendered cells: %d %v", row, found)
+	}
+}
