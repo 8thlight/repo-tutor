@@ -44,3 +44,19 @@ func TestNoticesCoverEveryLinkedModule(t *testing.T) {
 		t.Fatal("the notices should list modules and carry their license text")
 	}
 }
+
+func TestOnlyReleaseTagsReplaceTheDevelopmentVersion(t *testing.T) {
+	for version, want := range map[string]string{
+		"v1.2.3":       "v1.2.3",
+		"v1.2.3+dirty": "v1.2.3",
+		"v1.2.3-rc.1":  "v1.2.3-rc.1",
+		"v0.0.0-20261026154011-381cd4d0b81a+dirty": developmentVersion,
+		"v0.1.1-0.20261026154011-381cd4d0b81a":     developmentVersion,
+		"(devel)":                                  developmentVersion,
+		"":                                         developmentVersion,
+	} {
+		if got := FromBuildInfo(&debug.BuildInfo{Main: debug.Module{Version: version}}, true, "linux", "amd64").Version; got != want {
+			t.Fatalf("%q read as %q, want %q", version, got, want)
+		}
+	}
+}
