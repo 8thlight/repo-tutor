@@ -212,9 +212,9 @@ func (model interfaceModel) showSource(file repository.File, location repository
 	}
 	model, command := model.document("source", fmt.Sprintf("%s:%d", location.Path, location.Line), content.String())
 	model.sourcePath, model.sourceLine, model.sourceRendered = file.Path, location.Line, false
-	model.notice = "Source snapshot · /read PATH:LINE opens another location · Esc returns to your lesson"
+	model.notice = "Source snapshot · /read PATH:LINE opens another location · Esc goes back"
 	if isMarkdown(file.Path) {
-		model.notice = "Source snapshot · v shows the rendered page · Esc returns to your lesson"
+		model.notice = "Source snapshot · v shows the rendered page · Esc goes back"
 	}
 	return model, command
 }
@@ -244,7 +244,7 @@ func (model interfaceModel) rememberMarkdownView(path string, rendered bool) int
 func (model interfaceModel) showRendered(file repository.File, line int) (tea.Model, tea.Cmd) {
 	model, command := model.document("source", file.Path+" · rendered", model.markdown(file.Content))
 	model.sourcePath, model.sourceLine, model.sourceRendered = file.Path, line, true
-	model.notice = "Rendered Markdown · v shows the source · Esc returns to your lesson"
+	model.notice = "Rendered Markdown · v shows the source · Esc goes back"
 	return model, command
 }
 

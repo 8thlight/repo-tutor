@@ -209,7 +209,7 @@ func (model interfaceModel) composer() string {
 	palette := model.palette()
 	muted := lipgloss.NewStyle().Foreground(palette.muted)
 	if model.page != "lesson" {
-		content := muted.Render("Esc returns to your lesson")
+		content := muted.Render("Esc goes back")
 		if model.input.Value() != "" {
 			content += "\n" + muted.Render(ansi.Truncate("Draft kept: "+tutor.Plain(model.input.Value()), model.bodyWidth(), "…"))
 		}
