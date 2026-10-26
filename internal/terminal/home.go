@@ -13,7 +13,7 @@ import (
 
 const (
 	placeTopics   = "topics"
-	placeExplore  = "explore"
+	placeHotspots = "hotspots"
 	placeProgress = "progress"
 	placeAbout    = "about"
 	placeProbe    = "probe"
@@ -43,7 +43,7 @@ func (model interfaceModel) homeEntries() []homeEntry {
 	}
 	entries = append(entries,
 		homeEntry{placeTopics, "Topics", "Pick any topic to study or revisit.", ""},
-		homeEntry{placeExplore, "Explore", "Cited sources, the code itself, and reading hotspots.", ""})
+		homeEntry{placeHotspots, "Hotspots", "Files that change often or branch a lot, ranked as reading hints.", ""})
 	if model.overviewStale {
 		entries = append(entries, homeEntry{placeRefresh, "Refresh the overview", "The repository changed since the overview was written. Generate a new one.", ""})
 	}
@@ -154,8 +154,8 @@ func (model interfaceModel) openHomeEntry(entry homeEntry) (tea.Model, tea.Cmd) 
 		return model.learn()
 	case placeTopics:
 		return model.openPicker("topics", "")
-	case placeExplore:
-		return model.openPicker("sources", "")
+	case placeHotspots:
+		return model.openPicker("hotspots", "")
 	case placeAbout:
 		return model.openAbout()
 	case placeProbe:

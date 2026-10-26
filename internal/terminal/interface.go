@@ -47,6 +47,7 @@ type interfaceModel struct {
 	page              string
 	homeSelected      int
 	origin            string
+	sourceList        string
 	prefetcher        lessonPrefetcher
 	prefetching       bool
 	prefetchScheduled bool
@@ -202,6 +203,9 @@ func (model interfaceModel) primaryPage() bool {
 }
 
 func (model interfaceModel) back() (tea.Model, tea.Cmd) {
+	if model.page == "source" && model.sourceList != "" {
+		return model.openPicker(model.sourceList, "")
+	}
 	if model.origin == "home" {
 		model.page, model.pageTitle = "home", "Welcome"
 		model.input.Blur()

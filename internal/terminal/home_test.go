@@ -10,6 +10,7 @@ import (
 	"github.com/charmbracelet/colorprofile"
 	"github.com/charmbracelet/x/ansi"
 
+	"repo-tutor/internal/repository"
 	"repo-tutor/internal/session"
 	"repo-tutor/internal/tutor"
 )
@@ -35,7 +36,7 @@ func homeNumber(model interfaceModel, place string) rune {
 func TestHomeRecommendsLearnFirstAndStartsTheOverviewInTheBackground(t *testing.T) {
 	model := newLearnerFixture()
 	content := ansi.Strip(model.View().Content)
-	for _, expected := range []string{"Recommended: You have not started.", "› 1  Learn", "Explore", "Home"} {
+	for _, expected := range []string{"Recommended: You have not started.", "› 1  Learn", "Hotspots", "Home"} {
 		if !strings.Contains(content, expected) {
 			t.Fatalf("home is missing %q:\n%s", expected, content)
 		}
@@ -44,7 +45,7 @@ func TestHomeRecommendsLearnFirstAndStartsTheOverviewInTheBackground(t *testing.
 	for _, entry := range model.homeEntries() {
 		places = append(places, entry.place)
 	}
-	if strings.Join(places, ",") != "learn,topics,explore,about" {
+	if strings.Join(places, ",") != "learn,topics,hotspots,about" {
 		t.Fatalf("a new learner should see only places with something to show: %v", places)
 	}
 	started, command := model.Update(beginFirstLesson{})
@@ -303,7 +304,7 @@ func TestHomeOffersProbeAndRefreshOnlyWhenTheyApply(t *testing.T) {
 
 func TestTabsGroupPagesByActivity(t *testing.T) {
 	model := interfaceFixture()
-	for page, want := range map[string]string{"home": "home", "lesson": "learn", "topics": "learn", "quiz": "quiz", "sources": "explore", "source": "explore", "hotspots": "explore", "progress": "progress", "help": "help", "about": "about"} {
+	for page, want := range map[string]string{"home": "home", "lesson": "learn", "topics": "learn", "quiz": "learn", "sources": "learn", "source": "learn", "hotspots": "hotspots", "progress": "progress", "help": "help", "about": "about"} {
 		model.page = page
 		if got := model.activeTab(); got != want {
 			t.Fatalf("%s page should highlight %s, got %s", page, want, got)
@@ -311,20 +312,20 @@ func TestTabsGroupPagesByActivity(t *testing.T) {
 	}
 	opened, _ := model.openPicker("topics", "")
 	content := ansi.Strip(opened.(interfaceModel).View().Content)
-	if strings.Contains(content, "Topics    Quiz") || !strings.Contains(content, "Learn    Quiz    Explore    Progress") {
-		t.Fatalf("the tab bar should show five tabs:\n%s", content)
+	if !strings.Contains(content, "Home    Learn    Hotspots    Progress") {
+		t.Fatalf("the tab bar should show four tabs:\n%s", content)
 	}
 }
 
-func TestTabKeyStepsThroughTheFiveTabs(t *testing.T) {
+func TestTabKeyStepsThroughTheFourTabs(t *testing.T) {
 	model := newLearnerFixture()
 	var visited []string
-	for index := 0; index < 5; index++ {
+	for index := 0; index < 4; index++ {
 		model, _ = press(model, tea.KeyTab, 0)
 		visited = append(visited, model.activeTab())
 	}
-	if strings.Join(visited, ",") != "learn,quiz,explore,progress,home" {
-		t.Fatalf("Tab should step Home, Learn, Quiz, Explore, Progress and wrap: %v", visited)
+	if strings.Join(visited, ",") != "learn,hotspots,progress,home" {
+		t.Fatalf("Tab should step Home, Learn, Hotspots, Progress and wrap: %v", visited)
 	}
 	if model.page != "home" {
 		t.Fatalf("wrapping should land on Home, got %s", model.page)
@@ -333,9 +334,25 @@ func TestTabKeyStepsThroughTheFiveTabs(t *testing.T) {
 	if back.activeTab() != "progress" {
 		t.Fatalf("Shift+Tab should go back one tab, got %s", back.activeTab())
 	}
-	explore, _ := press(newLearnerFixture(), 's', tea.ModCtrl)
-	next, _ := press(explore, tea.KeyTab, 0)
-	if next.activeTab() != "progress" || next.page != "progress" {
-		t.Fatalf("Tab from Explore should leave it, got %s", next.page)
+	sources, _ := press(newLearnerFixture(), 's', tea.ModCtrl)
+	next, _ := press(sources, tea.KeyTab, 0)
+	if next.activeTab() != "hotspots" || next.page != "hotspots" {
+		t.Fatalf("Tab from Sources should reach Hotspots, got %s", next.page)
+	}
+}
+
+func TestEscLeavesASourceFileForTheListItCameFrom(t *testing.T) {
+	for _, list := range []string{"sources", "hotspots"} {
+		opened, _ := newLearnerFixture().openPicker(list, "")
+		model := opened.(interfaceModel)
+		file, _ := model.openFile(repository.Location{Path: "main.go", Line: 1})
+		inFile := file.(interfaceModel)
+		if inFile.page != "source" {
+			t.Fatalf("%s: Enter should open a file, got %s", list, inFile.page)
+		}
+		back, _ := press(inFile, tea.KeyEscape, 0)
+		if back.page != list {
+			t.Fatalf("Esc from a file opened from %s should return to it, got %s", list, back.page)
+		}
 	}
 }
