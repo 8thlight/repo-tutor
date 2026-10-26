@@ -1,6 +1,7 @@
 package terminal
 
 import (
+	"html"
 	"regexp"
 	"strings"
 
@@ -10,15 +11,18 @@ import (
 const matchedWords = 4
 
 var (
+	htmlTag        = regexp.MustCompile(`<[^>]*>`)
 	markdownLink   = regexp.MustCompile(`\[([^\]]*)\]\([^)]*\)`)
 	markdownMarker = regexp.MustCompile(`^\s*(?:#{1,6}\s+|>\s*|[-*+]\s+|\d+[.)]\s+)+`)
 	markdownMarks  = strings.NewReplacer("**", "", "__", "", "*", "", "_", "", "`", "")
+	tableRules     = strings.NewReplacer("|", " ", "│", " ")
 )
 
 func markdownWords(line string) string {
+	line = html.UnescapeString(htmlTag.ReplaceAllString(line, " "))
 	line = markdownMarker.ReplaceAllString(line, "")
 	line = markdownLink.ReplaceAllString(line, "$1")
-	line = markdownMarks.Replace(line)
+	line = tableRules.Replace(markdownMarks.Replace(line))
 	words := strings.Fields(line)
 	if len(words) > matchedWords {
 		words = words[:matchedWords]
@@ -41,7 +45,7 @@ func renderedRow(source []string, line int, rendered string) (int, bool) {
 		}
 	}
 	for row, text := range strings.Split(rendered, "\n") {
-		if strings.Contains(strings.Join(strings.Fields(ansi.Strip(text)), " "), target) {
+		if strings.Contains(strings.Join(strings.Fields(tableRules.Replace(ansi.Strip(text))), " "), target) {
 			if occurrence == 0 {
 				return row, true
 			}
@@ -49,4 +53,11 @@ func renderedRow(source []string, line int, rendered string) (int, bool) {
 		}
 	}
 	return 0, false
+}
+
+var trailingStyles = regexp.MustCompile(`(?:\x1b\[[0-9;]*m)+$`)
+
+func trimPadding(row string) string {
+	trimmed := ansi.Truncate(row, ansi.StringWidth(strings.TrimRight(ansi.Strip(row), " ")), "")
+	return trailingStyles.ReplaceAllString(trimmed, "\x1b[m")
 }

@@ -258,7 +258,7 @@ func (model interfaceModel) markdownPage(file repository.File, line int, cited b
 		if found && index == row {
 			gutter = marker
 		}
-		rows[index] = gutter + rows[index]
+		rows[index] = gutter + trimPadding(rows[index])
 	}
 	return strings.Join(rows, "\n"), row, found
 }
