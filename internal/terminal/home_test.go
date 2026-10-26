@@ -88,3 +88,16 @@ func TestResumedSessionOpensOnLearnNotHome(t *testing.T) {
 		t.Fatalf("a session with no turns should open on Home, got %s", model.page)
 	}
 }
+
+func TestAboutPageShowsBuildCopyrightAndSessionAgent(t *testing.T) {
+	model := interfaceFixture()
+	model.input.SetValue("/about")
+	next, _ := model.submit()
+	model = next.(interfaceModel)
+	content := ansi.Strip(model.View().Content)
+	for _, expected := range []string{"About repo-tutor", "Copyright © 2026 Eighth Light LLC.", "https://8thlight.com", "This session uses codex (default model)."} {
+		if !strings.Contains(content, expected) {
+			t.Fatalf("about page is missing %q:\n%s", expected, content)
+		}
+	}
+}

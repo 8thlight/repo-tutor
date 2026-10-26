@@ -10,6 +10,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 
+	"repo-tutor/internal/about"
 	"repo-tutor/internal/repository"
 	"repo-tutor/internal/tutor"
 )
@@ -42,7 +43,7 @@ then Enter opens the selected item. Esc returns to the lesson.
 
 Slash commands from the plain interface also work:
 /topics [filter]  /topic NUMBER|PATH  /next  /quiz  /review
-/continue  /questions  /extend  /refresh  /home
+/continue  /questions  /extend  /refresh  /home  /about
 /sources  /read PATH:LINE  /hotspots  /progress  /glossary
 /map  /help  /quit
 
@@ -267,6 +268,15 @@ func (model interfaceModel) document(page, title, content string) (interfaceMode
 	return model, nil
 }
 
+func (model interfaceModel) aboutText() string {
+	state := model.application.state
+	modelName := state.Model
+	if modelName == "" {
+		modelName = "default model"
+	}
+	return about.Read().Text() + fmt.Sprintf("\nThis session uses %s (%s).\n", state.Agent, modelName)
+}
+
 func (model interfaceModel) progressText() string {
 	var text strings.Builder
 	for _, topic := range model.application.course {
@@ -330,6 +340,9 @@ func (model interfaceModel) slash(text string) (tea.Model, tea.Cmd) {
 	case "/continue", "/extend":
 		model.input.Reset()
 		return model.continueQuiz(parts[0] == "/extend")
+	case "/about":
+		model.input.Reset()
+		return model.openDocument("about", "About repo-tutor", model.aboutText())
 	case "/home":
 		model.input.Reset()
 		return model.openHome()
