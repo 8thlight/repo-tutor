@@ -1,6 +1,6 @@
 # 0090. Rendered Markdown sources
 
-Status: accepted
+Status: accepted. The first-view rule is replaced by [0120](0120-markdown-first.md).
 
 ## Context
 
