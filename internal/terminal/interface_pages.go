@@ -187,8 +187,8 @@ func (model interfaceModel) openFile(location repository.Location, byCitation bo
 		model.notice = "This file is not in the source snapshot."
 		return model, nil
 	}
-	if isMarkdown(file.Path) && model.rendersMarkdown(file.Path, byCitation) {
-		return model.showRendered(file, location.Line)
+	if isMarkdown(file.Path) && model.rendersMarkdown(file.Path) {
+		return model.showRendered(file, location.Line, byCitation)
 	}
 	return model.showSource(file, location)
 }
@@ -224,11 +224,11 @@ func isMarkdown(path string) bool {
 	return extension == ".md" || extension == ".markdown"
 }
 
-func (model interfaceModel) rendersMarkdown(path string, byCitation bool) bool {
+func (model interfaceModel) rendersMarkdown(path string) bool {
 	if rendered, chosen := model.markdownViews[path]; chosen {
 		return rendered
 	}
-	return !byCitation
+	return true
 }
 
 func (model interfaceModel) rememberMarkdownView(path string, rendered bool) interfaceModel {
@@ -241,10 +241,13 @@ func (model interfaceModel) rememberMarkdownView(path string, rendered bool) int
 	return model
 }
 
-func (model interfaceModel) showRendered(file repository.File, line int) (tea.Model, tea.Cmd) {
+func (model interfaceModel) showRendered(file repository.File, line int, cited bool) (tea.Model, tea.Cmd) {
 	model, command := model.document("source", file.Path+" · rendered", model.markdown(file.Content))
 	model.sourcePath, model.sourceLine, model.sourceRendered = file.Path, line, true
 	model.notice = "Rendered Markdown · v shows the source · Esc goes back"
+	if cited {
+		model.notice = fmt.Sprintf("Line %d · v shows the source at that line · Esc goes back", line)
+	}
 	return model, command
 }
 
@@ -258,7 +261,7 @@ func (model interfaceModel) toggleMarkdownView() (tea.Model, tea.Cmd) {
 		return model.showSource(file, repository.Location{Path: file.Path, Line: max(1, model.sourceLine)})
 	}
 	model = model.rememberMarkdownView(file.Path, true)
-	return model.showRendered(file, model.sourceLine)
+	return model.showRendered(file, model.sourceLine, false)
 }
 
 func (model interfaceModel) openDocument(page, title, content string) (tea.Model, tea.Cmd) {
