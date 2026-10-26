@@ -47,6 +47,7 @@ type interfaceModel struct {
 	page           string
 	homeSelected   int
 	origin         string
+	overviewStale  bool
 	sourcePath     string
 	sourceLine     int
 	sourceRendered bool
@@ -194,6 +195,9 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 		} else {
 			model.application.state = message.state
 			model.history = len(message.state.Turns) - 1
+			if model.intent.message == openingMessage {
+				model.overviewStale = false
+			}
 			model.errorText = ""
 			if model.intent.action == "answer" || model.intent.action == "question" {
 				model.input.Reset()
@@ -410,7 +414,8 @@ func (model interfaceModel) openCached(overview tutor.SavedOverview) (tea.Model,
 	model.application.state = opened
 	model.history = len(opened.Turns) - 1
 	model.notice = "Loaded the saved overview"
-	if !overview.Fresh(model.application.snapshot.Fingerprint) {
+	model.overviewStale = !overview.Fresh(model.application.snapshot.Fingerprint)
+	if model.overviewStale {
 		model.notice = staleOverviewNotice
 	}
 	model.rebuildContent()
