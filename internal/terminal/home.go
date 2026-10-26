@@ -34,8 +34,8 @@ func (model interfaceModel) homeEntries() []homeEntry {
 		entries = append(entries, homeEntry{tutor.PlaceContinue, "Continue", "Move on from the answer you just reviewed.", ""})
 	}
 	entries = append(entries, homeEntry{tutor.PlaceLearn, "Learn", "Read the repository overview, then one idea at a time with a question to answer.", ""})
-	if _, err := probeIntent(state, model.application.course); err == nil && state.Probe == nil {
-		entries = append(entries, homeEntry{placeProbe, "Check what you know", "Answer a few short questions so the tutor can skip topics you already know.", ""})
+	if _, err := probeIntent(state, model.application.course); err == nil && state.Probe == nil && len(state.Turns) > 0 {
+		entries = append(entries, homeEntry{placeProbe, "Check what you know", "Optional. Already know this repository's foundations? Answer a few short questions to skip topics you know. New here? Skip this.", ""})
 	}
 	if state.Quiz != nil {
 		entries = append(entries, homeEntry{tutor.PlaceQuiz, "Quiz", "Answer five questions on this topic and revisit any you skipped.", ""})

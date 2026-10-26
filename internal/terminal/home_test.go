@@ -44,7 +44,7 @@ func TestHomeRecommendsLearnFirstAndStartsTheOverviewInTheBackground(t *testing.
 	for _, entry := range model.homeEntries() {
 		places = append(places, entry.place)
 	}
-	if strings.Join(places, ",") != "learn,probe,browse,about" {
+	if strings.Join(places, ",") != "learn,browse,about" {
 		t.Fatalf("a new learner should see only places with something to show: %v", places)
 	}
 	started, command := model.Update(beginFirstLesson{})
@@ -262,6 +262,15 @@ func TestFailedOverviewShowsOnHomeAndRetryStaysThere(t *testing.T) {
 
 func TestHomeOffersProbeAndRefreshOnlyWhenTheyApply(t *testing.T) {
 	model := newLearnerFixture()
+	if strings.Contains(strings.Join(func() (names []string) {
+		for _, entry := range model.homeEntries() {
+			names = append(names, entry.place)
+		}
+		return
+	}(), ","), placeProbe) {
+		t.Fatal("the probe should wait until the overview has been opened")
+	}
+	model.application.state.Turns = interfaceFixture().application.state.Turns
 	places := func() string {
 		var names []string
 		for _, entry := range model.homeEntries() {
