@@ -10,6 +10,8 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 
+	"github.com/charmbracelet/x/ansi"
+
 	"repo-tutor/internal/about"
 	"repo-tutor/internal/repository"
 	"repo-tutor/internal/tutor"
@@ -268,13 +270,23 @@ func (model interfaceModel) document(page, title, content string) (interfaceMode
 	return model, nil
 }
 
+const splashMinimumWidth = 113
+
+func (model interfaceModel) showsSplash() bool {
+	return model.trueColor && !model.noColor && model.width >= splashMinimumWidth
+}
+
 func (model interfaceModel) aboutText() string {
 	state := model.application.state
 	modelName := state.Model
 	if modelName == "" {
 		modelName = "default model"
 	}
-	return about.Read().Text() + fmt.Sprintf("\nThis session uses %s (%s).\nBuilt with Bubble Tea, Bubbles, Lip Gloss, Glamour, and Chroma, which are MIT licensed.\nrepo-tutor --version --notices prints every third-party license.\n", state.Agent, modelName)
+	text := about.Read().Text() + fmt.Sprintf("\nThis session uses %s (%s).\nBuilt with Bubble Tea, Bubbles, Lip Gloss, Glamour, and Chroma, which are MIT licensed.\nrepo-tutor --version --notices prints every third-party license.\n", state.Agent, modelName)
+	if !model.showsSplash() {
+		return text
+	}
+	return about.Splash() + "\x1b[0m\n" + ansi.Wrap(about.SplashCaption, about.SplashWidth, "") + "\n\n" + text
 }
 
 func (model interfaceModel) progressText() string {

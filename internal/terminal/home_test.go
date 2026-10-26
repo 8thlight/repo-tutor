@@ -4,6 +4,8 @@ import (
 	"strings"
 	"testing"
 
+	tea "charm.land/bubbletea/v2"
+	"github.com/charmbracelet/colorprofile"
 	"github.com/charmbracelet/x/ansi"
 
 	"repo-tutor/internal/session"
@@ -98,6 +100,41 @@ func TestAboutPageShowsBuildCopyrightAndSessionAgent(t *testing.T) {
 	for _, expected := range []string{"About repo-tutor", "Copyright © 2026 Eighth Light LLC.", "https://8thlight.com", "This session uses codex (default model)."} {
 		if !strings.Contains(content, expected) {
 			t.Fatalf("about page is missing %q:\n%s", expected, content)
+		}
+	}
+}
+
+func TestAboutShowsThePaintingOnlyOnWideTrueColorTerminals(t *testing.T) {
+	for name, test := range map[string]struct {
+		width     int
+		trueColor bool
+		noColor   bool
+		shown     bool
+	}{
+		"wide truecolor": {113, true, false, true},
+		"too narrow":     {112, true, false, false},
+		"256 colors":     {140, false, false, false},
+		"NO_COLOR":       {140, true, true, false},
+	} {
+		model := interfaceFixture()
+		model.width, model.height = test.width, 60
+		model.noColor = test.noColor
+		colored, _ := model.Update(tea.ColorProfileMsg{Profile: map[bool]colorprofile.Profile{true: colorprofile.TrueColor, false: colorprofile.ANSI256}[test.trueColor]})
+		model = colored.(interfaceModel)
+		model.noColor = test.noColor
+		model.input.SetValue("/about")
+		next, _ := model.submit()
+		model = next.(interfaceModel)
+		text := model.pageContent
+		if shown := strings.Contains(text, "Jan Lievens, 1631"); shown != test.shown {
+			t.Fatalf("%s: painting shown=%v, want %v", name, shown, test.shown)
+		}
+		if test.shown {
+			for _, line := range strings.Split(ansi.Strip(model.View().Content), "\n") {
+				if ansi.StringWidth(line) > test.width {
+					t.Fatalf("%s: line overflows: %q", name, line)
+				}
+			}
 		}
 	}
 }
