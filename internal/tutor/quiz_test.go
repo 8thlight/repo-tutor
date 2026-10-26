@@ -11,6 +11,14 @@ func TestQuizGoalAndImmutableOutcomes(t *testing.T) {
 	if hint.Completed() != 0 {
 		t.Fatal("a hint counted as a completed question")
 	}
+	clarified := RecordQuiz(quiz, "core", "answer", "First?", Reply{Assessment: "none", Question: "Which package owns the calculation, based on the overview?"})
+	if clarified.Completed() != 0 || len(clarified.Questions) != 1 || clarified.Questions[0].Text != "Which package owns the calculation, based on the overview?" || quiz.Questions[0].Text != "First?" {
+		t.Fatal("clarification must revise the current question without completing it or mutating prior state")
+	}
+	clarified = RecordQuiz(clarified, "core", "answer", clarified.Questions[0].Text, Reply{Assessment: "correct"})
+	if clarified.Completed() != 1 || clarified.Questions[0].Assessment != "correct" {
+		t.Fatal("the revised question could not be answered")
+	}
 	graded := RecordQuiz(quiz, "core", "answer", "First?", Reply{Assessment: "incorrect"})
 	if quiz.Completed() != 0 || graded.Completed() != 1 || len(graded.Questions) != 1 {
 		t.Fatal("grading must record one outcome without generating the next question or mutating the prior quiz")

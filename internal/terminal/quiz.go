@@ -18,17 +18,7 @@ func reviewing(state session.State) bool {
 		return false
 	}
 	turn := state.Turns[len(state.Turns)-1]
-	if turn.Action != "answer" {
-		return false
-	}
-	if turn.Reply.Assessment != "none" || turn.Reply.Question == "" {
-		return true
-	}
-	if len(state.Turns) > 1 {
-		previous := state.Turns[len(state.Turns)-2]
-		return previous.Topic == turn.Topic && previous.Reply.Question != "" && previous.Reply.Question != turn.Reply.Question
-	}
-	return false
+	return turn.Action == "answer" && (turn.Reply.Assessment != "none" || turn.Reply.Question == "")
 }
 
 func probeIntent(state session.State, course []tutor.Topic) (turnIntent, error) {

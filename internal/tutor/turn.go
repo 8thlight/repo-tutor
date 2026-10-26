@@ -36,6 +36,7 @@ type Request struct {
 	Question string
 	Goal     string
 	Previous *Reply
+	Lesson   *Reply
 }
 
 type Context struct {
@@ -60,8 +61,9 @@ func Prepare(snapshot repository.Snapshot, request Request) Context {
 		Message  string    `json:"learner_message"`
 		Question string    `json:"pending_question"`
 		Previous *Reply    `json:"previous_reply,omitempty"`
+		Lesson   *Reply    `json:"last_lesson,omitempty"`
 		Sources  []Excerpt `json:"sources"`
-	}{request.Goal, request.Topic, request.Action, request.Message, request.Question, request.Previous, excerpts})
+	}{request.Goal, request.Topic, request.Action, request.Message, request.Question, request.Previous, request.Lesson, excerpts})
 	prompt := `You are repo-tutor, teaching a developer this specific code repository.
 Respond only with JSON matching the supplied response schema. Use plain, concise language.
 Teach one small idea per turn, explain why it matters, and point to real code.
@@ -87,7 +89,28 @@ For action lesson, explain the current topic and end with one comprehension ques
 For action probe, ask one short question that tests whether the learner already knows what this
 topic does, without teaching it; use explanation for one framing sentence and assessment none.
 For action quiz, ask one practical question about this topic without giving away its answer;
-use explanation only to frame the exercise. For action answer, assess the learner's answer
+use explanation only to frame the exercise.
+
+Quiz design instructions:
+- Test one concept taught in last_lesson or earlier explanations to the learner. The source
+  inventory and citations are evidence available to you, not material the learner has read.
+- Match the lesson's level of detail. After a package-level overview, ask about package
+  responsibilities; do not demand exact implementation or test filenames not introduced.
+- Make the question answerable from taught material and facts explicitly supplied in the
+  exercise. If no lesson is available, supply enough context for a self-contained exercise.
+  New code may be shown as a short cited excerpt, with unfamiliar terms explained first.
+- For debugging exercises, supply a concrete input, expected output or behavior, and observed
+  failure. Separate hypothetical failures from bugs actually demonstrated by the sources.
+  A vague symptom such as "a dependency is missing" cannot identify a unique failing layer.
+- Ask for one bounded result, such as a package choice with a reason, a traced value, or one
+  assertion. Accept equivalent reasoning instead of requiring a hidden file pair or wording.
+- Before asking, check that the supplied facts support an answer and distinguish reasonable
+  alternatives. If they do not, narrow the question or add context without revealing the answer.
+These teaching prerequisites apply to quizzes and lesson comprehension questions. A probe
+intentionally checks prior knowledge before teaching; still make its question unambiguous.
+
+Answer and clarification instructions:
+For action answer, assess the learner's answer
 to pending_question and give specific corrective feedback. Do not introduce a new idea or
 question after an attempted answer: set question to an empty string. The learner explicitly
 continues before the next exercise. Use explanation only to explain this answer, not what
@@ -99,6 +122,11 @@ Use correct, partial, or incorrect only when the message actually attempts an an
 Use none when the learner asks a question, asks for a hint, or says they do not know.
 For all other actions use assessment none. Never claim mastery from merely seeing a lesson.
 If the learner asks for a hint, preserve the pending question and do not reveal the full answer.
+If the learner asks what a question means, challenges its ambiguity, or says it requires
+untaught material, treat that as clarification, not an answer attempt or a request to skip.
+Use assessment none and empty feedback. Explain the missing context and return the pending
+question, rephrased at the taught level when needed, in question. Keep this exercise open;
+do not move to another topic, reveal its full solution, or set question empty for clarification.
 If sources are insufficient, say what is missing instead of guessing. Explain unfamiliar
 repository terms when first used. Prioritize the learner's goal, but keep the chosen topic.
 
@@ -195,9 +223,12 @@ func selectExcerpts(snapshot repository.Snapshot, request Request) []Excerpt {
 		}
 		add(selected.Path, 1)
 	}
-	if request.Previous != nil {
+	for _, reply := range []*Reply{request.Lesson, request.Previous} {
+		if reply == nil {
+			continue
+		}
 		seen := map[string]bool{}
-		for _, citation := range request.Previous.Citations {
+		for _, citation := range reply.Citations {
 			if !seen[citation.Path] && len(seen) < 4 {
 				add(citation.Path, max(1, citation.Line-12))
 				seen[citation.Path] = true

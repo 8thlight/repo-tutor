@@ -45,6 +45,7 @@ func (application application) completeTurn(ctx context.Context, action, message
 	if action == "quiz-next" || action == "quiz-extend" {
 		request.Action = "quiz"
 	}
+	request.Lesson = lastLesson(application.state.Turns, topic)
 	if topic == application.state.Topic {
 		if !reviewing(application.state) {
 			request.Question = application.state.Question
@@ -94,6 +95,16 @@ func (application application) completeTurn(ctx context.Context, action, message
 		return session.State{}, fmt.Errorf("save tutor turn: %w", err)
 	}
 	return updated, nil
+}
+
+func lastLesson(turns []session.Turn, topic string) *tutor.Reply {
+	for index := len(turns) - 1; index >= 0; index-- {
+		if turns[index].Topic == topic && turns[index].Action == "lesson" {
+			reply := turns[index].Reply
+			return &reply
+		}
+	}
+	return nil
 }
 
 func (application *application) show(reply tutor.Reply) {

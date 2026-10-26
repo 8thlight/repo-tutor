@@ -96,14 +96,31 @@ func TestSkippedQuestionHasBoundaryAndFailedContinueKeepsReview(t *testing.T) {
 	}
 }
 
-func TestLegacyUngradedSkipWaitsForContinue(t *testing.T) {
+func TestRephrasedQuestionRemainsAnswerable(t *testing.T) {
 	model := interfaceFixture()
-	model.application.state.Turns = append(model.application.state.Turns, session.Turn{Topic: tutor.Overview, Action: "answer", Message: "Skip this question", Reply: tutor.Reply{Assessment: "none", Explanation: "Answer to the last exercise.", Question: "An old automatically generated next question?"}})
+	model.application.state.Turns = append(model.application.state.Turns, session.Turn{Topic: tutor.Overview, Action: "answer", Message: "What do you mean?", Reply: tutor.Reply{Assessment: "none", Explanation: "Consider the package responsibilities from the overview.", Question: "Which package owns calculations?"}})
 	model.application.state.Question = model.application.state.Turns[1].Reply.Question
 	model.history = 1
 	composer := ansi.Strip(model.composer())
-	if !strings.Contains(composer, "Continue") || strings.Contains(composer, model.application.state.Question) {
-		t.Fatalf("an older ungraded skip should resume at review:\n%s", composer)
+	if strings.Contains(composer, "Continue") || !strings.Contains(composer, model.application.state.Question) {
+		t.Fatalf("clarification must keep the revised question available to answer:\n%s", composer)
+	}
+}
+
+func TestLastLessonMatchesTopicAndIgnoresQuizFeedback(t *testing.T) {
+	turns := []session.Turn{
+		{Topic: "core", Action: "lesson", Reply: tutor.Reply{Explanation: "An older lesson."}},
+		{Topic: "core", Action: "lesson", Reply: tutor.Reply{Explanation: "The calculation belongs to core."}},
+		{Topic: "cli", Action: "lesson", Reply: tutor.Reply{Explanation: "CLI handles commands."}},
+		{Topic: "core", Action: "quiz", Reply: tutor.Reply{Explanation: "Try an exercise."}},
+		{Topic: "core", Action: "answer", Reply: tutor.Reply{Explanation: "Correct."}},
+	}
+	lesson := lastLesson(turns, "core")
+	if lesson == nil || lesson.Explanation != "The calculation belongs to core." {
+		t.Fatal("quiz must retain the latest lesson for its topic across intervening turns")
+	}
+	if lastLesson(turns, "unseen") != nil {
+		t.Fatal("an unseen topic inherited another topic's teaching")
 	}
 }
 
