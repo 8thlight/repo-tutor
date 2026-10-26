@@ -57,7 +57,7 @@ func (model *interfaceModel) resize() {
 		model.pageContent = model.aboutText()
 	}
 	if file, found := model.application.snapshot.File(model.sourcePath); found && model.page == "source" && model.sourceRendered {
-		model.pageContent, _, _ = model.markdownPage(file, model.sourceLine, model.sourceCited)
+		model.pageContent, _, _ = model.markdownPage(file, model.sourceLine)
 	}
 	if model.isPicker() {
 		model.configurePicker(model.picker.FilterValue())

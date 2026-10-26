@@ -173,22 +173,21 @@ func (model interfaceModel) selectItem() (tea.Model, tea.Cmd) {
 	if model.page == "quiz" {
 		return model.selectQuizSlot(item.line)
 	}
-	byCitation := model.page != "sources" || !strings.HasPrefix(item.description, "Available")
-	return model.openFile(repository.Location{Path: item.value, Line: item.line}, byCitation)
+	return model.openFile(repository.Location{Path: item.value, Line: item.line})
 }
 
 func (model interfaceModel) openSource(location repository.Location) (tea.Model, tea.Cmd) {
-	return model.openFile(location, true)
+	return model.openFile(location)
 }
 
-func (model interfaceModel) openFile(location repository.Location, byCitation bool) (tea.Model, tea.Cmd) {
+func (model interfaceModel) openFile(location repository.Location) (tea.Model, tea.Cmd) {
 	file, found := model.application.snapshot.File(location.Path)
 	if !found {
 		model.notice = "This file is not in the source snapshot."
 		return model, nil
 	}
 	if isMarkdown(file.Path) && model.rendersMarkdown(file.Path) {
-		return model.showRendered(file, location.Line, byCitation)
+		return model.showRendered(file, location.Line)
 	}
 	return model.showSource(file, location)
 }
@@ -245,17 +244,17 @@ func (model interfaceModel) rememberMarkdownView(path string, rendered bool) int
 	return model
 }
 
-func (model interfaceModel) markdownPage(file repository.File, line int, cited bool) (string, int, bool) {
+func (model interfaceModel) markdownPage(file repository.File, line int) (string, int, bool) {
 	rendered := model.markdown(file.Content)
-	row, found := -1, false
-	if cited {
-		row, found = renderedRow(strings.Split(file.Content, "\n"), line, rendered)
+	rows := strings.Split(rendered, "\n")
+	row, found := renderedRow(strings.Split(file.Content, "\n"), line, rendered)
+	if !found {
+		row = firstTextRow(rows)
 	}
 	marker := lipgloss.NewStyle().Foreground(model.palette().accent).Bold(true).Render("› ")
-	rows := strings.Split(rendered, "\n")
 	for index := range rows {
 		gutter := "  "
-		if found && index == row {
+		if index == row {
 			gutter = marker
 		}
 		rows[index] = gutter + trimPadding(rows[index])
@@ -263,14 +262,20 @@ func (model interfaceModel) markdownPage(file repository.File, line int, cited b
 	return strings.Join(rows, "\n"), row, found
 }
 
-func (model interfaceModel) showRendered(file repository.File, line int, cited bool) (tea.Model, tea.Cmd) {
-	page, row, found := model.markdownPage(file, line, cited)
-	model, command := model.document("source", file.Path+" · rendered", page)
-	model.sourcePath, model.sourceLine, model.sourceRendered, model.sourceCited = file.Path, line, true, cited
-	model.notice = "Rendered Markdown · v shows the source · Esc goes back"
-	if cited {
-		model.notice = fmt.Sprintf("Line %d · could not place it in this view · v shows the source at that line · Esc goes back", line)
+func firstTextRow(rows []string) int {
+	for index, row := range rows {
+		if strings.TrimSpace(ansi.Strip(row)) != "" {
+			return index
+		}
 	}
+	return 0
+}
+
+func (model interfaceModel) showRendered(file repository.File, line int) (tea.Model, tea.Cmd) {
+	page, row, found := model.markdownPage(file, line)
+	model, command := model.document("source", file.Path+" · rendered", page)
+	model.sourcePath, model.sourceLine, model.sourceRendered = file.Path, line, true
+	model.notice = fmt.Sprintf("Line %d · could not place it, so the top is marked with › · v shows the source · Esc goes back", line)
 	if found {
 		model.viewport.SetYOffset(max(0, row-sourceContextRows/4))
 		model.notice = fmt.Sprintf("Line %d · marked with › · v shows the source at that line · Esc goes back", line)
@@ -288,7 +293,7 @@ func (model interfaceModel) toggleMarkdownView() (tea.Model, tea.Cmd) {
 		return model.showSource(file, repository.Location{Path: file.Path, Line: max(1, model.sourceLine)})
 	}
 	model = model.rememberMarkdownView(file.Path, true)
-	return model.showRendered(file, model.sourceLine, model.sourceCited)
+	return model.showRendered(file, model.sourceLine)
 }
 
 func (model interfaceModel) openDocument(page, title, content string) (tea.Model, tea.Cmd) {

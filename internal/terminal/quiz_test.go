@@ -307,15 +307,15 @@ func TestMarkdownAlwaysOpensRenderedAndTogglesToSourceAtTheCitedLine(t *testing.
 		t.Fatalf("v should return to the rendered page, got %q", model.pageTitle)
 	}
 	model, _ = press(model, 'v', 0)
-	listed, _ := model.openFile(repository.Location{Path: "README.md", Line: 1}, false)
+	listed, _ := model.openFile(repository.Location{Path: "README.md", Line: 1})
 	if listed.(interfaceModel).pageTitle != "README.md:1" {
 		t.Fatal("a file whose view was chosen should keep that view")
 	}
-	fresh, _ := interfaceFixture().openFile(repository.Location{Path: "README.md", Line: 1}, false)
+	fresh, _ := interfaceFixture().openFile(repository.Location{Path: "README.md", Line: 1})
 	if fresh.(interfaceModel).pageTitle != "README.md · rendered" {
 		t.Fatal("a Markdown file should open rendered when no view was chosen")
 	}
-	code, _ := model.openFile(repository.Location{Path: "main.go", Line: 1}, true)
+	code, _ := model.openFile(repository.Location{Path: "main.go", Line: 1})
 	toggled, _ := press(code.(interfaceModel), 'v', 0)
 	if toggled.pageTitle != "main.go:1" {
 		t.Fatal("code files have no rendered view")
