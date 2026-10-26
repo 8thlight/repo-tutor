@@ -1,6 +1,6 @@
 # 0080. Landing page
 
-Status: accepted
+Status: accepted. The Browse entry is replaced by Topics and Explore under [0170](0170-tab-groups.md).
 
 ## Context
 
