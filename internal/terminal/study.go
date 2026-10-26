@@ -26,6 +26,46 @@ type application struct {
 	timeout     time.Duration
 }
 
+const openingMessage = "Start with the repository's purpose and a map of how it works."
+
+const staleOverviewNotice = "Repository changed since this overview was written. /refresh regenerates it."
+
+func (application application) cachedOverview() (tutor.SavedOverview, bool) {
+	if application.store == nil {
+		return tutor.SavedOverview{}, false
+	}
+	data, found, err := application.store.LoadOverview(tutor.GoalKey(application.state.Goal))
+	if err != nil || !found {
+		return tutor.SavedOverview{}, false
+	}
+	return tutor.DecodeOverview(data)
+}
+
+func (application application) openWithOverview(overview tutor.SavedOverview) (session.State, error) {
+	opened := application.recordReply("lesson", openingMessage, tutor.Overview, "", overview.Reply)
+	if err := application.store.Save(opened); err != nil {
+		return session.State{}, fmt.Errorf("save cached overview: %w", err)
+	}
+	return opened, nil
+}
+
+func (application *application) start(ctx context.Context) error {
+	overview, found := application.cachedOverview()
+	if !found {
+		return application.turn(ctx, "lesson", openingMessage, application.state.Topic)
+	}
+	opened, err := application.openWithOverview(overview)
+	if err != nil {
+		return err
+	}
+	application.state = opened
+	if !overview.Fresh(application.snapshot.Fingerprint) {
+		fmt.Fprintln(application.output, staleOverviewNotice)
+	}
+	application.show(overview.Reply)
+	return nil
+}
+
 func (application *application) turn(ctx context.Context, action, message, topic string) error {
 	fmt.Fprintf(application.diagnostics, "\nWaiting for %s (turn limit %s; Ctrl-C to exit)...\n", application.state.Agent, application.timeout)
 	updated, err := application.completeTurn(ctx, action, message, topic)
@@ -74,6 +114,10 @@ func (application application) completeTurn(ctx context.Context, action, message
 	updated.SessionID = result.SessionID
 	if err := application.store.Save(updated); err != nil {
 		return session.State{}, fmt.Errorf("save tutor turn: %w", err)
+	}
+	if action == "lesson" && topic == tutor.Overview && message == openingMessage {
+		saved := tutor.SavedOverview{Fingerprint: application.snapshot.Fingerprint, Goal: tutor.GoalKey(application.state.Goal), Reply: reply}
+		_ = application.store.SaveOverview(saved.Goal, tutor.EncodeOverview(saved))
 	}
 	return updated, nil
 }
@@ -226,6 +270,8 @@ func (application *application) command(ctx context.Context, text string) (bool,
 			return false, err
 		}
 		return false, application.turn(ctx, intent.action, intent.message, intent.topic)
+	case "/refresh":
+		return false, application.turn(ctx, "lesson", openingMessage, tutor.Overview)
 	case "/questions":
 		fmt.Fprintln(application.output, quizText(application.state.Quiz))
 	case "/quit", "/exit":

@@ -218,14 +218,34 @@ func TestChangedSourceStartsFreshAndArchivesProgress(t *testing.T) {
 		t.Fatal(err)
 	}
 	output, err := run(t, "/quit\n", repository, "--state-dir", stateDirectory)
-	if err != nil || !strings.Contains(output, "Repository sources changed") {
-		t.Fatalf("source changes were not detected: %v\n%s", err, output)
+	if err != nil || !strings.Contains(output, "Repository sources changed") || !strings.Contains(output, "/refresh regenerates it") || strings.Contains(output, "Waiting for") {
+		t.Fatalf("source changes should show the saved overview as stale without a model request: %v\n%s", err, output)
 	}
 	files, _ := filepath.Glob(filepath.Join(stateDirectory, "*", "previous.json"))
 	refreshed := saved(t, stateDirectory)
 	overview := refreshed["progress"].(map[string]any)["overview"].(map[string]any)
 	if len(files) != 1 || refreshed["goal"] != "Trace the entry point" || overview["lessons"] != float64(2) {
 		t.Fatalf("source refresh lost the previous session, learning goal, or progress: %+v", refreshed)
+	}
+}
+
+func TestSavedOverviewOpensInstantlyAndRefreshRegenerates(t *testing.T) {
+	repository, stateDirectory := fixture(t), t.TempDir()
+	arguments := []string{repository, "--agent", "codex", "--state-dir", stateDirectory, "--plain"}
+	if output, err := run(t, "/quit\n", arguments...); err != nil || !strings.Contains(output, "Waiting for") {
+		t.Fatalf("the first run should request the overview: %v\n%s", err, output)
+	}
+	files, _ := filepath.Glob(filepath.Join(stateDirectory, "*", "overview-*.md"))
+	if len(files) != 1 {
+		t.Fatalf("the overview should be saved as one Markdown file: %v", files)
+	}
+	output, err := run(t, "/quit\n", append(arguments, "--new")...)
+	if err != nil || strings.Contains(output, "Waiting for") || !strings.Contains(output, "Execution starts at main.go:2") {
+		t.Fatalf("a fresh session with the same goal should reuse the saved overview: %v\n%s", err, output)
+	}
+	output, err = run(t, "/refresh\n/quit\n", arguments...)
+	if err != nil || !strings.Contains(output, "Waiting for") {
+		t.Fatalf("/refresh should request a new overview: %v\n%s", err, output)
 	}
 }
 

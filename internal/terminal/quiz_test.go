@@ -261,3 +261,29 @@ func TestAnswerTurnIsRecordedOnceAndShiftsWithTrimmedHistory(t *testing.T) {
 		t.Fatal("a trimmed turn must read as no longer saved")
 	}
 }
+
+func TestFirstLessonLoadsSavedOverviewWithoutAgentAndMarksStaleness(t *testing.T) {
+	for _, fingerprint := range []string{"current", "older"} {
+		model := interfaceFixture()
+		store, err := session.Open(t.TempDir(), "/work/repowise")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer store.Close()
+		reply := model.application.state.Turns[0].Reply
+		saved := tutor.SavedOverview{Fingerprint: fingerprint, Goal: tutor.GoalKey(model.application.state.Goal), Reply: reply}
+		if err := store.SaveOverview(saved.Goal, tutor.EncodeOverview(saved)); err != nil {
+			t.Fatal(err)
+		}
+		model.application.store = store
+		model.application.snapshot.Fingerprint = "current"
+		model.application.state.Turns, model.application.state.Progress = nil, map[string]tutor.Progress{}
+		model.history = -1
+		next, _ := model.Update(beginFirstLesson{})
+		model = next.(interfaceModel)
+		stale := strings.Contains(model.notice, "/refresh")
+		if model.busy || len(model.application.state.Turns) != 1 || model.application.state.Progress[tutor.Overview].Lessons != 1 || stale != (fingerprint == "older") {
+			t.Fatalf("saved overview (%s) should open with no request: busy=%v turns=%d notice=%q", fingerprint, model.busy, len(model.application.state.Turns), model.notice)
+		}
+	}
+}
