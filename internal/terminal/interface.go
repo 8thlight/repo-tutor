@@ -51,6 +51,7 @@ type interfaceModel struct {
 	prefetching       bool
 	prefetchScheduled bool
 	prefetchID        int
+	prefetchTopic     string
 	prefetchCancel    context.CancelFunc
 	prefetchFailed    map[string]bool
 	prefetchSpinner   spinner.Model
@@ -85,6 +86,9 @@ func runInterface(ctx context.Context, application application, input io.Reader,
 		running.Lock()
 		defer running.Unlock()
 		if err := runningContext.Err(); err != nil {
+			return session.State{}, err
+		}
+		if err := turnContext.Err(); err != nil {
 			return session.State{}, err
 		}
 		worker := application
@@ -288,6 +292,7 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c":
 			if model.busy {
 				model.cancel()
+				model = model.stopPrefetch()
 				model.notice = "Stopping this turn. Completed progress is saved."
 				return model, nil
 			}
@@ -302,6 +307,7 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			if model.busy {
 				model.cancel()
+				model = model.stopPrefetch()
 				model.notice = "Stopping this turn. Completed progress is saved."
 				return model, nil
 			}
@@ -411,7 +417,9 @@ func (model interfaceModel) begin(intent turnIntent) (tea.Model, tea.Cmd) {
 		model.notice = "Keep each message under 16000 bytes. Your draft is still here."
 		return model, nil
 	}
-	model = model.stopPrefetch()
+	if !model.prefetchingTopic(intent) {
+		model = model.stopPrefetch()
+	}
 	model.busy = true
 	model.started = time.Now()
 	model.intent = intent

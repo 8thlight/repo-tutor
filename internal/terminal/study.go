@@ -90,6 +90,11 @@ func (application application) completeTurn(ctx context.Context, action, message
 	if len(message) > 16000 {
 		return session.State{}, fmt.Errorf("message is too long; keep each turn under 16000 bytes")
 	}
+	if action == "lesson" && message == firstLessonMessage {
+		if lesson, cached := application.cachedLesson(topic); cached && lesson.Fresh(application.snapshot.Fingerprint) {
+			return application.openWithLesson(lesson, message)
+		}
+	}
 	request := tutor.Request{Topic: topic, Action: action, Message: message, Goal: application.state.Goal}
 	if action == "quiz-next" || action == "quiz-extend" {
 		request.Action = "quiz"

@@ -355,7 +355,7 @@ func (model interfaceModel) View() tea.View {
 		keys = "Enter send · F1 help · Ctrl+Q quit"
 	}
 	indicator := ""
-	if model.prefetching {
+	if model.prefetching && !model.busy {
 		indicator = model.prefetchSpinner.View() + " Preparing next lesson"
 	}
 	footer := model.footerLine(notice, indicator, width, muted) + "\n" + muted.Render(ansi.Truncate(keys, width, "…"))

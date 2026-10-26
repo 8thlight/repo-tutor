@@ -64,13 +64,17 @@ func (model interfaceModel) startPrefetch() (interfaceModel, tea.Cmd) {
 		return model, nil
 	}
 	prefetchContext, cancel := context.WithCancel(model.ctx)
-	model.prefetching, model.prefetchCancel = true, cancel
+	model.prefetching, model.prefetchCancel, model.prefetchTopic = true, cancel, topic
 	model.prefetchID++
 	id, state, prefetcher := model.prefetchID, model.application.state, model.prefetcher
 	work := func() tea.Msg {
 		return prefetchFinished{id, topic, prefetcher(prefetchContext, state, topic)}
 	}
 	return model, tea.Batch(work, model.prefetchSpinner.Tick)
+}
+
+func (model interfaceModel) prefetchingTopic(intent turnIntent) bool {
+	return model.prefetching && model.prefetchTopic == intent.topic && intent.action == "lesson" && intent.message == firstLessonMessage
 }
 
 func (model interfaceModel) stopPrefetch() interfaceModel {

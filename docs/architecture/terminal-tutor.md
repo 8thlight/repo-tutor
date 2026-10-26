@@ -66,7 +66,7 @@ A first lesson is saved as `lesson-<goal key>-<topic key>.md` beside `session.js
 
 ## Prefetch
 
-A few seconds after a turn finishes, the workspace checks the topic that Ctrl+N would open. When that topic has no saved turn and no fresh cached lesson, it asks the agent for the topic's first lesson in a separate agent session and saves the result to the lesson cache, with a muted spinner and "Preparing next lesson" at the bottom right. The prefetch waits for the same lock as every turn. Starting any foreground turn, or quitting, cancels it, and a cancelled prefetch is not counted as a failure. A failed prefetch is not retried in the same run. Prefetching records nothing in progress or history. `--no-prefetch` turns it off, and plain mode never prefetches. See [0150](../decisions/0150-prefetch-next-lesson.md).
+A few seconds after a turn finishes, the workspace checks the topic that Ctrl+N would open. When that topic has no saved turn and no fresh cached lesson, it asks the agent for the topic's first lesson in a separate agent session and saves the result to the lesson cache, with a muted spinner and "Preparing next lesson" at the bottom right. The prefetch waits for the same lock as every turn. Starting a foreground turn for another topic, or quitting, cancels it, and a cancelled prefetch is not counted as a failure. A request for the topic being prefetched waits behind it and then uses the lesson it saved; Esc stops both. A first-lesson turn always checks the lesson cache before asking the agent. A failed prefetch is not retried in the same run. Prefetching records nothing in progress or history. `--no-prefetch` turns it off, and plain mode never prefetches. See [0150](../decisions/0150-prefetch-next-lesson.md).
 
 ## Reading hints
 
