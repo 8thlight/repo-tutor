@@ -89,3 +89,71 @@ func (model interfaceModel) continueQuiz(extend bool) (tea.Model, tea.Cmd) {
 	}
 	return model.begin(intent)
 }
+
+func quizSlotItems(state session.State) []browserItem {
+	quiz := state.Quiz
+	if quiz == nil {
+		return []browserItem{{"No quiz yet", "Start a five-question quiz with Ctrl+G or /quiz.", "", -1}}
+	}
+	items := make([]browserItem, 0, quiz.Goal)
+	for slot := 0; slot < max(quiz.Goal, len(quiz.Questions)); slot++ {
+		title, description := fmt.Sprintf("%d  Generated when you get there", slot+1), "Later"
+		if slot < len(quiz.Questions) {
+			question := quiz.Questions[slot]
+			title = fmt.Sprintf("%d  %s", slot+1, tutor.Plain(question.Text))
+			switch question.Assessment {
+			case "":
+				description = "Current · Enter returns to this question"
+			case "skipped":
+				description = "Skipped · Enter answers it again"
+			default:
+				description = "Answered " + question.Assessment
+			}
+		} else if slot == len(quiz.Questions) && reviewing(state) && quiz.Completed() < quiz.Goal {
+			description = "Next · Enter generates this question"
+		}
+		items = append(items, browserItem{title, description, "", slot})
+	}
+	return items
+}
+
+func reopenQuestion(state session.State, slot int) (session.State, bool) {
+	reopened, ok := tutor.Reopen(state.Quiz, slot)
+	if !ok {
+		return state, false
+	}
+	text := reopened.Questions[slot].Text
+	state.Quiz, state.Question, state.Review = reopened, text, false
+	reply := tutor.Reply{Assessment: "none", Explanation: fmt.Sprintf("Returning to question %d of %d.", slot+1, reopened.Goal), Question: text}
+	state.Turns = append(append([]session.Turn(nil), state.Turns...), session.Turn{Topic: state.Topic, Action: "quiz-retry", Reply: reply})
+	return state, true
+}
+
+func (model interfaceModel) selectQuizSlot(slot int) (tea.Model, tea.Cmd) {
+	state := model.application.state
+	quiz := state.Quiz
+	switch {
+	case quiz == nil || slot < 0:
+		model.notice = "Start a quiz with Ctrl+G or /quiz."
+		return model, nil
+	case slot == len(quiz.Questions) && reviewing(state):
+		return model.continueQuiz(false)
+	case slot >= len(quiz.Questions):
+		model.notice = "This question is generated when you reach it."
+		return model, nil
+	}
+	reopened, ok := reopenQuestion(state, slot)
+	if !ok {
+		model.notice = "This question is already answered."
+		return model, nil
+	}
+	if model.application.store != nil {
+		if err := model.application.store.Save(reopened); err != nil {
+			model.notice = "Could not save: " + tutor.Plain(err.Error())
+			return model, nil
+		}
+	}
+	model.application.state = reopened
+	model.history = len(reopened.Turns) - 1
+	return model.learn()
+}

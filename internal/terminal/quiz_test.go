@@ -198,3 +198,49 @@ func TestQuizTabStaysActiveAcrossStartAndIndex(t *testing.T) {
 		t.Fatal("a lesson should keep the Learn tab")
 	}
 }
+
+func TestSelectingSkippedSlotReturnsToItsQuestion(t *testing.T) {
+	model := interfaceFixture()
+	model.application.state.Quiz = &tutor.Quiz{Topic: tutor.Overview, Goal: 5, Active: 1, Questions: []tutor.QuizQuestion{{Text: "Where?", Assessment: "skipped"}, {Text: "Why?", Assessment: "correct"}}}
+	model.application.state.Turns = append(model.application.state.Turns, session.Turn{Topic: tutor.Overview, Action: "answer", Reply: tutor.Reply{Assessment: "correct", Feedback: "Right."}})
+	model.application.state.Question, model.application.state.Review = "", true
+	opened, _ := model.openPicker("quiz", "")
+	model = opened.(interfaceModel)
+	if !model.isPicker() || model.activeTab() != "quiz" || len(model.picker.Items()) != 5 {
+		t.Fatal("the index should list every goal slot as a selectable item")
+	}
+	selected, command := model.selectQuizSlot(0)
+	model = selected.(interfaceModel)
+	if command != nil && model.busy {
+		t.Fatal("reopening a skipped question must not call the agent")
+	}
+	state := model.application.state
+	if model.page != "lesson" || state.Question != "Where?" || state.Quiz.Active != 0 || reviewing(state) || strings.Contains(model.composer(), "Continue") {
+		t.Fatalf("the skipped question should be current and answerable: %+v", state)
+	}
+	answered, _ := model.selectQuizSlot(1)
+	if !strings.Contains(answered.(interfaceModel).notice, "already answered") {
+		t.Fatal("an answered slot must not be reopened")
+	}
+	later, _ := model.selectQuizSlot(4)
+	if !strings.Contains(later.(interfaceModel).notice, "generated when you reach it") {
+		t.Fatal("a later slot must explain that it does not exist yet")
+	}
+}
+
+func TestSelectingNextSlotGeneratesItOnlyAfterReview(t *testing.T) {
+	model := interfaceFixture()
+	model.application.state.Review = true
+	model.application.state.Quiz = &tutor.Quiz{Topic: tutor.Overview, Goal: 5, Questions: []tutor.QuizQuestion{{Text: "First?", Assessment: "partial"}}}
+	model.run = func(_ context.Context, state session.State, action, _, _ string) (session.State, error) {
+		if action != "quiz-next" {
+			t.Fatalf("the next slot should generate the next question, got %s", action)
+		}
+		return state, nil
+	}
+	started, command := model.selectQuizSlot(1)
+	if command == nil || !started.(interfaceModel).busy {
+		t.Fatal("selecting the next slot should continue the quiz")
+	}
+	started.(interfaceModel).cancel()
+}
