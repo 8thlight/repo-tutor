@@ -20,7 +20,7 @@ Only real terminal input and output select the workspace. `--plain`, pipes, redi
 
 A session with no turns opens on Home, the first tab. Home makes no model request. It lists Learn and Browse, adds Quiz once a quiz exists, adds Progress once there is an outcome, and adds Continue while an answer awaits review. `tutor.Recommend` picks one entry from saved state and Home puts it first with its reason. Enter opens the selected entry, number keys open an entry by position, and `/home` returns. A saved overview loads at once; otherwise the overview generates in the background while Home stays on screen. A session with turns resumes on Learn. See [0080](../decisions/0080-landing-page.md).
 
-`/about` opens the About page, and `repo-tutor --version` prints the same build facts as plain text. Both read `about.Read`, which uses the Go build information: module version, commit revision, commit time, and platform. A build without version control data prints `unknown` for those fields. The page adds the session's agent and model. See [0100](../decisions/0100-about-page.md).
+`/about` opens the About page, and `repo-tutor --version` prints the same build facts as plain text. Both read `about.Read`, which uses the Go build information: module version, commit revision, commit time, and platform. A build without version control data prints `unknown` for those fields. The page adds the session's agent and model. `NOTICES.txt` embeds the license text of every linked third-party module; `just notices` regenerates it, `repo-tutor --version --notices` prints it, and a test fails when a linked module is missing from it. See [0100](../decisions/0100-about-page.md).
 
 ## Repository snapshot
 
