@@ -26,7 +26,9 @@ The copyright line is "Copyright © 2026 Eighth Light LLC." It follows the wordi
 
 Ship a generated notices file inside the binary that lists each third-party module and its license text. The About page shows a short credit line and `--version --notices` prints the full text. The dependencies in `go.mod` are the source, so a check in `just check` fails when a module is missing from the file.
 
-The page may show the Jan Lievens painting, "Prince Charles Louis of the Palatinate with his Tutor Wolrad von Plessen in Historical Dress", with the title, artist, and source from its Wikimedia Commons page. Confirm the date and the license text on that page before the caption is final. Show the image only when the terminal is wide and tall enough and supports true color. Otherwise show the text alone. Plain mode and `NO_COLOR` never show it. The image is embedded text, so the binary stays self-contained under 0005.
+The page shows the Jan Lievens painting, "Prince Charles Louis of the Palatinate with his Tutor Wolrad von Plessen in Historical Dress", dated 1631. Its Wikimedia Commons page lists it as public domain, from the J. Paul Getty Museum through Google Art Project, and the caption says so. The art is an 80 column by 43 row true color rendering embedded in the binary. It appears only when the terminal is at least 113 columns wide, true color is detected, and `NO_COLOR` is unset. Below that width the sidebar leaves less than 80 columns for the page. Plain mode never shows it. The image is embedded text, so the binary stays self-contained under 0005.
+
+The version reads `0.1.0-dev` unless the build comes from a release tag. Go stamps untagged builds with a pseudo-version, and that is not shown.
 
 ## Consequences
 
