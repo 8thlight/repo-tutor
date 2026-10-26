@@ -245,17 +245,35 @@ func (model interfaceModel) rememberMarkdownView(path string, rendered bool) int
 	return model
 }
 
-func (model interfaceModel) showRendered(file repository.File, line int, cited bool) (tea.Model, tea.Cmd) {
+func (model interfaceModel) markdownPage(file repository.File, line int, cited bool) (string, int, bool) {
 	rendered := model.markdown(file.Content)
-	model, command := model.document("source", file.Path+" · rendered", rendered)
-	model.sourcePath, model.sourceLine, model.sourceRendered = file.Path, line, true
+	row, found := -1, false
+	if cited {
+		row, found = renderedRow(strings.Split(file.Content, "\n"), line, rendered)
+	}
+	marker := lipgloss.NewStyle().Foreground(model.palette().accent).Bold(true).Render("› ")
+	rows := strings.Split(rendered, "\n")
+	for index := range rows {
+		gutter := "  "
+		if found && index == row {
+			gutter = marker
+		}
+		rows[index] = gutter + rows[index]
+	}
+	return strings.Join(rows, "\n"), row, found
+}
+
+func (model interfaceModel) showRendered(file repository.File, line int, cited bool) (tea.Model, tea.Cmd) {
+	page, row, found := model.markdownPage(file, line, cited)
+	model, command := model.document("source", file.Path+" · rendered", page)
+	model.sourcePath, model.sourceLine, model.sourceRendered, model.sourceCited = file.Path, line, true, cited
 	model.notice = "Rendered Markdown · v shows the source · Esc goes back"
 	if cited {
 		model.notice = fmt.Sprintf("Line %d · could not place it in this view · v shows the source at that line · Esc goes back", line)
-		if row, found := renderedRow(strings.Split(file.Content, "\n"), line, rendered); found {
-			model.viewport.SetYOffset(max(0, row-sourceContextRows/4))
-			model.notice = fmt.Sprintf("Line %d · scrolled to its text · v shows the source at that line · Esc goes back", line)
-		}
+	}
+	if found {
+		model.viewport.SetYOffset(max(0, row-sourceContextRows/4))
+		model.notice = fmt.Sprintf("Line %d · marked with › · v shows the source at that line · Esc goes back", line)
 	}
 	return model, command
 }
@@ -270,7 +288,7 @@ func (model interfaceModel) toggleMarkdownView() (tea.Model, tea.Cmd) {
 		return model.showSource(file, repository.Location{Path: file.Path, Line: max(1, model.sourceLine)})
 	}
 	model = model.rememberMarkdownView(file.Path, true)
-	return model.showRendered(file, model.sourceLine, false)
+	return model.showRendered(file, model.sourceLine, model.sourceCited)
 }
 
 func (model interfaceModel) openDocument(page, title, content string) (tea.Model, tea.Cmd) {

@@ -42,12 +42,31 @@ func TestCitationScrollsRenderedMarkdownToItsText(t *testing.T) {
 	model.application.snapshot.Files = append(model.application.snapshot.Files, repository.File{Path: "docs/guide.md", Content: document.String()})
 	cited, _ := model.openSource(repository.Location{Path: "docs/guide.md", Line: 3 + 4*40})
 	model = cited.(interfaceModel)
-	if model.viewport.YOffset() == 0 || !strings.Contains(ansi.Strip(model.viewport.View()), "Paragraph number 41 explains one idea.") || !strings.Contains(model.notice, "scrolled to its text") {
+	if model.viewport.YOffset() == 0 || !strings.Contains(ansi.Strip(model.viewport.View()), "Paragraph number 41 explains one idea.") || !strings.Contains(model.notice, "marked with ›") {
 		t.Fatalf("the rendered view should scroll to the cited paragraph: offset %d, notice %q", model.viewport.YOffset(), model.notice)
+	}
+	var marked []string
+	for _, row := range strings.Split(ansi.Strip(model.pageContent), "\n") {
+		if strings.HasPrefix(row, "› ") {
+			marked = append(marked, row)
+		}
+	}
+	if len(marked) != 1 || !strings.Contains(marked[0], "Paragraph number 41 explains one idea.") {
+		t.Fatalf("exactly the cited row should carry the gutter marker: %q", marked)
 	}
 	opened, _ := interfaceFixture().openSource(repository.Location{Path: "README.md", Line: 1})
 	short := opened.(interfaceModel)
 	if short.viewport.YOffset() != 0 {
 		t.Fatal("a short document should stay at the top")
+	}
+}
+
+func TestRenderedMarkdownHasNoMarkerWhenNothingMatches(t *testing.T) {
+	model := interfaceFixture()
+	model.application.snapshot.Files = append(model.application.snapshot.Files, repository.File{Path: "rule.md", Content: "# Title\n\n***\n"})
+	opened, _ := model.openSource(repository.Location{Path: "rule.md", Line: 3})
+	page := opened.(interfaceModel)
+	if strings.Contains(ansi.Strip(page.pageContent), "› ") || !strings.Contains(page.notice, "could not place it") {
+		t.Fatalf("an unmatched citation should show no marker: %q", page.notice)
 	}
 }
