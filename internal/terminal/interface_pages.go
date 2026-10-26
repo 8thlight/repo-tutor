@@ -350,7 +350,7 @@ func (model interfaceModel) progressText() string {
 
 func (model interfaceModel) next() (tea.Model, tea.Cmd) {
 	if topic, found := tutor.NextUnheld(model.application.course, model.application.state.Progress, model.application.state.Topic); found {
-		return model.begin(turnIntent{"lesson", "Teach this topic and connect it to its foundations.", topic.ID})
+		return model.openTopic(topic.ID)
 	}
 	model.notice = "You reached the last topic. Try a quiz, choose another topic, or use /review."
 	return model, nil
