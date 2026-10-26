@@ -1,6 +1,6 @@
 # 0030. Question pacing and quiz goals
 
-Status: accepted
+Status: accepted. The question index is replaced by [0060](0060-selectable-quiz-index.md).
 
 ## Context
 
