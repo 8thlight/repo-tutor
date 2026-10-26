@@ -103,23 +103,12 @@ func (application application) completeTurn(ctx context.Context, action, message
 			request.Previous = &previous
 		}
 	}
-	prepared := tutor.Prepare(application.snapshot, request)
-	turnContext, cancel := context.WithTimeout(ctx, application.timeout)
-	defer cancel()
-	result, err := agent.Run(turnContext, agent.Request{
-		Agent: application.state.Agent, Model: application.state.Model,
-		Workspace: filepath.Join(application.store.Directory, "agent"),
-		SessionID: application.state.SessionID, Prompt: prepared.Prompt,
-	})
+	reply, sessionID, err := application.ask(ctx, request, application.state.SessionID)
 	if err != nil {
-		return session.State{}, fmt.Errorf("%w\nProgress is saved. Retry the same command; use --new if the agent session cannot resume", err)
-	}
-	reply, err := tutor.DecodeReply(result.Content, prepared, request)
-	if err != nil {
-		return session.State{}, fmt.Errorf("%w\nThis turn was not recorded. Retry your message", err)
+		return session.State{}, err
 	}
 	updated := application.recordReply(action, message, topic, request.Question, reply)
-	updated.SessionID = result.SessionID
+	updated.SessionID = sessionID
 	if err := application.store.Save(updated); err != nil {
 		return session.State{}, fmt.Errorf("save tutor turn: %w", err)
 	}
@@ -127,6 +116,38 @@ func (application application) completeTurn(ctx context.Context, action, message
 		application.saveLesson(topic, reply)
 	}
 	return updated, nil
+}
+
+func (application application) ask(ctx context.Context, request tutor.Request, sessionID string) (tutor.Reply, string, error) {
+	prepared := tutor.Prepare(application.snapshot, request)
+	turnContext, cancel := context.WithTimeout(ctx, application.timeout)
+	defer cancel()
+	result, err := agent.Run(turnContext, agent.Request{
+		Agent: application.state.Agent, Model: application.state.Model,
+		Workspace: filepath.Join(application.store.Directory, "agent"),
+		SessionID: sessionID, Prompt: prepared.Prompt,
+	})
+	if err != nil {
+		return tutor.Reply{}, "", fmt.Errorf("%w\nProgress is saved. Retry the same command; use --new if the agent session cannot resume", err)
+	}
+	reply, err := tutor.DecodeReply(result.Content, prepared, request)
+	if err != nil {
+		return tutor.Reply{}, "", fmt.Errorf("%w\nThis turn was not recorded. Retry your message", err)
+	}
+	return reply, result.SessionID, nil
+}
+
+func (application application) prefetchLesson(ctx context.Context, topic string) error {
+	if lesson, cached := application.cachedLesson(topic); cached && lesson.Fresh(application.snapshot.Fingerprint) {
+		return nil
+	}
+	request := tutor.Request{Topic: topic, Action: "lesson", Message: firstLessonMessage, Goal: application.state.Goal}
+	reply, _, err := application.ask(ctx, request, "")
+	if err != nil {
+		return err
+	}
+	application.saveLesson(topic, reply)
+	return nil
 }
 
 func (application application) recordReply(action, message, topic, pending string, reply tutor.Reply) session.State {
