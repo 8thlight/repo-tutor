@@ -23,6 +23,15 @@ func newLearnerFixture() interfaceModel {
 	return model
 }
 
+func homeNumber(model interfaceModel, place string) rune {
+	for index, entry := range model.homeEntries() {
+		if entry.place == place {
+			return rune('1' + index)
+		}
+	}
+	return '0'
+}
+
 func TestHomeRecommendsLearnFirstAndStartsTheOverviewInTheBackground(t *testing.T) {
 	model := newLearnerFixture()
 	content := ansi.Strip(model.View().Content)
@@ -35,7 +44,7 @@ func TestHomeRecommendsLearnFirstAndStartsTheOverviewInTheBackground(t *testing.
 	for _, entry := range model.homeEntries() {
 		places = append(places, entry.place)
 	}
-	if strings.Join(places, ",") != "learn,browse,about" {
+	if strings.Join(places, ",") != "learn,probe,browse,about" {
 		t.Fatalf("a new learner should see only places with something to show: %v", places)
 	}
 	started, command := model.Update(beginFirstLesson{})
@@ -52,7 +61,7 @@ func TestHomeKeysOpenTheRecommendationOrAnotherPlace(t *testing.T) {
 	if model.homeSelected != 1 {
 		t.Fatal("down should move the selection")
 	}
-	browsed, _ := press(model, '2', 0)
+	browsed, _ := press(model, homeNumber(model, placeBrowse), 0)
 	if browsed.page != "topics" {
 		t.Fatalf("number keys should open that entry, got %s", browsed.page)
 	}
@@ -213,7 +222,7 @@ func TestEscAndPageKeysReturnToWhereThePageWasOpened(t *testing.T) {
 		t.Fatal("Ctrl+L should always go to the lesson")
 	}
 
-	browsed, _ := press(home, '2', 0)
+	browsed, _ := press(home, homeNumber(home, placeBrowse), 0)
 	switched, _ := press(browsed, 's', tea.ModCtrl)
 	if switched.page != "sources" || switched.origin != "home" {
 		t.Fatalf("switching pages directly should keep the original origin: %s %q", switched.page, switched.origin)
@@ -249,4 +258,36 @@ func TestFailedOverviewShowsOnHomeAndRetryStaysThere(t *testing.T) {
 		t.Fatalf("Ctrl+R should retry without leaving Home: page=%s busy=%v", retried.page, retried.busy)
 	}
 	retried.cancel()
+}
+
+func TestHomeOffersProbeAndRefreshOnlyWhenTheyApply(t *testing.T) {
+	model := newLearnerFixture()
+	places := func() string {
+		var names []string
+		for _, entry := range model.homeEntries() {
+			names = append(names, entry.place)
+		}
+		return strings.Join(names, ",")
+	}
+	if strings.Contains(places(), placeRefresh) {
+		t.Fatal("refresh should wait for a stale overview")
+	}
+	model.overviewStale = true
+	if !strings.Contains(places(), placeRefresh) {
+		t.Fatal("a stale overview should offer a refresh")
+	}
+	begun, command := press(model, homeNumber(model, placeRefresh), 0)
+	if command == nil || !begun.busy || begun.intent.message != openingMessage {
+		t.Fatal("Refresh should request a new overview")
+	}
+	begun.cancel()
+	probed, command := press(model, homeNumber(model, placeProbe), 0)
+	if command == nil || !probed.busy || probed.intent.action != "probe" {
+		t.Fatalf("Check what you know should start the probe: %+v", probed.intent)
+	}
+	probed.cancel()
+	model.application.state.Probe = &tutor.Probe{Topics: []string{"a"}}
+	if strings.Contains(places(), placeProbe) {
+		t.Fatal("the probe entry should end once a probe has run")
+	}
 }

@@ -15,6 +15,8 @@ const (
 	placeBrowse   = "browse"
 	placeProgress = "progress"
 	placeAbout    = "about"
+	placeProbe    = "probe"
+	placeRefresh  = "refresh"
 )
 
 type homeEntry struct {
@@ -32,10 +34,16 @@ func (model interfaceModel) homeEntries() []homeEntry {
 		entries = append(entries, homeEntry{tutor.PlaceContinue, "Continue", "Move on from the answer you just reviewed.", ""})
 	}
 	entries = append(entries, homeEntry{tutor.PlaceLearn, "Learn", "Read the repository overview, then one idea at a time with a question to answer.", ""})
+	if _, err := probeIntent(state, model.application.course); err == nil && state.Probe == nil {
+		entries = append(entries, homeEntry{placeProbe, "Check what you know", "Answer a few short questions so the tutor can skip topics you already know.", ""})
+	}
 	if state.Quiz != nil {
 		entries = append(entries, homeEntry{tutor.PlaceQuiz, "Quiz", "Answer five questions on this topic and revisit any you skipped.", ""})
 	}
 	entries = append(entries, homeEntry{placeBrowse, "Browse", "Topics, cited sources, and reading hotspots.", ""})
+	if model.overviewStale {
+		entries = append(entries, homeEntry{placeRefresh, "Refresh the overview", "The repository changed since the overview was written. Generate a new one.", ""})
+	}
 	if tutor.Started(state.Progress) {
 		entries = append(entries, homeEntry{placeProgress, "Progress", "Lessons read and answers assessed so far.", ""})
 	}
@@ -145,6 +153,15 @@ func (model interfaceModel) openHomeEntry(entry homeEntry) (tea.Model, tea.Cmd) 
 		return model.openPicker("topics", "")
 	case placeAbout:
 		return model.openAbout()
+	case placeProbe:
+		intent, err := probeIntent(model.application.state, model.application.course)
+		if err != nil {
+			model.notice = err.Error()
+			return model, nil
+		}
+		return model.begin(intent)
+	case placeRefresh:
+		return model.begin(turnIntent{"lesson", openingMessage, tutor.Overview})
 	default:
 		return model.openDocument("progress", "Progress", model.progressText())
 	}
