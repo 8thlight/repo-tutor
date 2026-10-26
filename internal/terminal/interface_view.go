@@ -167,6 +167,23 @@ func (model interfaceModel) sectionDivider(label string) string {
 	return lipgloss.NewStyle().Foreground(model.palette().muted).Render(text)
 }
 
+func (model interfaceModel) inQuiz() bool {
+	if model.page != "lesson" {
+		return false
+	}
+	if model.busy {
+		return strings.HasPrefix(model.intent.action, "quiz")
+	}
+	return model.application.state.Quiz != nil && model.history == len(model.application.state.Turns)-1
+}
+
+func (model interfaceModel) activeTab() string {
+	if model.inQuiz() {
+		return "quiz"
+	}
+	return model.page
+}
+
 func (model interfaceModel) topicTitle() string {
 	identifier := model.application.state.Topic
 	if model.page == "lesson" && model.history >= 0 && model.history < len(model.application.state.Turns) {
@@ -266,7 +283,7 @@ func (model interfaceModel) View() tea.View {
 	var tabs []string
 	for _, page := range pages {
 		label := " " + page.label + " "
-		if model.page == page.page {
+		if model.activeTab() == page.page {
 			label = accent.Underline(true).Render(label)
 		} else {
 			label = muted.Render(label)
@@ -281,8 +298,7 @@ func (model interfaceModel) View() tea.View {
 	if model.page == "lesson" && len(model.application.state.Turns) > 0 {
 		title += fmt.Sprintf("  ·  turn %d / %d", model.history+1, len(model.application.state.Turns))
 	}
-	if model.page == "lesson" && model.application.state.Quiz != nil && model.history == len(model.application.state.Turns)-1 {
-		quiz := model.application.state.Quiz
+	if quiz := model.application.state.Quiz; model.inQuiz() && quiz != nil {
 		title = fmt.Sprintf("Quiz · %d / %d answered · Ctrl+B index", quiz.Completed(), quiz.Goal)
 	}
 	body := model.viewport.View()
