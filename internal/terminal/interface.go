@@ -139,7 +139,10 @@ func (model interfaceModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		model.resize()
 		return model, nil
 	case beginFirstLesson:
-		return model.begin(turnIntent{"lesson", "Start with the repository's purpose and a map of how it works.", model.application.state.Topic})
+		if overview, found := model.application.cachedOverview(); found {
+			return model.openCached(overview)
+		}
+		return model.begin(turnIntent{"lesson", openingMessage, model.application.state.Topic})
 	case turnFinished:
 		model.busy = false
 		if model.cancel != nil {
@@ -333,4 +336,21 @@ func (model interfaceModel) learn() (tea.Model, tea.Cmd) {
 		return model, model.input.Focus()
 	}
 	return model, nil
+}
+
+func (model interfaceModel) openCached(overview tutor.SavedOverview) (tea.Model, tea.Cmd) {
+	opened, err := model.application.openWithOverview(overview)
+	if err != nil {
+		model.errorText = tutor.Plain(err.Error())
+		return model, nil
+	}
+	model.application.state = opened
+	model.history = len(opened.Turns) - 1
+	model.notice = "Loaded the saved overview"
+	if !overview.Fresh(model.application.snapshot.Fingerprint) {
+		model.notice = staleOverviewNotice
+	}
+	model.rebuildContent()
+	model.viewport.GotoTop()
+	return model, model.input.Focus()
 }

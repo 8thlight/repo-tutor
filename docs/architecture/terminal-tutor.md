@@ -50,6 +50,10 @@ Claude uses print mode with a structured schema, safe mode, no built-in tools or
 
 No driver uses an ambiguous latest-session flag or bypasses permissions. A process error, failed event, timeout, truncated response, or invalid lesson leaves completed progress unchanged. An interrupted remote turn can still exist in the agent's own history. Resume failures are reported; `--new` starts a separate conversation.
 
+## Overview cache
+
+The opening lesson on the repository overview is saved as `overview-<goal key>.md` beside `session.json`, one file per learning goal. A header comment holds the source fingerprint, question, and citations, and the body is the lesson Markdown. A new session loads this file instead of requesting a turn, and records it as a lesson. When the fingerprint differs, the saved overview still opens with a notice, and `/refresh` requests a new one. A damaged or unknown-format file counts as missing. See [0070](../decisions/0070-overview-cache.md).
+
 ## Reading hints
 
 Git history counts file appearances in at most 2,000 non-merge commits from the last 180 days. It reads local history only and does not follow renames. Missing Git history falls back to source signals. Shallow history can undercount changes.
@@ -62,7 +66,7 @@ The reading score is `(commits + 1) * (branch points + 1)`, with path order brea
 
 The canonical repository path selects the session directory. A nonblocking file lock prevents two tutors from updating it at once. Session files have private permissions and are replaced atomically after a successful write and sync. The terminal requires macOS or Linux for the file lock.
 
-The source fingerprint includes file paths and contents, independent of Git history. Changed source starts a fresh course with the previous agent, model, and goal unless explicitly overridden. `previous.json` keeps one archived session. A fresh course resets quiz outcomes so stale assessments do not carry over to different source. The current transcript retains 200 turns, with a 16 MiB file limit. Corrupt or unsupported state requires `--new` rather than silently discarding progress.
+The source fingerprint includes file paths and contents, independent of Git history. Changed source starts a fresh course with the previous agent, model, and goal unless explicitly overridden. `previous.json` keeps one archived session. A fresh course keeps topic progress, including topics marked known, and drops the saved quiz, probe, and review state so stale assessments do not carry over to different source. The current transcript retains 200 turns, with a 16 MiB file limit. Corrupt or unsupported state requires `--new` rather than silently discarding progress.
 
 In plain mode, Ctrl-D or `/quit` exits after completed work is saved, and Ctrl-C exits from an agent turn or an idle prompt. In the workspace, Ctrl-Q or `/quit` exits and Ctrl-C cancels an active turn, then exits when idle. A per-turn deadline defaults to three minutes. Failure messages retain the CLI diagnostics and explain how to retry.
 

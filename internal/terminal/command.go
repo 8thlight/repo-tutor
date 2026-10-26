@@ -293,7 +293,7 @@ func study(ctx context.Context, arguments []string, input io.Reader, output, dia
 	}
 	fmt.Fprintln(output, "Type an answer or a question. /topics lists the course; /help lists commands; /quit saves and exits.")
 	if len(state.Turns) == 0 {
-		if err := application.turn(ctx, "lesson", "Start with the repository's purpose and a map of how it works.", state.Topic); err != nil {
+		if err := application.start(ctx); err != nil {
 			return err
 		}
 	} else {

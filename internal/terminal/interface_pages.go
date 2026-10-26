@@ -40,7 +40,7 @@ then Enter opens the selected item. Esc returns to the lesson.
 
 Slash commands from the plain interface also work:
 /topics [filter]  /topic NUMBER|PATH  /next  /quiz  /review
-/continue  /questions  /extend
+/continue  /questions  /extend  /refresh
 /sources  /read PATH:LINE  /hotspots  /progress  /glossary
 /map  /help  /quit
 
@@ -267,6 +267,9 @@ func (model interfaceModel) slash(text string) (tea.Model, tea.Cmd) {
 	case "/continue", "/extend":
 		model.input.Reset()
 		return model.continueQuiz(parts[0] == "/extend")
+	case "/refresh":
+		model.input.Reset()
+		return model.begin(turnIntent{"lesson", openingMessage, tutor.Overview})
 	case "/probe":
 		intent, err := probeIntent(model.application.state, model.application.course)
 		if err != nil {
