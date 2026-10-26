@@ -229,6 +229,8 @@ func (model interfaceModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			return model.openPicker("quiz", "")
 		case "ctrl+f":
 			return model.continueQuiz(false)
+		case "f2":
+			return model.openAbout()
 		case "f1":
 			return model.openDocument("help", "A few ways to keep learning", interfaceHelp)
 		case "ctrl+l":

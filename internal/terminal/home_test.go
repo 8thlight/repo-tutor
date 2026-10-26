@@ -33,7 +33,7 @@ func TestHomeRecommendsLearnFirstAndStartsTheOverviewInTheBackground(t *testing.
 	for _, entry := range model.homeEntries() {
 		places = append(places, entry.place)
 	}
-	if strings.Join(places, ",") != "learn,browse" {
+	if strings.Join(places, ",") != "learn,browse,about" {
 		t.Fatalf("a new learner should see only places with something to show: %v", places)
 	}
 	started, command := model.Update(beginFirstLesson{})
@@ -135,6 +135,32 @@ func TestAboutShowsThePaintingOnlyOnWideTrueColorTerminals(t *testing.T) {
 					t.Fatalf("%s: line overflows: %q", name, line)
 				}
 			}
+		}
+	}
+}
+
+func TestAboutOpensFromHomeAndFromAnyPageWithF2(t *testing.T) {
+	model := newLearnerFixture()
+	entries := model.homeEntries()
+	if last := entries[len(entries)-1]; last.place != placeAbout {
+		t.Fatalf("Home should end with About, got %+v", last)
+	}
+	opened, _ := press(model, rune('0'+len(entries)), 0)
+	if opened.page != "about" {
+		t.Fatalf("Home's About entry should open the page, got %s", opened.page)
+	}
+	for _, page := range []string{"topics", "quiz", "progress", "home"} {
+		model := interfaceFixture()
+		switch page {
+		case "topics", "quiz":
+			next, _ := model.openPicker(page, "")
+			model = next.(interfaceModel)
+		default:
+			model.page = page
+		}
+		pressed, _ := model.Update(tea.KeyPressMsg{Code: tea.KeyF2})
+		if pressed.(interfaceModel).page != "about" {
+			t.Fatalf("F2 should open About from %s", page)
 		}
 	}
 }
