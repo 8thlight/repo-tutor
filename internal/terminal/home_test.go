@@ -162,3 +162,35 @@ func TestAboutOpensFromHomeAndFromAnyPageWithF2(t *testing.T) {
 		}
 	}
 }
+
+func TestPressingAPageKeyAgainReturnsToTheLesson(t *testing.T) {
+	for name, key := range map[string]tea.KeyPressMsg{
+		"topics":   {Code: 'k', Mod: tea.ModCtrl},
+		"sources":  {Code: 's', Mod: tea.ModCtrl},
+		"hotspots": {Code: 'o', Mod: tea.ModCtrl},
+		"progress": {Code: 'p', Mod: tea.ModCtrl},
+		"quiz":     {Code: 'b', Mod: tea.ModCtrl},
+		"help":     {Code: tea.KeyF1},
+		"about":    {Code: tea.KeyF2},
+	} {
+		model := interfaceFixture()
+		model.history = 0
+		opened, _ := model.Update(key)
+		if opened.(interfaceModel).page != name {
+			t.Fatalf("%s key should open %s, got %s", name, name, opened.(interfaceModel).page)
+		}
+		closed, _ := opened.(interfaceModel).Update(key)
+		if closed.(interfaceModel).page != "lesson" {
+			t.Fatalf("pressing the %s key again should return to the lesson, got %s", name, closed.(interfaceModel).page)
+		}
+	}
+}
+
+func TestPageKeyOnAnotherPageSwitchesInsteadOfClosing(t *testing.T) {
+	model := interfaceFixture()
+	opened, _ := model.Update(tea.KeyPressMsg{Code: 'k', Mod: tea.ModCtrl})
+	switched, _ := opened.(interfaceModel).Update(tea.KeyPressMsg{Code: 's', Mod: tea.ModCtrl})
+	if switched.(interfaceModel).page != "sources" {
+		t.Fatal("a different page key should open that page")
+	}
+}

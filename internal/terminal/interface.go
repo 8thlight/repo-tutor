@@ -218,21 +218,25 @@ func (model interfaceModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 				return model, nil
 			}
 		case "ctrl+k":
-			return model.openPicker("topics", "")
+			return model.toggled("topics", func() (tea.Model, tea.Cmd) { return model.openPicker("topics", "") })
 		case "ctrl+s":
-			return model.openPicker("sources", "")
+			return model.toggled("sources", func() (tea.Model, tea.Cmd) { return model.openPicker("sources", "") })
 		case "ctrl+o":
-			return model.openPicker("hotspots", "")
+			return model.toggled("hotspots", func() (tea.Model, tea.Cmd) { return model.openPicker("hotspots", "") })
 		case "ctrl+p":
-			return model.openDocument("progress", "Progress", model.progressText())
+			return model.toggled("progress", func() (tea.Model, tea.Cmd) {
+				return model.openDocument("progress", "Progress", model.progressText())
+			})
 		case "ctrl+b":
-			return model.openPicker("quiz", "")
+			return model.toggled("quiz", func() (tea.Model, tea.Cmd) { return model.openPicker("quiz", "") })
 		case "ctrl+f":
 			return model.continueQuiz(false)
 		case "f2":
-			return model.openAbout()
+			return model.toggled("about", model.openAbout)
 		case "f1":
-			return model.openDocument("help", "A few ways to keep learning", interfaceHelp)
+			return model.toggled("help", func() (tea.Model, tea.Cmd) {
+				return model.openDocument("help", "A few ways to keep learning", interfaceHelp)
+			})
 		case "ctrl+l":
 			return model.learn()
 		case "ctrl+n":
@@ -390,4 +394,11 @@ func (model interfaceModel) showingHome() interfaceModel {
 	model.input.Blur()
 	model.rebuildContent()
 	return model
+}
+
+func (model interfaceModel) toggled(page string, open func() (tea.Model, tea.Cmd)) (tea.Model, tea.Cmd) {
+	if model.page == page {
+		return model.learn()
+	}
+	return open()
 }
