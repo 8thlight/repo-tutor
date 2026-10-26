@@ -40,7 +40,7 @@ func TestInterfaceFitsTerminalAndKeepsExitDiscoverable(t *testing.T) {
 		model := interfaceFixture()
 		resized, _ := model.Update(tea.WindowSizeMsg{Width: size.width, Height: size.height})
 		model = resized.(interfaceModel)
-		pages := []string{"lesson", "topics", "quiz", "sources", "hotspots", "progress", "help"}
+		pages := []string{"home", "lesson", "topics", "quiz", "sources", "hotspots", "progress", "help"}
 		for _, page := range pages {
 			if page == "topics" || page == "sources" || page == "hotspots" || page == "quiz" {
 				opened, _ := model.openPicker(page, "")

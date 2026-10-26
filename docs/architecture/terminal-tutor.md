@@ -18,6 +18,8 @@ Failed turns show recovery guidance and keep the current draft. `Esc` or `Ctrl+C
 
 Only real terminal input and output select the workspace. `--plain`, pipes, redirected output, `TERM=dumb`, and `--ask` retain the line-based behavior. Plain mode is also the screen-reader option. The workspace detects terminal background color, supports `NO_COLOR`, and uses words as well as colors for status and assessments. See [0020](../decisions/0020-interactive-terminal.md).
 
+A session with no turns opens on Home, the first tab. Home makes no model request. It lists Learn and Browse, adds Quiz once a quiz exists, adds Progress once there is an outcome, and adds Continue while an answer awaits review. `tutor.Recommend` picks one entry from saved state and Home puts it first with its reason. Enter opens the selected entry, number keys open an entry by position, and `/home` returns. A saved overview loads at once; otherwise the overview generates in the background while Home stays on screen. A session with turns resumes on Learn. See [0080](../decisions/0080-landing-page.md).
+
 ## Repository snapshot
 
 The reader walks the selected directory without following symlinks. It includes Go, Python, JavaScript, TypeScript, Markdown, and the `go.mod`, `pyproject.toml`, and `package.json` manifests. Hidden directories, dependencies, fixtures, and generated output directories are excluded. Git ignore rules apply when Git is available. Generated Go source is excluded from package analysis.
