@@ -22,6 +22,8 @@ func resumeTopic(state session.State, topic string) (session.State, bool) {
 		return state, true
 	}
 	last := state.Turns[source]
+	copied := last
+	copied.Resumed = true
 	state.Topic = topic
 	state.Question = last.Reply.Question
 	state.Review = last.Action == "answer" && (last.Reply.Assessment != "none" || last.Reply.Question == "")
@@ -29,7 +31,7 @@ func resumeTopic(state session.State, topic string) (session.State, bool) {
 		state.Quiz = nil
 	}
 	state.Probe = nil
-	state.Turns = append(append([]session.Turn(nil), state.Turns...), last)
+	state.Turns = append(append([]session.Turn(nil), state.Turns...), copied)
 	if trimmed := len(state.Turns) - 200; trimmed > 0 {
 		state.Turns = state.Turns[trimmed:]
 		state.Quiz = tutor.ShiftQuizTurns(state.Quiz, trimmed)
