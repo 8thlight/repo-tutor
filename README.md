@@ -78,7 +78,7 @@ Hotspots combine recent local Git changes and branch counts. The counts help cho
 
 Sessions live under `repo-tutor` in `XDG_STATE_HOME`, when set, or your operating system's user configuration directory. The startup output shows the exact file. Use `--state-dir DIRECTORY` to choose another location.
 
-Each repository has its own session, with the last 200 turns and per-topic outcomes. A changed source snapshot starts a fresh course and saves the old session as `previous.json`. Starting with `--new` also replaces that one archive. Agent, model, and goal changes require a new session. The turn timeout defaults to three minutes; change it with `--timeout 5m`.
+Each repository has its own session, with the last 200 turns and per-topic outcomes. A changed source snapshot starts a fresh course, keeps your topic progress, and saves the old session as `previous.json`. Starting with `--new` also replaces that one archive. Agent, model, and goal changes require a new session. The turn timeout defaults to three minutes; change it with `--timeout 5m`. While you read, the workspace prepares the next topic's first lesson in the background and caches it beside the session; `--no-prefetch` turns that off.
 
 If a turn fails, its reply and assessment are not recorded. Check the reported login, quota, or format error, then retry. Choose another agent with `--agent codex --new` or `--agent claude --new`.
 
