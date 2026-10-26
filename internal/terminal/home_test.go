@@ -1,6 +1,8 @@
 package terminal
 
 import (
+	"context"
+	"errors"
 	"strings"
 	"testing"
 
@@ -228,4 +230,23 @@ func TestEscAndPageKeysReturnToWhereThePageWasOpened(t *testing.T) {
 	if closed, _ := press(fromLesson.(interfaceModel), tea.KeyEscape, 0); closed.page != "lesson" {
 		t.Fatalf("Esc should return to the lesson, got %s", closed.page)
 	}
+}
+
+func TestFailedOverviewShowsOnHomeAndRetryStaysThere(t *testing.T) {
+	model := newLearnerFixture()
+	model.run = func(context.Context, session.State, string, string, string) (session.State, error) {
+		return session.State{}, errors.New("connection refused")
+	}
+	started, command := model.Update(beginFirstLesson{})
+	next, _ := started.(interfaceModel).Update(finishedCommand(t, command))
+	model = next.(interfaceModel)
+	content := ansi.Strip(model.View().Content)
+	if model.page != "home" || model.busy || !strings.Contains(content, "The overview could not be prepared. Ctrl+R tries again.") || !strings.Contains(content, "connection refused") {
+		t.Fatalf("a failed overview should be explained on Home:\n%s", content)
+	}
+	retried, command := press(model, 'r', tea.ModCtrl)
+	if retried.page != "home" || !retried.busy || command == nil {
+		t.Fatalf("Ctrl+R should retry without leaving Home: page=%s busy=%v", retried.page, retried.busy)
+	}
+	retried.cancel()
 }

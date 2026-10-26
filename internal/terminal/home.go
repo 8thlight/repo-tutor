@@ -65,6 +65,9 @@ func (model interfaceModel) homeContent() string {
 	if model.busy {
 		content.WriteString(muted.Render(ansi.Wrap("Preparing the overview in the background. Browse while you wait.", width, "")) + "\n\n")
 	}
+	if model.errorText != "" {
+		content.WriteString(ansi.Wrap("The overview could not be prepared. Ctrl+R tries again.\n"+model.errorText, width, "") + "\n\n")
+	}
 	for index, entry := range model.homeEntries() {
 		marker, label := "  ", entry.label
 		if entry.reason != "" {

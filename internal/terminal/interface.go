@@ -272,6 +272,10 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+g":
 			return model.begin(turnIntent{"quiz", "Ask one practical comprehension question about this topic.", model.application.state.Topic})
 		case "ctrl+r":
+			if model.errorText != "" && model.page == "home" {
+				retried, command := model.begin(model.intent)
+				return retried.(interfaceModel).showingHome(), command
+			}
 			if model.errorText != "" {
 				return model.begin(model.intent)
 			}
