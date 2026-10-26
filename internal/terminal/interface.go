@@ -161,9 +161,6 @@ func (model interfaceModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		if model.page == "progress" {
 			model.pageContent = model.progressText()
 		}
-		if model.page == "quiz" {
-			model.pageContent = quizText(model.application.state.Quiz)
-		}
 		if model.isPicker() {
 			model.configurePicker(model.picker.FilterValue())
 		}
@@ -212,7 +209,7 @@ func (model interfaceModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+p":
 			return model.openDocument("progress", "Progress", model.progressText())
 		case "ctrl+b":
-			return model.openDocument("quiz", "Quiz questions", quizText(model.application.state.Quiz))
+			return model.openPicker("quiz", "")
 		case "ctrl+f":
 			return model.continueQuiz(false)
 		case "f1":

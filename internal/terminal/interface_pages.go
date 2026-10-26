@@ -62,7 +62,7 @@ func (item browserItem) Description() string { return tutor.Plain(item.descripti
 func (item browserItem) FilterValue() string { return tutor.Plain(item.title + " " + item.description) }
 
 func (model interfaceModel) isPicker() bool {
-	return model.page == "topics" || model.page == "sources" || model.page == "hotspots"
+	return model.page == "topics" || model.page == "sources" || model.page == "hotspots" || model.page == "quiz"
 }
 
 func (model interfaceModel) openPicker(page, filter string) (tea.Model, tea.Cmd) {
@@ -89,6 +89,11 @@ func (model *interfaceModel) configurePicker(filter string) {
 				status = "Current topic · " + status
 			}
 			items = append(items, browserItem{fmt.Sprintf("%d  %s", index+1, tutor.Plain(topic.Title)), status, topic.ID, 0})
+		}
+	case "quiz":
+		model.pageTitle = "Quiz questions"
+		for _, slot := range quizSlotItems(model.application.state) {
+			items = append(items, slot)
 		}
 	case "sources":
 		model.pageTitle = "Follow the evidence"
@@ -157,6 +162,9 @@ func (model interfaceModel) selectItem() (tea.Model, tea.Cmd) {
 	}
 	if model.page == "topics" {
 		return model.begin(turnIntent{"lesson", "Teach the next small idea in this topic.", item.value})
+	}
+	if model.page == "quiz" {
+		return model.selectQuizSlot(item.line)
 	}
 	return model.openSource(repository.Location{Path: item.value, Line: item.line})
 }
@@ -246,9 +254,6 @@ func (model interfaceModel) cyclePage(backward bool) (tea.Model, tea.Cmd) {
 	if page == "progress" {
 		return model.openDocument(page, "Progress", model.progressText())
 	}
-	if page == "quiz" {
-		return model.openDocument("quiz", "Quiz questions", quizText(model.application.state.Quiz))
-	}
 	return model.openPicker(page, "")
 }
 
@@ -272,7 +277,7 @@ func (model interfaceModel) slash(text string) (tea.Model, tea.Cmd) {
 		return model.begin(intent)
 	case "/questions":
 		model.input.Reset()
-		return model.openDocument("quiz", "Quiz questions", quizText(model.application.state.Quiz))
+		return model.openPicker("quiz", "")
 	case "/quit", "/exit":
 		return model, tea.Quit
 	case "/topics", "/sources", "/hotspots":
