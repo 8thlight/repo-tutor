@@ -307,7 +307,7 @@ func (model interfaceModel) View() tea.View {
 		title += fmt.Sprintf("  ·  turn %d / %d", model.history+1, len(model.application.state.Turns))
 	}
 	if quiz := model.application.state.Quiz; model.inQuiz() && quiz != nil {
-		title = fmt.Sprintf("Quiz · %d / %d answered · Ctrl+B index", quiz.Completed(), quiz.Goal)
+		title = fmt.Sprintf("Question %d / %d · %s · Ctrl+B index", quiz.Active+1, quiz.Goal, model.topicTitle())
 	}
 	body := model.viewport.View()
 	if model.busy && model.page == "lesson" {
