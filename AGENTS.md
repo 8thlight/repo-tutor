@@ -27,5 +27,6 @@ Only ADRs are numbered, by tens.
 - A comment is a smell. Run `comments-review` before you commit.
 - Put throwaway notes in `.scratch/` and generated output in `output/`. Do not commit either.
 - Run `just check` before you commit, from the Nix dev shell.
+- Keep each commit as small as possible: one change with its test. Split unrelated edits into separate commits.
 - Verify every agent or tool report yourself before you rely on it.
 - Do not create, edit, or close an issue unless a person asks.
