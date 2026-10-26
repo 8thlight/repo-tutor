@@ -34,7 +34,7 @@ In a terminal, the tutor opens a full-screen workspace with a lesson, the curren
 
 Topic and source lists support arrow keys and `/` to filter. Press `Enter` to confirm a filter, then `Enter` again to open an item. You can browse while the tutor thinks. A failed turn keeps your draft and completed progress.
 
-After an answer, the tutor stops at feedback. Press `Enter` with an empty answer box, use `Ctrl+F`, or type `/continue` when you are ready for the next exercise. You can ask about the feedback before moving on. Each quiz starts with a five-question goal; the Quiz tab or `Ctrl+B` shows answered, current, and upcoming questions. Incorrect answers and skips still count toward completion, while correctness is tracked separately. After finishing, `/extend` adds five more questions. Future questions are generated as you continue, so their text is not available in advance.
+After an answer, the tutor stops at feedback. Press `Enter` with an empty answer box, use `Ctrl+F`, or type `/continue` when you are ready for the next exercise. You can ask about the feedback before moving on. Each quiz starts with a five-question goal; `Ctrl+B` shows answered, current, and upcoming questions. Incorrect answers and skips still count toward completion, while correctness is tracked separately. After finishing, `/extend` adds five more questions. Future questions are generated as you continue, so their text is not available in advance.
 
 While an exercise loads, the lesson pane shows a loading view. Sources remain available and use syntax highlighting with a marker at the cited line. Highlighting needs no language server or extra installation.
 
