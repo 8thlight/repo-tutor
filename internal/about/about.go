@@ -17,6 +17,18 @@ const (
 	unknown            = "unknown"
 )
 
+//go:embed splash.ansi
+var splash string
+
+const (
+	SplashWidth   = 80
+	SplashCaption = "Prince Charles Louis of the Palatinate with his Tutor Wolrad von Plessen in Historical Dress. Jan Lievens, 1631. Public domain, from the J. Paul Getty Museum via Google Art Project."
+)
+
+func Splash() string {
+	return strings.TrimRight(splash, "\n")
+}
+
 //go:embed NOTICES.txt
 var notices string
 

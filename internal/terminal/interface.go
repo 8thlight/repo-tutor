@@ -54,6 +54,7 @@ type interfaceModel struct {
 	pageContent    string
 	history        int
 	dark           bool
+	trueColor      bool
 	noColor        bool
 	busy           bool
 	cancel         context.CancelFunc
@@ -142,6 +143,9 @@ func (model interfaceModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		model.width, model.height = message.Width, message.Height
 		model.resize()
+		return model, nil
+	case tea.ColorProfileMsg:
+		model.trueColor = message.Profile == colorprofile.TrueColor
 		return model, nil
 	case tea.BackgroundColorMsg:
 		model.dark = message.IsDark()
