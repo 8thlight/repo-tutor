@@ -143,3 +143,51 @@ func TestPrefetchSkipsStudiedCachedAndFailedTopicsAndNeverRetriesAFailure(t *tes
 		t.Fatal("without a prefetcher nothing runs")
 	}
 }
+
+func TestForegroundRequestForTheSameTopicWaitsForThePrefetchInsteadOfCancellingIt(t *testing.T) {
+	model, topic := prefetchFixture(t)
+	var prefetchContext context.Context
+	model.prefetcher = func(ctx context.Context, _ session.State, _ string) error {
+		prefetchContext = ctx
+		<-ctx.Done()
+		return ctx.Err()
+	}
+	started, command := model.startPrefetch()
+	model = started
+	results := make(chan prefetchFinished, 1)
+	go func() { results <- runPrefetchCommand(t, command) }()
+	waiting, _ := model.begin(turnIntent{"lesson", firstLessonMessage, topic})
+	model = waiting.(interfaceModel)
+	defer model.cancel()
+	if !model.busy || !model.prefetching || model.prefetchCancel == nil {
+		t.Fatal("a request for the prefetched topic should wait behind the prefetch")
+	}
+	stopped, _ := press(model, tea.KeyEscape, 0)
+	if stopped.prefetching || prefetchContext == nil {
+		t.Fatal("Esc while waiting should stop the prefetch it waits on")
+	}
+	<-results
+	if prefetchContext.Err() == nil {
+		t.Fatal("the prefetch should be cancelled by Esc")
+	}
+
+	other, otherCommand := started.begin(turnIntent{"lesson", firstLessonMessage, "learning/other"})
+	defer other.(interfaceModel).cancel()
+	_ = otherCommand
+	if other.(interfaceModel).prefetching {
+		t.Fatal("a request for a different topic should still cancel the prefetch")
+	}
+}
+
+func TestFirstLessonTurnUsesAFreshCachedLessonBeforeAskingTheAgent(t *testing.T) {
+	model, topic := prefetchFixture(t)
+	reply := tutor.Reply{Explanation: "Prepared earlier.", Question: "What is prepared?", Assessment: "none", Citations: model.application.state.Turns[0].Reply.Citations}
+	lesson := tutor.SavedLesson{Fingerprint: "current", Goal: tutor.GoalKey(model.application.state.Goal), Topic: topic, Reply: reply}
+	if err := model.application.store.SaveLesson(tutor.LessonKey(model.application.state.Goal, topic), tutor.EncodeLesson(lesson)); err != nil {
+		t.Fatal(err)
+	}
+	state, err := model.application.completeTurn(context.Background(), "lesson", firstLessonMessage, topic)
+	if err != nil || state.Topic != topic || state.Question != reply.Question || state.Progress[topic].Lessons != 1 || len(state.Turns) != 3 {
+		t.Fatalf("the cached lesson should be used without an agent: %v %+v", err, state)
+	}
+}
