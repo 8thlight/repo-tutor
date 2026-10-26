@@ -36,6 +36,7 @@ Alt+Left/Right  Read earlier or later turns
 PgUp / PgDown   Scroll the lesson or source
 Tab / Shift+Tab Switch between Home, learning, and browsing
 F1              Show this help
+F2              Show the version, copyright, and credits
 Ctrl+R          Retry a failed turn, keeping your draft
 Esc / Ctrl+C    Stop a running turn
 Ctrl+Q          Save and quit (Ctrl+C also quits when idle)
@@ -354,7 +355,7 @@ func (model interfaceModel) slash(text string) (tea.Model, tea.Cmd) {
 		return model.continueQuiz(parts[0] == "/extend")
 	case "/about":
 		model.input.Reset()
-		return model.openDocument("about", "About repo-tutor", model.aboutText())
+		return model.openAbout()
 	case "/home":
 		model.input.Reset()
 		return model.openHome()

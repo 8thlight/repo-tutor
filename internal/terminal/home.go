@@ -14,6 +14,7 @@ import (
 const (
 	placeBrowse   = "browse"
 	placeProgress = "progress"
+	placeAbout    = "about"
 )
 
 type homeEntry struct {
@@ -38,6 +39,7 @@ func (model interfaceModel) homeEntries() []homeEntry {
 	if tutor.Started(state.Progress) {
 		entries = append(entries, homeEntry{placeProgress, "Progress", "Lessons read and answers assessed so far.", ""})
 	}
+	entries = append(entries, homeEntry{placeAbout, "About", "Version, copyright, and credits. F2 opens it from anywhere.", ""})
 	for index, entry := range entries {
 		if entry.place == recommendation.Place {
 			entry.reason = recommendation.Reason
@@ -138,7 +140,13 @@ func (model interfaceModel) openHomeEntry(entry homeEntry) (tea.Model, tea.Cmd) 
 		return model.learn()
 	case placeBrowse:
 		return model.openPicker("topics", "")
+	case placeAbout:
+		return model.openAbout()
 	default:
 		return model.openDocument("progress", "Progress", model.progressText())
 	}
+}
+
+func (model interfaceModel) openAbout() (tea.Model, tea.Cmd) {
+	return model.openDocument("about", "About repo-tutor", model.aboutText())
 }
