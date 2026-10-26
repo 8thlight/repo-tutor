@@ -3,6 +3,7 @@ package terminal
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -327,5 +328,27 @@ func TestVKeyStillTypesInTheLessonComposer(t *testing.T) {
 	model = typed.(interfaceModel)
 	if model.page != "lesson" || model.input.Value() != "v" {
 		t.Fatalf("v must reach the answer box outside Markdown sources, got %q on %s", model.input.Value(), model.page)
+	}
+}
+
+func TestSourceViewKeepsTheWholeFileReachableAndScrollsToTheCitation(t *testing.T) {
+	model := interfaceFixture()
+	var source strings.Builder
+	for line := 1; line <= 300; line++ {
+		fmt.Fprintf(&source, "value%d = %d\n", line, line)
+	}
+	model.application.snapshot.Files = append(model.application.snapshot.Files, repository.File{Path: "long.py", Content: source.String()})
+	opened, _ := model.openSource(repository.Location{Path: "long.py", Line: 200})
+	model = opened.(interfaceModel)
+	content := ansi.Strip(model.pageContent)
+	if !strings.Contains(content, "    1  value1 = 1") || !strings.Contains(content, "  300  value300 = 300") {
+		t.Fatal("the source view should hold the whole file")
+	}
+	if model.viewport.YOffset() == 0 || model.viewport.YOffset() > 200 || !strings.Contains(ansi.Strip(model.viewport.View()), "›  200  value200 = 200") {
+		t.Fatalf("the cited line should be in view: offset %d", model.viewport.YOffset())
+	}
+	model.viewport.GotoTop()
+	if !strings.Contains(ansi.Strip(model.viewport.View()), "    1  value1 = 1") {
+		t.Fatal("the first line must be reachable by scrolling up")
 	}
 }

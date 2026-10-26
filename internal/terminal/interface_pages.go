@@ -199,18 +199,22 @@ func (model interfaceModel) showSource(file repository.File, location repository
 		model.notice = fmt.Sprintf("Choose a line between 1 and %d.", len(lines))
 		return model, nil
 	}
-	first := max(1, location.Line-12)
 	highlighted := model.highlightSource(location.Path, file.Content)
 	var content strings.Builder
 	palette := model.palette()
-	for index := first - 1; index < min(first+119, len(lines)); index++ {
+	rowsAbove := 0
+	for index, line := range highlighted {
 		prefix := fmt.Sprintf(" %5d  ", index+1)
 		if index+1 == location.Line {
 			prefix = lipgloss.NewStyle().Foreground(palette.accent).Bold(true).Render(fmt.Sprintf("›%5d  ", index+1))
 		}
-		content.WriteString(prefix + highlighted[index] + "\n")
+		content.WriteString(prefix + line + "\n")
+		if index+1 < location.Line {
+			rowsAbove += max(1, (ansi.StringWidth(prefix+line)+model.bodyWidth()-1)/model.bodyWidth())
+		}
 	}
 	model, command := model.document("source", fmt.Sprintf("%s:%d", location.Path, location.Line), content.String())
+	model.viewport.SetYOffset(max(0, rowsAbove-sourceContextRows))
 	model.sourcePath, model.sourceLine, model.sourceRendered = file.Path, location.Line, false
 	model.notice = "Source snapshot · /read PATH:LINE opens another location · Esc goes back"
 	if isMarkdown(file.Path) {
@@ -274,6 +278,8 @@ func (model interfaceModel) document(page, title, content string) (interfaceMode
 	model.viewport.GotoTop()
 	return model, nil
 }
+
+const sourceContextRows = 12
 
 const splashMinimumWidth = 113
 
