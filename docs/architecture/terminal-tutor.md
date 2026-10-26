@@ -56,6 +56,8 @@ Claude uses print mode with a structured schema, safe mode, no built-in tools or
 
 No driver uses an ambiguous latest-session flag or bypasses permissions. A process error, failed event, timeout, truncated response, or invalid lesson leaves completed progress unchanged. An interrupted remote turn can still exist in the agent's own history. Resume failures are reported; `--new` starts a separate conversation.
 
+The workspace passes the renderer `TERM=vt100` and the color profile detected from the real environment, so redraws avoid backward tabs and other optional cursor sequences that some IDE terminals mishandle. See [0130](../decisions/0130-plain-cursor-movement.md).
+
 ## Overview cache
 
 The opening lesson on the repository overview is saved as `overview-<goal key>.md` beside `session.json`, one file per learning goal. A header comment holds the source fingerprint, question, and citations, and the body is the lesson Markdown. A new session loads this file instead of requesting a turn, and records it as a lesson. When the fingerprint differs, the saved overview still opens with a notice, and `/refresh` requests a new one. A damaged or unknown-format file counts as missing. See [0070](../decisions/0070-overview-cache.md).

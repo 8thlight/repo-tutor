@@ -260,3 +260,19 @@ func TestCancellationAndFirstLessonFailureAreRecoverable(t *testing.T) {
 		t.Fatalf("first-lesson cancellation offered no recovery:\n%s", content)
 	}
 }
+
+func TestRendererIsToldTheTerminalOnlyDoesPlainCursorMovement(t *testing.T) {
+	adjusted := plainCursorMovement([]string{"HOME=/h", "TERM=xterm-256color", "COLORTERM=truecolor"})
+	terms := 0
+	for _, entry := range adjusted {
+		if strings.HasPrefix(entry, "TERM=") {
+			terms++
+			if entry != "TERM=vt100" {
+				t.Fatalf("TERM should hide backward tab and other optional movement: %s", entry)
+			}
+		}
+	}
+	if terms != 1 || len(adjusted) != 3 {
+		t.Fatalf("only TERM should change: %v", adjusted)
+	}
+}
