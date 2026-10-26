@@ -102,6 +102,25 @@ func (store *Store) Load() (State, bool, error) {
 	return state, true, nil
 }
 
+func (store *Store) overviewPath(goalKey string) string {
+	return filepath.Join(store.Directory, "overview-"+goalKey+".md")
+}
+
+func (store *Store) LoadOverview(goalKey string) ([]byte, bool, error) {
+	data, err := os.ReadFile(store.overviewPath(goalKey))
+	if errors.Is(err, os.ErrNotExist) {
+		return nil, false, nil
+	}
+	if err != nil {
+		return nil, false, err
+	}
+	return data, true, nil
+}
+
+func (store *Store) SaveOverview(goalKey string, data []byte) error {
+	return store.write(filepath.Base(store.overviewPath(goalKey)), data)
+}
+
 func (store *Store) Archive() error {
 	data, err := os.ReadFile(filepath.Join(store.Directory, "session.json"))
 	if errors.Is(err, os.ErrNotExist) {
