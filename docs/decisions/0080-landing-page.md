@@ -1,6 +1,6 @@
 # 0080. Landing page
 
-Status: accepted. The Browse entry is replaced by Topics and Explore under [0170](0170-tab-groups.md).
+Status: accepted. The Browse entry is replaced by Topics and Hotspots under [0180](0180-learn-and-hotspots.md).
 
 ## Context
 
