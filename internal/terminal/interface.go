@@ -87,7 +87,11 @@ func runInterface(ctx context.Context, application application, input io.Reader,
 	}
 	_, noColor := os.LookupEnv("NO_COLOR")
 	model := newInterface(runningContext, application, runner, noColor)
-	options := []tea.ProgramOption{tea.WithContext(runningContext), tea.WithInput(input), tea.WithOutput(output)}
+	environment := os.Environ()
+	options := []tea.ProgramOption{
+		tea.WithContext(runningContext), tea.WithInput(input), tea.WithOutput(output),
+		tea.WithEnvironment(plainCursorMovement(environment)), tea.WithColorProfile(colorprofile.Detect(output, environment)),
+	}
 	if noColor {
 		options = append(options, tea.WithColorProfile(colorprofile.NoTTY))
 	}
@@ -100,6 +104,16 @@ func runInterface(ctx context.Context, application application, input io.Reader,
 	}
 	fmt.Fprintln(output, "Session saved. Run the same command to resume.")
 	return nil
+}
+
+func plainCursorMovement(environment []string) []string {
+	adjusted := make([]string, 0, len(environment)+1)
+	for _, entry := range environment {
+		if !strings.HasPrefix(entry, "TERM=") {
+			adjusted = append(adjusted, entry)
+		}
+	}
+	return append(adjusted, "TERM=vt100")
 }
 
 func newInterface(ctx context.Context, application application, runner turnRunner, noColor bool) interfaceModel {
