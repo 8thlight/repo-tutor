@@ -2,6 +2,7 @@ package terminal
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
@@ -52,6 +53,17 @@ func markdownChoice(rendered bool, label string) settingChoice {
 	}
 }
 
+func quizLengthChoice(length int) settingChoice {
+	return settingChoice{
+		group: "QUIZ LENGTH", label: fmt.Sprintf("%d questions", length),
+		selected: func(current settings.Settings) bool { return current.QuizLength == length },
+		apply: func(current settings.Settings) settings.Settings {
+			current.QuizLength = length
+			return current
+		},
+	}
+}
+
 func highlightChoice(brand highlightColor) settingChoice {
 	return settingChoice{
 		group: "HIGHLIGHT COLOR", label: brand.label, highlight: brand.id,
@@ -74,6 +86,9 @@ func settingChoices() []settingChoice {
 		tabStyleChoice(settings.TabStyleJoinedArrows, "Joined arrows", powerlineNote),
 		markdownChoice(true, "Rendered"),
 		markdownChoice(false, "Source"),
+	}
+	for _, length := range settings.QuizLengths {
+		choices = append(choices, quizLengthChoice(length))
 	}
 	for _, brand := range highlightColors {
 		choices = append(choices, highlightChoice(brand))

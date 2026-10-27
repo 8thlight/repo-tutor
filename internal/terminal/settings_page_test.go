@@ -10,6 +10,7 @@ import (
 	"github.com/charmbracelet/x/ansi"
 
 	"repo-tutor/internal/session"
+	"repo-tutor/internal/tutor"
 )
 
 func settingsPageFixture(t *testing.T) interfaceModel {
@@ -163,7 +164,7 @@ func TestHighlightChoiceIsSavedAndChangesTheAccent(t *testing.T) {
 	model.noColor = false
 	model.dark = true
 	before := model.palette().accent
-	for range 9 {
+	for range 12 {
 		model, _ = press(model, tea.KeyDown, 0)
 	}
 	model, _ = press(model, tea.KeySpace, 0)
@@ -211,4 +212,35 @@ func TestThePageNamesItsKeysAndLeavesTheMarkdownViewKeyToTheFile(t *testing.T) {
 	if strings.Contains(content, "Press v") {
 		t.Fatal("the v key belongs to the file view and not to this page")
 	}
+}
+
+func TestQuizLengthIsChosenSavedAndUsedForTheNextQuiz(t *testing.T) {
+	model := settingsPageFixture(t)
+	for range 11 {
+		model, _ = press(model, tea.KeyDown, 0)
+	}
+	model, _ = press(model, tea.KeySpace, 0)
+	if model.application.settings.QuizLength != 10 {
+		t.Fatalf("choosing 10 questions should set the length: %+v", model.application.settings)
+	}
+	saved, _, _ := session.LoadSettings(model.application.settingsBase)
+	if saved.QuizLength != 10 {
+		t.Fatalf("the length should be saved: %+v", saved)
+	}
+	if !strings.Contains(ansi.Strip(model.settingsContent()), "(•) 10 questions") {
+		t.Fatalf("the chosen length should show (•):\n%s", ansi.Strip(model.settingsContent()))
+	}
+	updated := model.application.recordReply("quiz", "go", tutor.Overview, "", tutor.Reply{Question: "First?", Assessment: "none"})
+	if updated.Quiz == nil || updated.Quiz.Goal != 10 {
+		t.Fatalf("a new quiz should take the chosen length: %+v", updated.Quiz)
+	}
+	if !strings.Contains(ansi.Strip(readingFixtureWith(model).actionLine()), "Quiz this topic (10)") {
+		t.Fatal("the action line should name the chosen length")
+	}
+}
+
+func readingFixtureWith(model interfaceModel) interfaceModel {
+	reading := readingFixture()
+	reading.application.settings = model.application.settings
+	return reading
 }

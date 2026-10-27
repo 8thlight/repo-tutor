@@ -22,14 +22,16 @@ const (
 )
 
 var (
-	TabStyles  = []string{TabStyleNone, TabStyleBlock, TabStyleSlanted, TabStyleRounded, TabStyleJoinedSlanted, TabStyleJoinedRounded, TabStyleJoinedArrows}
-	Highlights = []string{"red", "orange", "yellow", HighlightGreen, "blue", "dark_blue", "purple"}
+	TabStyles   = []string{TabStyleNone, TabStyleBlock, TabStyleSlanted, TabStyleRounded, TabStyleJoinedSlanted, TabStyleJoinedRounded, TabStyleJoinedArrows}
+	QuizLengths = []int{3, 5, 10}
+	Highlights  = []string{"red", "orange", "yellow", HighlightGreen, "blue", "dark_blue", "purple"}
 )
 
 type Settings struct {
 	TabStyle              string
 	MarkdownOpensRendered bool
 	Highlight             string
+	QuizLength            int
 }
 
 type Status struct {
@@ -42,10 +44,11 @@ type file struct {
 	TabStyle              *string `json:"tab_style,omitempty"`
 	MarkdownOpensRendered *bool   `json:"markdown_opens_rendered,omitempty"`
 	Highlight             *string `json:"highlight,omitempty"`
+	QuizLength            *int    `json:"quiz_length,omitempty"`
 }
 
 func Defaults() Settings {
-	return Settings{TabStyle: TabStyleNone, MarkdownOpensRendered: true, Highlight: HighlightGreen}
+	return Settings{TabStyle: TabStyleNone, MarkdownOpensRendered: true, Highlight: HighlightGreen, QuizLength: 5}
 }
 
 func Decode(data []byte) (Settings, Status) {
@@ -63,6 +66,9 @@ func Decode(data []byte) (Settings, Status) {
 	if decoded.Highlight != nil && slices.Contains(Highlights, *decoded.Highlight) {
 		settings.Highlight = *decoded.Highlight
 	}
+	if decoded.QuizLength != nil && slices.Contains(QuizLengths, *decoded.QuizLength) {
+		settings.QuizLength = *decoded.QuizLength
+	}
 	return settings, Status{ReadOnly: decoded.Version > Version}
 }
 
@@ -70,6 +76,6 @@ func Encode(settings Settings) []byte {
 	var buffer bytes.Buffer
 	encoder := json.NewEncoder(&buffer)
 	encoder.SetIndent("", "  ")
-	encoder.Encode(file{Version: Version, TabStyle: &settings.TabStyle, MarkdownOpensRendered: &settings.MarkdownOpensRendered, Highlight: &settings.Highlight})
+	encoder.Encode(file{Version: Version, TabStyle: &settings.TabStyle, MarkdownOpensRendered: &settings.MarkdownOpensRendered, Highlight: &settings.Highlight, QuizLength: &settings.QuizLength})
 	return buffer.Bytes()
 }

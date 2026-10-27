@@ -23,9 +23,14 @@ func (quiz Quiz) Completed() int {
 	return count
 }
 
-func RecordQuiz(previous *Quiz, topic, action, pending string, reply Reply) *Quiz {
+const DefaultQuizLength = 5
+
+func RecordQuiz(previous *Quiz, topic, action, pending string, reply Reply, length int) *Quiz {
+	if length < 1 {
+		length = DefaultQuizLength
+	}
 	if action == "quiz" {
-		return &Quiz{Topic: topic, Goal: 5, Questions: []QuizQuestion{{Text: reply.Question}}}
+		return &Quiz{Topic: topic, Goal: length, Questions: []QuizQuestion{{Text: reply.Question}}}
 	}
 	if action == "lesson" || action == "probe" || (previous != nil && previous.Topic != topic) {
 		return nil
@@ -36,7 +41,7 @@ func RecordQuiz(previous *Quiz, topic, action, pending string, reply Reply) *Qui
 	quiz := *previous
 	quiz.Questions = append([]QuizQuestion(nil), previous.Questions...)
 	if action == "quiz-extend" {
-		quiz.Goal += 5
+		quiz.Goal += length
 	}
 	if action == "quiz-next" || action == "quiz-extend" {
 		quiz.Questions = append(quiz.Questions, QuizQuestion{Text: reply.Question})

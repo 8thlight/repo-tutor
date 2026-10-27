@@ -10,10 +10,11 @@ import (
 	"repo-tutor/internal/tutor"
 )
 
-const quizLengthDefault = 5
-
 func (model interfaceModel) quizLength() int {
-	return quizLengthDefault
+	if length := model.application.settings.QuizLength; length > 0 {
+		return length
+	}
+	return tutor.DefaultQuizLength
 }
 
 func (model interfaceModel) nextTopicLabel() (string, bool) {

@@ -49,7 +49,7 @@ func TestANewerVersionIsReadButReadOnly(t *testing.T) {
 }
 
 func TestEncodedSettingsDecodeToThemselves(t *testing.T) {
-	want := settings.Settings{TabStyle: "slanted", MarkdownOpensRendered: false, Highlight: "dark_blue"}
+	want := settings.Settings{TabStyle: "slanted", MarkdownOpensRendered: false, Highlight: "dark_blue", QuizLength: 10}
 	got, status := settings.Decode(settings.Encode(want))
 	if got != want || status != (settings.Status{}) {
 		t.Fatalf("got %+v %+v", got, status)
@@ -68,6 +68,19 @@ func TestEveryJoinedStyleIsAKnownValue(t *testing.T) {
 		got, _ := settings.Decode([]byte(`{"tab_style":"` + style + `"}`))
 		if got.TabStyle != style {
 			t.Fatalf("%s should be accepted, got %s", style, got.TabStyle)
+		}
+	}
+}
+
+func TestQuizLengthAcceptsOnlyTheOfferedValues(t *testing.T) {
+	got, _ := settings.Decode([]byte(`{"quiz_length":10}`))
+	if got.QuizLength != 10 {
+		t.Fatalf("10 should be accepted, got %d", got.QuizLength)
+	}
+	for _, value := range []string{"4", "0", "-3", "100"} {
+		got, status := settings.Decode([]byte(`{"quiz_length":` + value + `}`))
+		if got.QuizLength != 5 || status.Unreadable {
+			t.Fatalf("%s should fall back to 5, got %d", value, got.QuizLength)
 		}
 	}
 }
