@@ -256,7 +256,7 @@ func (model interfaceModel) rendersMarkdown(path string) bool {
 	if rendered, chosen := model.markdownViews[path]; chosen {
 		return rendered
 	}
-	return true
+	return model.application.settings.MarkdownOpensRendered
 }
 
 func (model interfaceModel) rememberMarkdownView(path string, rendered bool) interfaceModel {
