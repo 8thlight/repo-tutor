@@ -28,7 +28,7 @@ In a terminal, the tutor opens a full-screen workspace with a lesson, the curren
 | `Tab` / `Shift+Tab` | Switch views |
 | `PgUp` / `PgDown` | Scroll the lesson or source |
 | `Alt+Left` / `Alt+Right` | Read earlier or later saved steps |
-| `Esc` | Return to the lesson, or stop what is loading |
+| `Esc` / `Ctrl+L` | Go back, or stop what is loading / return to the lesson (press twice to leave a quiz) |
 | `Ctrl+R` | Retry a failed request with your draft kept |
 | `F1` / `F2` / `F3` | Help / Settings / About |
 | `Ctrl+Q` | Save and quit |

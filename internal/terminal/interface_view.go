@@ -352,7 +352,7 @@ func (model interfaceModel) View() tea.View {
 		indicator = model.prefetchSpinner.View() + " " + model.prefetchLabel()
 	}
 	noticeStyle := muted
-	if model.skipArmed {
+	if model.skipArmed || model.leaveArmed {
 		noticeStyle = lipgloss.NewStyle().Foreground(palette.warning).Bold(true)
 	}
 	footer := model.footerLine(notice, indicator, width, noticeStyle) + "\n" + model.footerKeys(width)

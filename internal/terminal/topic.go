@@ -11,36 +11,51 @@ func readingAction(action string) bool {
 	return action == "lesson" || action == "question"
 }
 
-func resumeTopic(state session.State, topic string) (session.State, bool) {
-	source := -1
+func latestReading(state session.State, topic string) (int, bool) {
 	for index := len(state.Turns) - 1; index >= 0; index-- {
 		if state.Turns[index].Topic == topic && readingAction(state.Turns[index].Action) {
-			source = index
-			break
+			return index, true
 		}
 	}
-	if source < 0 {
-		return state, false
-	}
-	if state.Topic == topic {
-		return state, true
-	}
-	last := state.Turns[source]
-	copied := last
+	return -1, false
+}
+
+func showAgain(state session.State, source int) session.State {
+	copied := state.Turns[source]
 	copied.Resumed = true
-	state.Topic = topic
-	state.Question = last.Reply.Question
-	state.Review = last.Action == "answer" && (last.Reply.Assessment != "none" || last.Reply.Question == "")
-	if state.Quiz != nil && state.Quiz.Topic != topic {
-		state.Quiz = nil
-	}
-	state.Probe = nil
+	state.Topic = copied.Topic
+	state.Question = copied.Reply.Question
+	state.Review = false
 	state.Turns = append(append([]session.Turn(nil), state.Turns...), copied)
 	if trimmed := len(state.Turns) - 200; trimmed > 0 {
 		state.Turns = state.Turns[trimmed:]
 		state.Quiz = tutor.ShiftQuizTurns(state.Quiz, trimmed)
 	}
-	return state, true
+	return state
+}
+
+func resumeTopic(state session.State, topic string) (session.State, bool) {
+	source, found := latestReading(state, topic)
+	if !found {
+		return state, false
+	}
+	if state.Topic == topic {
+		return state, true
+	}
+	if state.Quiz != nil && state.Quiz.Topic != topic {
+		state.Quiz = nil
+	}
+	state.Probe = nil
+	return showAgain(state, source), true
+}
+
+func leaveQuestions(state session.State) (session.State, bool) {
+	source, found := latestReading(state, state.Topic)
+	if !found {
+		return state, false
+	}
+	state.Quiz, state.Probe = nil, nil
+	return showAgain(state, source), true
 }
 
 func (model interfaceModel) openTopic(topic string) (tea.Model, tea.Cmd) {
