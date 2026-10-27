@@ -39,17 +39,17 @@ Tutor options:
   --goal TEXT               What you want to learn (skips the first-run question)
   --new                     Archive the previous session and start again
   --ask TEXT                Ask one question, save the reply, and exit
-  --state-dir DIRECTORY     Store sessions in this directory
+  --state-dir DIRECTORY     Store sessions and settings in this directory
   --timeout DURATION        Limit each agent turn (default 3m)
   --plain                   Use the line-based interface instead of the full-screen UI
-  --no-prefetch             Do not prepare the next lesson in the background
+  --no-prefetch             Do not prepare the next lesson or quiz question in the background
 
 Examples:
   repo-tutor ../onboard-kit --agent codex
   repo-tutor scan ../onboard-kit
   repo-tutor --goal "Trace how a plan becomes a document" ../onboard-kit
 
-Inside a session, type /help for topics, quizzes, source browsing, and progress.
+Inside a session, press F1 for help (type /help in plain mode).
 `
 
 func Run(ctx context.Context, arguments []string, input io.Reader, output io.Writer, diagnostics io.Writer) error {

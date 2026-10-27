@@ -24,18 +24,19 @@ Ctrl+N          Next: the next topic, or the next question during a quiz (twice 
 Ctrl+G          Start a quiz on this topic (length is a setting)
 Ctrl+F          More: more on this topic, or more questions after a quiz
 Ctrl+B          Open the quiz question index and goal
+A               On the question index, show a skipped question's answer
 Ctrl+K          Browse and search topics
 Ctrl+S          Browse cited sources and open the code
 v               Switch a Markdown file between rendered and source
 T               Teach the open source file (starts a lesson on it)
-Ctrl+P          See lessons and recorded answer outcomes
+Ctrl+P          See your goal, coverage, understanding, and latest exam
 Esc             Go back to where you opened this page (its key again also works)
-Ctrl+L          Return to the current lesson (leaves a quiz after a second press)
+Ctrl+L          Return to the current lesson (leaves a quiz, exam, or probe after a second press)
 Alt+Left/Right  Step through this topic; at its ends, press again for the neighbor
 PgUp / PgDown   Scroll the lesson or source
 Tab / Shift+Tab Switch between Home, Course, Quiz, and Progress
 F1              Show this help
-F2              Change the tab style, highlight color, quiz length, and Markdown view
+F2              Change the tab style, highlight color, quiz and exam length, and Markdown view
 F3              Show the version, copyright, and credits
 Ctrl+R          Retry a failed request, keeping your draft
 Esc / Ctrl+C    Stop what is loading
@@ -44,7 +45,9 @@ Ctrl+Q          Save and quit (Ctrl+C also quits when idle)
 In lists: arrows move, / filters, Enter confirms a filter,
 then Enter opens the selected item. Esc goes back.
 
-Completed replies save before display. A failed or stopped turn
+Home offers an exam once you have read ten topics.
+
+Completed replies save before display. A failed or stopped request
 does not change your recorded outcomes. Answers are assessed by
 your chosen agent; reading a lesson does not count as mastery.
 
