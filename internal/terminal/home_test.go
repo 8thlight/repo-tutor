@@ -387,3 +387,29 @@ func TestGoalAppearsOnHomeAndProgressAndNotInTheHeader(t *testing.T) {
 		t.Fatalf("the header should be one line with a blank row under it:\n%s", strings.Join(lines[:4], "\n"))
 	}
 }
+
+func TestHomeOffersReviewOnlyWhenATopicIsWeak(t *testing.T) {
+	model := newLearnerFixture()
+	for _, entry := range model.homeEntries() {
+		if entry.place == placeReview {
+			t.Fatal("a learner with no answers has nothing to review")
+		}
+	}
+	core := model.application.course[1]
+	model.application.state.Progress = map[string]tutor.Progress{core.ID: {Lessons: 1, Missed: 2, Correct: 1}}
+	var review homeEntry
+	for _, entry := range model.homeEntries() {
+		if entry.place == placeReview {
+			review = entry
+		}
+	}
+	if review.label != "Review a weak topic" || !strings.Contains(review.description, tutor.Plain(core.Title)) {
+		t.Fatalf("the entry should name the weak topic: %+v", review)
+	}
+	started, _ := model.openHomeEntry(review)
+	reviewing := started.(interfaceModel)
+	defer reviewing.cancel()
+	if !reviewing.busy || reviewing.intent.topic != core.ID || reviewing.intent.message != tutor.ReviewMessage {
+		t.Fatalf("the entry should start a review lesson on %s: %+v", core.ID, reviewing.intent)
+	}
+}
