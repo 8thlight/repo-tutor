@@ -12,7 +12,7 @@ Two choices have a risk the learner cannot see. The slanted and rounded tab styl
 
 `F3` opens the Settings page and, pressed again on it, returns to the origin, as 0110 and 0200 describe. It highlights no tab. The Home page lists Settings before About, with the line "Look and behavior. F3 opens it from anywhere." Help lists F3. The tab line hints become `Tab Next  F1 Help  F2 About  F3 Settings`, and they shorten in this order: `F1 Help  F2 About  F3 Settings`, then `F1 Help  F2 About`, then `F1 Help`.
 
-The page is a single list of choices under muted headings. Up and Down move between choices, skipping headings. Enter or Space selects the focused choice. The selected choice in each group shows `(•)` and the others show `( )`, so the state never rests on color alone. The focused row uses the same `›` marker as other lists. A choice applies and saves at once, and the notice reads "Saved". There is no Apply button and no Cancel; changing back is one more selection. `F3` and Esc close the page.
+The page is a single list of choices under muted headings. Up and Down move between choices, skipping headings. Space selects the focused choice. Enter does nothing here, because Enter opens things on other pages and a stray Enter must not change a setting. The selected choice in each group shows `(•)` and the others show `( )`, so the state never rests on color alone. The focused row uses the same `›` marker as other lists. A choice applies and saves at once, and the notice reads "Saved". There is no Apply button and no Cancel; changing back is one more selection. `F3` and Esc close the page.
 
 The groups, in order:
 
@@ -28,4 +28,4 @@ At widths under 80 columns the samples move under their labels so no row wraps m
 
 ## Consequences
 
-A learner sees every tab style before choosing and can undo a bad one in a keystroke. The page is also one more list with the same keys as the rest of the workspace, so it teaches nothing new. Powerline glyph codes are fixed here so a rewrite draws the same tabs. Two limits are accepted: the tool cannot detect a missing font, so it relies on the sample and the standing note, and the page shows a Markdown setting that affects only files opened afterward.
+A learner sees every tab style before choosing and can undo a bad one in a keystroke. The page is also one more list that moves with the arrow keys like the rest of the workspace, and it adds one new key, Space, to choose. Powerline glyph codes are fixed here so a rewrite draws the same tabs. Two limits are accepted: the tool cannot detect a missing font, so it relies on the sample and the standing note, and the page shows a Markdown setting that affects only files opened afterward.
