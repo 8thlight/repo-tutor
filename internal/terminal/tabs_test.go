@@ -118,3 +118,64 @@ func TestJoinedBarReachesTheTerminalEdgeAndOtherStylesKeepTheMargin(t *testing.T
 		t.Fatalf("a block bar should keep the margin: %q", line)
 	}
 }
+
+func tabRows(model interfaceModel) (string, string) {
+	lines := strings.Split(ansi.Strip(model.View().Content), "\n")
+	for index, line := range lines {
+		if strings.Contains(line, "Home") && strings.Contains(line, "Course") && index+1 < len(lines) {
+			return line, lines[index+1]
+		}
+	}
+	return "", ""
+}
+
+func TestTheRuleIsHeavyUnderTheActiveTabAndLightElsewhere(t *testing.T) {
+	model := interfaceFixture()
+	model.noColor = false
+	bar, rule := tabRows(model)
+	start := strings.Index(bar, " Course ")
+	heavy := strings.Index(rule, "━")
+	if start < 0 || heavy < 0 || len([]rune(rule[:heavy])) != len([]rune(bar[:start])) {
+		t.Fatalf("the heavy stretch should start under Course:\n%q\n%q", bar, rule)
+	}
+	if strings.Count(rule, "━") != len([]rune(" Course ")) {
+		t.Fatalf("the heavy stretch should cover exactly the Course tab:\n%q", rule)
+	}
+}
+
+func TestTheRuleIsAllLightWhenNoTabIsActive(t *testing.T) {
+	model := settingsPageFixture(t)
+	model.noColor = false
+	_, rule := tabRows(model)
+	if strings.Contains(rule, "━") || !strings.Contains(rule, "─") {
+		t.Fatalf("with no active tab the rule should be light all the way:\n%q", rule)
+	}
+}
+
+func TestTheRuleStillMarksTheActiveTabWithoutColor(t *testing.T) {
+	model := interfaceFixture()
+	_, rule := tabRows(model)
+	if !strings.Contains(rule, "━") {
+		t.Fatalf("thickness should carry the signal when color is off:\n%q", rule)
+	}
+}
+
+func TestTheRuleStartsWhereTheBarStarts(t *testing.T) {
+	for style, prefix := range map[string]string{"joined_arrows": "─", "block": "  ─"} {
+		model := interfaceFixture()
+		model.noColor = false
+		model.application.settings.TabStyle = style
+		_, rule := tabRows(model)
+		if !strings.HasPrefix(rule, prefix) {
+			t.Fatalf("%s: the rule should start where the bar starts: %q", style, rule)
+		}
+	}
+}
+
+func TestTheRuleReplacesTheBlankRowSoThePageKeepsItsHeight(t *testing.T) {
+	model := interfaceFixture()
+	model.noColor = false
+	if rows := strings.Count(model.View().Content, "\n") + 1; rows > model.height {
+		t.Fatalf("the view is %d rows and the terminal has %d", rows, model.height)
+	}
+}
