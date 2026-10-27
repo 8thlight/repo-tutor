@@ -18,7 +18,7 @@ In a terminal, the tutor opens a full-screen workspace with a lesson, the curren
 
 | Shortcut | What it does |
 | -- | -- |
-| `Enter` / `Alt+Enter` | Send your question or answer / add a line |
+| `Enter` | Send your question or answer |
 | `Ctrl+N` / `Ctrl+G` | Next topic / quiz this topic |
 | `Ctrl+F` | More on this topic, the next quiz question after feedback, or more questions when a quiz is done |
 | `Ctrl+B` | Quiz question index and goal |
