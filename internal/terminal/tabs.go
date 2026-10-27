@@ -11,15 +11,7 @@ import (
 	"repo-tutor/internal/settings"
 )
 
-type tabHint struct{ key, label string }
-
-var (
-	tabKey      = tabHint{"Tab", "Next"}
-	helpKey     = tabHint{"F1", "Help"}
-	aboutKey    = tabHint{"F2", "About"}
-	settingsKey = tabHint{"F3", "Settings"}
-	tabHintSets = [][]tabHint{{tabKey, helpKey, aboutKey, settingsKey}, {helpKey, aboutKey, settingsKey}, {helpKey, aboutKey}, {helpKey}}
-)
+var tabHintSets = [][]keyHint{{{"Tab", "Next"}}}
 
 func (model interfaceModel) cutoutColor(fallback string) color.Color {
 	if model.background != nil {
@@ -189,21 +181,10 @@ func (model interfaceModel) tabRule(width int) string {
 func (model interfaceModel) tabBar(width int) string {
 	bar := model.tabs(model.application.settings.TabStyle, model.activeTab())
 	for _, set := range tabHintSets {
-		hints := model.renderTabHints(set)
+		hints := model.renderKeyHints(set, "  ")
 		if lipgloss.Width(bar)+2+lipgloss.Width(hints) <= width {
 			return bar + strings.Repeat(" ", width-lipgloss.Width(bar)-lipgloss.Width(hints)) + hints
 		}
 	}
 	return ansi.Truncate(bar, width, "…")
-}
-
-func (model interfaceModel) renderTabHints(hints []tabHint) string {
-	palette := model.palette()
-	key := lipgloss.NewStyle().Foreground(palette.foreground).Bold(true)
-	label := lipgloss.NewStyle().Foreground(palette.muted)
-	rendered := make([]string, len(hints))
-	for index, hint := range hints {
-		rendered[index] = key.Render(hint.key) + " " + label.Render(hint.label)
-	}
-	return strings.Join(rendered, "  ")
 }

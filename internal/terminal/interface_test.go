@@ -149,7 +149,7 @@ func TestGradedAnswerStaysWithItsQuestionAndFeedback(t *testing.T) {
 		position += next + 1
 	}
 	composer := ansi.Strip(model.composer())
-	if !strings.HasPrefix(composer, "────") || !strings.Contains(composer, "Continue") || strings.Contains(composer, reply.Question) || strings.Contains(content, reply.Explanation) {
+	if !strings.HasPrefix(composer, "────") || !strings.Contains(composer, "Enter or Ctrl+F continue") || strings.Contains(composer, reply.Question) || strings.Contains(content, reply.Explanation) {
 		t.Fatalf("review must stop before the next idea or question:\n%s\n%s", content, composer)
 	}
 	model.application.state.Turns = append(model.application.state.Turns, session.Turn{Topic: "another", Action: "lesson", Reply: tutor.Reply{Assessment: "none"}})
@@ -249,7 +249,7 @@ func TestFailedTurnKeepsDraftAndRetryUsesSameIntent(t *testing.T) {
 	}
 	next, _ := model.Update(finishedCommand(t, command))
 	model = next.(interfaceModel)
-	if model.busy || model.input.Value() != "The core package" || len(model.application.state.Turns) != 1 || !strings.Contains(ansi.Strip(model.View().Content), "Turn not recorded") {
+	if model.busy || model.input.Value() != "The core package" || len(model.application.state.Turns) != 1 || !strings.Contains(ansi.Strip(model.View().Content), "That did not finish") {
 		t.Fatal("failed turn lost progress, draft, or recovery guidance")
 	}
 	retried, retry := model.Update(tea.KeyPressMsg{Code: 'r', Mod: tea.ModCtrl})

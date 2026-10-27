@@ -249,13 +249,13 @@ func TestTheSidebarCarriesTheSameChoicesAsTheActionLine(t *testing.T) {
 	if bar[0] != sidebar[0] || bar[1] != sidebar[1] {
 		t.Fatalf("Quiz and More should read the same in both places: %v vs %v", bar, sidebar)
 	}
-	for _, row := range strings.Split(model.sidebarShortcuts(), "\n") {
+	for _, row := range strings.Split(ansi.Strip(model.sidebarShortcuts()), "\n") {
 		if len([]rune(row)) > sidebarWidth-3 {
 			t.Fatalf("%q would wrap in the sidebar", row)
 		}
 	}
 	for _, expected := range []string{"Ctrl+K  Choose a topic", "Ctrl+S  Follow a citation"} {
-		if !strings.Contains(model.sidebarShortcuts(), expected) {
+		if !strings.Contains(ansi.Strip(model.sidebarShortcuts()), expected) {
 			t.Fatalf("the sidebar should keep %q", expected)
 		}
 	}
@@ -264,7 +264,7 @@ func TestTheSidebarCarriesTheSameChoicesAsTheActionLine(t *testing.T) {
 func TestTheSidebarNamesMoreAsTheNextQuestionDuringAQuiz(t *testing.T) {
 	model := readingFixture()
 	model.application.state.Quiz = &tutor.Quiz{Topic: tutor.Overview, Goal: 5, Questions: []tutor.QuizQuestion{{Text: "First?", Assessment: "partial"}}}
-	if !strings.Contains(model.sidebarShortcuts(), "Ctrl+F  Next question") {
+	if !strings.Contains(ansi.Strip(model.sidebarShortcuts()), "Ctrl+F  Next question") {
 		t.Fatalf("Ctrl+F continues a quiz, and the sidebar should say so:\n%s", model.sidebarShortcuts())
 	}
 }
