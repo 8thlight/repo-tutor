@@ -83,3 +83,68 @@ func TestTheLessonComposerIsAQuestionBox(t *testing.T) {
 		t.Fatalf("a lesson should offer a question box:\n%s", composer)
 	}
 }
+
+func TestWaitingTextNamesWhatIsHappening(t *testing.T) {
+	for action, want := range map[string]string{
+		"lesson": "Preparing your lesson", "quiz": "Preparing your question", "quiz-next": "Preparing your question",
+		"probe": "Preparing your question", "answer": "Reviewing your answer", "question": "Thinking about your question",
+	} {
+		model := interfaceFixture()
+		started, _ := model.begin(turnIntent{action, "go", tutor.Overview})
+		model = started.(interfaceModel)
+		content := ansi.Strip(model.View().Content)
+		model.cancel()
+		if !strings.Contains(content, want) {
+			t.Fatalf("%s should say %q:\n%s", action, want, content)
+		}
+	}
+}
+
+func TestAfterALessonTheActionLineOffersQuizMoreAndNext(t *testing.T) {
+	model := readingFixture()
+	title, found := model.nextTopicLabel()
+	if !found {
+		t.Fatal("the fixture course should have a next topic")
+	}
+	line := ansi.Strip(model.actionLine())
+	for _, expected := range []string{"Ctrl+G Quiz this topic (5)", "Ctrl+F More on this topic", "Ctrl+N Next: " + title} {
+		if !strings.Contains(line, expected) {
+			t.Fatalf("the action line is missing %q:\n%s", expected, line)
+		}
+	}
+	if !strings.Contains(ansi.Strip(model.composer()), line) {
+		t.Fatal("the action line should sit with the composer")
+	}
+}
+
+func TestTheActionLineStaysAwayWhenItWouldMislead(t *testing.T) {
+	pending := readingFixture()
+	pending.application.state.Question = "Which package owns the calculation?"
+	busy := readingFixture()
+	busy.busy = true
+	earlier := readingFixture()
+	earlier.application.state.Turns = append(earlier.application.state.Turns, earlier.application.state.Turns[0])
+	earlier.history = 0
+	inQuiz := readingFixture()
+	inQuiz.application.state.Quiz = &tutor.Quiz{Topic: tutor.Overview, Goal: 5, Questions: []tutor.QuizQuestion{{Text: "First?"}}}
+	inQuiz.application.state.Question = "First?"
+	for name, model := range map[string]interfaceModel{"a pending question": pending, "a running turn": busy, "an earlier step": earlier, "a quiz": inQuiz} {
+		if line := model.actionLine(); line != "" {
+			t.Fatalf("%s should hide the action line, got %q", name, ansi.Strip(line))
+		}
+	}
+	last := readingFixture()
+	last.application.state.Topic = last.application.course[len(last.application.course)-1].ID
+	if strings.Contains(ansi.Strip(last.actionLine()), "Next:") {
+		t.Fatal("the last topic has no next topic to offer")
+	}
+}
+
+func TestACompleteQuizOffersTheNextTopicAndExtend(t *testing.T) {
+	model := readingFixture()
+	line := model.quizCompleteLine()
+	title, _ := model.nextTopicLabel()
+	if !strings.Contains(line, "Ctrl+N Next: "+title) || !strings.Contains(line, "/extend adds 5") {
+		t.Fatalf("got %q", line)
+	}
+}

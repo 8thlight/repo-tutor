@@ -238,7 +238,7 @@ func (model interfaceModel) composer() string {
 	} else if reviewing(model.application.state) {
 		label = "[ Continue → ] Enter empty / Ctrl+F\nAsk about this answer, or continue."
 		if quiz := model.application.state.Quiz; quiz != nil && quiz.Completed() >= quiz.Goal {
-			label = fmt.Sprintf("QUIZ COMPLETE · %d / %d answered\n/extend adds 5 · Ctrl+B results", quiz.Completed(), quiz.Goal)
+			label = fmt.Sprintf("QUIZ COMPLETE · %d / %d answered\n%s", quiz.Completed(), quiz.Goal, model.quizCompleteLine())
 		}
 	}
 	if model.askingGoal() {
@@ -249,7 +249,11 @@ func (model interfaceModel) composer() string {
 		border = palette.border
 	}
 	editor := lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(border).Width(max(1, model.bodyWidth()-2)).Render(model.input.View())
-	return model.sectionDivider("") + "\n" + muted.Render(ansi.Wrap(label, model.bodyWidth(), "")) + "\n" + editor
+	actions := ""
+	if line := model.actionLine(); line != "" {
+		actions = line + "\n"
+	}
+	return actions + model.sectionDivider("") + "\n" + muted.Render(ansi.Wrap(label, model.bodyWidth(), "")) + "\n" + editor
 }
 
 func (model interfaceModel) sidebar() string {
@@ -320,7 +324,7 @@ func (model interfaceModel) View() tea.View {
 				title += " · " + tutor.Plain(topic.Title)
 			}
 		}
-		body = accent.Render(model.spinner.View()+" Loading your next exercise…") + "\n\n" + muted.Render("Grounding the reply in repository sources.\n\nYou can browse topics and sources while you wait.\nEsc stops this request; your progress is saved.")
+		body = accent.Render(model.spinner.View()+" "+waitingText(model.intent.action)) + "\n\n" + muted.Render("Grounding the reply in repository sources.\n\nYou can browse topics and sources while you wait.\nEsc stops this request; your progress is saved.")
 	}
 	if model.isPicker() {
 		body = model.picker.View()
@@ -344,7 +348,7 @@ func (model interfaceModel) View() tea.View {
 	if model.page == "lesson" && model.history < len(model.application.state.Turns)-1 {
 		notice = "Earlier step · Esc returns to the current question · Alt+←/→ steps through this topic"
 	}
-	keys := "Enter send   Ctrl+N next   Ctrl+G quiz   Ctrl+K topics   Ctrl+S sources   Ctrl+Q quit"
+	keys := "Enter send   Ctrl+K topics   Ctrl+S sources   Ctrl+Q quit"
 	if reviewing(model.application.state) {
 		keys = "Ctrl+F continue   Ctrl+B quiz index   Ctrl+S sources   Ctrl+Q quit"
 	}
@@ -373,6 +377,19 @@ func (model interfaceModel) View() tea.View {
 	view.AltScreen = true
 	view.MouseMode = tea.MouseModeCellMotion
 	return view
+}
+
+func waitingText(action string) string {
+	switch action {
+	case "quiz", "quiz-next", "quiz-extend", "probe":
+		return "Preparing your question…"
+	case "answer":
+		return "Reviewing your answer…"
+	case "question":
+		return "Thinking about your question…"
+	default:
+		return "Preparing your lesson…"
+	}
 }
 
 func turnLabel(action string) string {
