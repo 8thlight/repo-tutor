@@ -84,3 +84,13 @@ func TestLessonIsKeptPerKeyAndReplacedInPlace(t *testing.T) {
 		t.Fatal("overview was not saved privately")
 	}
 }
+
+func TestBaseDirectoryPrefersTheFlagThenXDGStateHome(t *testing.T) {
+	t.Setenv("XDG_STATE_HOME", "/state")
+	if base, _ := session.Base("/chosen"); base != "/chosen" {
+		t.Fatalf("an explicit directory should win, got %s", base)
+	}
+	if base, _ := session.Base(""); base != "/state/repo-tutor" {
+		t.Fatalf("XDG_STATE_HOME should hold a repo-tutor folder, got %s", base)
+	}
+}

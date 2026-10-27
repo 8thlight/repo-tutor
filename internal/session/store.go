@@ -47,17 +47,25 @@ type Store struct {
 	lock      *os.File
 }
 
-func Open(base string, repository string) (*Store, error) {
+func Base(base string) (string, error) {
+	if base != "" {
+		return base, nil
+	}
+	base = os.Getenv("XDG_STATE_HOME")
 	if base == "" {
-		base = os.Getenv("XDG_STATE_HOME")
-		if base == "" {
-			var err error
-			base, err = os.UserConfigDir()
-			if err != nil {
-				return nil, err
-			}
+		var err error
+		base, err = os.UserConfigDir()
+		if err != nil {
+			return "", err
 		}
-		base = filepath.Join(base, "repo-tutor")
+	}
+	return filepath.Join(base, "repo-tutor"), nil
+}
+
+func Open(base string, repository string) (*Store, error) {
+	base, err := Base(base)
+	if err != nil {
+		return nil, err
 	}
 	identifier := fmt.Sprintf("%x", sha256.Sum256([]byte(repository)))
 	directory := filepath.Join(base, identifier[:24])
@@ -146,7 +154,11 @@ func (store *Store) Save(state State) error {
 }
 
 func (store *Store) write(name string, data []byte) error {
-	file, err := os.CreateTemp(store.Directory, ".session-*")
+	return writeFile(store.Directory, name, data)
+}
+
+func writeFile(directory, name string, data []byte) error {
+	file, err := os.CreateTemp(directory, ".session-*")
 	if err != nil {
 		return err
 	}
@@ -162,5 +174,5 @@ func (store *Store) write(name string, data []byte) error {
 	if err := file.Close(); err != nil {
 		return err
 	}
-	return os.Rename(file.Name(), filepath.Join(store.Directory, name))
+	return os.Rename(file.Name(), filepath.Join(directory, name))
 }
