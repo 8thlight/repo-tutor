@@ -20,7 +20,6 @@ import (
 const interfaceHelp = `Start with one idea, then try explaining it back.
 
 Enter           Send your question or answer
-Alt+Enter       Add a line to your answer
 Ctrl+N          Learn the next topic
 Ctrl+G          Start a quiz on this topic (length is a setting)
 Ctrl+F          More on this topic, or the next quiz question

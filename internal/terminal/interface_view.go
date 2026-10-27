@@ -44,7 +44,6 @@ func (model interfaceModel) bodyHeight() int {
 func (model *interfaceModel) resize() {
 	palette := model.palette()
 	model.input.SetWidth(max(1, model.bodyWidth()-4))
-	model.input.SetHeight(2)
 	inputStyles := textarea.DefaultStyles(model.dark)
 	inputStyles.Focused.Prompt = lipgloss.NewStyle().Foreground(palette.accent)
 	inputStyles.Focused.Text = lipgloss.NewStyle().Foreground(palette.foreground)
@@ -228,38 +227,39 @@ func (model interfaceModel) composer() string {
 		}
 		return content
 	}
-	label := "Ask about this topic"
-	border := palette.accent
-	if model.application.state.Question != "" {
-		question := ansi.Wrap(tutor.Plain(model.application.state.Question), model.bodyWidth(), "")
+	title, tint, above := "Ask about this topic", palette.accent, ""
+	state := model.application.state
+	if state.Question != "" {
+		question := ansi.Wrap(tutor.Plain(state.Question), model.bodyWidth(), "")
 		lines := strings.Split(question, "\n")
 		if len(lines) > 2 {
 			lines = lines[:2]
 			lines[1] = ansi.Truncate(lines[1]+" …", model.bodyWidth(), "…")
 		}
-		label = "NEXT QUESTION\n" + strings.Join(lines, "\n")
+		above, title = "NEXT QUESTION\n"+strings.Join(lines, "\n"), "Your answer"
 	}
-	if model.history < len(model.application.state.Turns)-1 {
-		label = "Earlier step · Esc returns to the current question"
-	} else if reviewing(model.application.state) {
-		label = "Ask about this answer, or continue."
-		if quiz := model.application.state.Quiz; quiz != nil && quiz.Completed() >= quiz.Goal {
-			label = fmt.Sprintf("QUIZ COMPLETE · %d / %d answered\n%s", quiz.Completed(), quiz.Goal, model.quizCompleteLine())
+	if model.history < len(state.Turns)-1 {
+		above, title = "Earlier step · Esc returns to the current question", "Ask about this topic"
+	} else if reviewing(state) {
+		above, title = "", "Ask about this answer, or continue"
+		if quiz := state.Quiz; quiz != nil && quiz.Completed() >= quiz.Goal {
+			above, title = fmt.Sprintf("QUIZ COMPLETE · %d / %d answered\n%s", quiz.Completed(), quiz.Goal, model.quizCompleteLine()), "Ask about this answer"
 		}
 	}
 	if model.askingGoal() {
-		label = goalComposerLabel
+		above, title = "", goalQuestion
 	}
 	if model.busy {
-		label = waitingPhrase(model.intent.action) + " · Esc stops it"
-		border = palette.border
+		above, title, tint = "", waitingPhrase(model.intent.action), palette.border
 	}
-	editor := lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(border).Width(max(1, model.bodyWidth()-2)).Render(model.input.View())
 	actions := ""
 	if line := model.actionLine(); line != "" {
 		actions = line + "\n"
 	}
-	return actions + model.composerDivider() + "\n" + muted.Render(ansi.Wrap(label, model.bodyWidth(), "")) + "\n" + editor
+	if above != "" {
+		above = muted.Render(ansi.Wrap(above, model.bodyWidth(), "")) + "\n"
+	}
+	return actions + model.sectionDivider("") + "\n" + above + model.framedInput(title, model.typingHints(), tint)
 }
 
 func (model interfaceModel) sidebar() string {

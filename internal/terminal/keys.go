@@ -1,6 +1,7 @@
 package terminal
 
 import (
+	"image/color"
 	"strings"
 
 	"charm.land/lipgloss/v2"
@@ -66,8 +67,10 @@ func (model interfaceModel) footerKeys(width int) string {
 func (model interfaceModel) typingHints() []keyHint {
 	state := model.application.state
 	switch {
+	case model.askingGoal() && strings.TrimSpace(model.input.Value()) != "":
+		return []keyHint{{"Enter", "saves your goal"}}
 	case model.askingGoal():
-		return nil
+		return []keyHint{{"Enter", "keeps the default"}}
 	case model.busy:
 		return []keyHint{{"Esc", "stops it"}}
 	case model.page == "lesson" && model.history < len(state.Turns)-1:
@@ -77,19 +80,23 @@ func (model interfaceModel) typingHints() []keyHint {
 	case reviewing(state):
 		return []keyHint{{"Enter or Ctrl+F", "continue"}}
 	}
-	return []keyHint{{"Enter", "send"}, {"Alt+Enter", "new line"}}
+	return []keyHint{{"Enter", "send"}}
 }
 
-func (model interfaceModel) composerDivider() string {
-	hints := model.typingHints()
-	if len(hints) == 0 {
-		return model.sectionDivider("")
+func (model interfaceModel) framedInput(title string, hints []keyHint, tint color.Color) string {
+	width := max(12, model.bodyWidth())
+	inner := width - 2
+	border := lipgloss.NewStyle().Foreground(tint)
+	caption := lipgloss.NewStyle().Foreground(model.palette().muted)
+	title = ansi.Truncate(title, max(1, inner-4), "…")
+	top := border.Render("╭─ ") + caption.Render(title) + border.Render(" "+strings.Repeat("─", max(0, inner-3-ansi.StringWidth(title)))+"╮")
+	bottom := border.Render("╰" + strings.Repeat("─", inner) + "╯")
+	if len(hints) > 0 {
+		rendered := model.renderKeyHints(hints, " · ")
+		if dashes := inner - ansi.StringWidth(rendered) - 3; dashes >= 2 {
+			bottom = border.Render("╰"+strings.Repeat("─", dashes)+" ") + rendered + border.Render(" ─╯")
+		}
 	}
-	rendered := model.renderKeyHints(hints, " · ")
-	room := model.bodyWidth() - ansi.StringWidth(rendered) - 4
-	if room < 2 {
-		return model.sectionDivider("")
-	}
-	rule := lipgloss.NewStyle().Foreground(model.palette().muted)
-	return rule.Render(strings.Repeat("─", room)+" ") + rendered + rule.Render(" ──")
+	body := lipgloss.NewStyle().Border(lipgloss.RoundedBorder(), false, true, false, true).BorderForeground(tint).Width(width).Render(model.input.View())
+	return top + "\n" + body + "\n" + bottom
 }
