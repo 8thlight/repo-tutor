@@ -1,6 +1,6 @@
 # 0290. Hotspots as a lesson
 
-Status: accepted
+Status: accepted. `/hotspots` is removed from the full-screen interface under [0320](0320-no-slash-commands-in-the-interface.md), and the lesson is in the Topics list.
 
 ## Context
 

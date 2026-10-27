@@ -1,6 +1,6 @@
 # 0080. Landing page
 
-Status: accepted. The Browse entry is replaced by Topics, with no Explore or Hotspots entry, under [0190](0190-course-and-quiz-tabs.md).
+Status: accepted. The Browse entry is replaced by Topics, with no Explore or Hotspots entry, under [0190](0190-course-and-quiz-tabs.md). `/home` is removed from the full-screen interface under [0320](0320-no-slash-commands-in-the-interface.md).
 
 ## Context
 

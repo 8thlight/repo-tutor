@@ -1,6 +1,6 @@
 # 0040. Learner probe
 
-Status: accepted
+Status: accepted. The probe is the Check what you know entry on Home in the full-screen interface, and `/probe` in plain mode, under [0320](0320-no-slash-commands-in-the-interface.md).
 
 ## Context
 
