@@ -3,6 +3,7 @@ package terminal
 import (
 	"image/color"
 	"strings"
+	"unicode"
 
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/ansi"
@@ -62,28 +63,53 @@ func (model interfaceModel) footerHintSets() [][]keyHint {
 	}
 }
 
-func (model interfaceModel) pageHints() []keyHint {
+func (model interfaceModel) pageActions() [][2]string {
 	switch {
 	case model.page == "source":
-		hints := []keyHint{{"Enter or Esc", "back", false}, {"T", "teach this file", false}}
+		actions := [][2]string{{"Enter or Esc", "Back"}, {"T", "Teach this file"}}
 		if isMarkdown(model.sourcePath) {
-			hints = append(hints, keyHint{"v", "rendered or source", false})
+			actions = append(actions, [2]string{"v", "Rendered or source"})
 		}
-		return hints
+		return actions
 	case model.isPicker():
-		hints := []keyHint{{"↑↓", "move", false}, {"/", "search", false}, {"Enter", "open", false}}
+		actions := [][2]string{{"↑↓", "Move"}, {"/", "Search"}, {"Enter", "Open"}}
 		if model.page == "quiz" {
-			hints = append(hints, keyHint{"A", "show answer", false})
+			actions = append(actions, [2]string{"A", "Show answer"})
 		}
-		return hints
+		return actions
 	}
 	return nil
 }
 
+func (model interfaceModel) pageHints() []keyHint {
+	if model.sidebarVisible() {
+		return nil
+	}
+	var hints []keyHint
+	for _, action := range model.pageActions() {
+		label := []rune(action[1])
+		label[0] = unicode.ToLower(label[0])
+		hints = append(hints, keyHint{action[0], string(label), false})
+	}
+	return hints
+}
+
 func (model interfaceModel) footerKeys(width int) string {
 	page := model.pageHints()
+	pageGoesBack := false
+	for _, hint := range page {
+		pageGoesBack = pageGoesBack || strings.Contains(hint.key, "Esc")
+	}
 	for _, set := range model.footerHintSets() {
-		if line := model.renderKeyHints(append(append([]keyHint(nil), page...), set...), " · "); ansi.StringWidth(line) <= width {
+		var merged []keyHint
+		merged = append(merged, page...)
+		for _, hint := range set {
+			if pageGoesBack && hint == escapeHint {
+				continue
+			}
+			merged = append(merged, hint)
+		}
+		if line := model.renderKeyHints(merged, " · "); ansi.StringWidth(line) <= width {
 			return line
 		}
 	}

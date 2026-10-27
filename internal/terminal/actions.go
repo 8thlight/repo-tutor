@@ -83,11 +83,23 @@ func (model interfaceModel) actionLine() string {
 	return model.styledActions(model.courseActions(true))
 }
 
+func (model interfaceModel) sidebarShortcutsTitle() string {
+	if len(model.pageActions()) > 0 {
+		return "ON THIS PAGE"
+	}
+	return "KEEP GOING"
+}
+
 func (model interfaceModel) sidebarShortcuts() string {
 	if model.movingToAnotherTopic() {
 		return lipgloss.NewStyle().Foreground(model.palette().foreground).Bold(true).Render("Ctrl+K") + "  " + lipgloss.NewStyle().Foreground(model.palette().muted).Render("Choose a topic")
 	}
-	actions := model.courseActions(false)
+	actions := model.pageActions()
+	if len(actions) > 0 {
+		actions = append(actions, [2]string{"Ctrl+K", "Choose a topic"}, [2]string{"Ctrl+S", "Follow a citation"})
+		return model.renderSidebarRows(actions)
+	}
+	actions = model.courseActions(false)
 	if state := model.application.state; state.Quiz != nil {
 		actions = append(actions, [2]string{"Ctrl+B", "Question index"})
 	}
@@ -95,6 +107,10 @@ func (model interfaceModel) sidebarShortcuts() string {
 		actions = append(actions, [2]string{"Ctrl+L", "Leave " + model.flowName()})
 	}
 	actions = append(actions, [2]string{"Ctrl+K", "Choose a topic"}, [2]string{"Ctrl+S", "Follow a citation"})
+	return model.renderSidebarRows(actions)
+}
+
+func (model interfaceModel) renderSidebarRows(actions [][2]string) string {
 	palette := model.palette()
 	key := lipgloss.NewStyle().Foreground(palette.foreground).Bold(true)
 	label := lipgloss.NewStyle().Foreground(palette.muted)

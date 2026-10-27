@@ -88,15 +88,15 @@ Each kind of message has one purpose, and a new message starts by asking which k
 | -- | -- | -- |
 | Page title | Names the page and the learner's place in it, never a key | While the page is open |
 | Notice, footer left | Says what just happened, such as "Lesson ready" or "Saved" | Ten seconds, or until a failure is resolved |
-| Footer keys | The keys that work on this page, then the app-wide keys | While the page is open |
+| Footer keys | The app-wide keys; on a terminal too narrow for the sidebar, the page's keys lead them | While the page is open |
 | Input frame | What the box is for, on its top border, and the keys that act on it, on its bottom border | While the box shows |
 | Action line | The next-step choices after a lesson | While the lesson is current |
-| Sidebar | Course status and the navigation keys that apply now | While the course view shows |
+| Sidebar | Course status, and the keys that apply now: the course keys on a lesson, or "On this page" keys on a file or list | While the sidebar shows |
 | Tab line | The tab hint | Always |
 | Loading view | What the tutor is doing, and what stays open meanwhile | While a request runs |
 | Second-press prompt | Confirms a skip or an exit, in the warning color | Five seconds |
 
-See [0310](../decisions/0310-controls-and-notices.md), [0400](../decisions/0400-housekeeping.md), and [0440](../decisions/0440-page-keys-in-the-footer.md).
+See [0310](../decisions/0310-controls-and-notices.md), [0400](../decisions/0400-housekeeping.md), and [0440](../decisions/0440-where-page-keys-go.md).
 
 ## Prefetch
 

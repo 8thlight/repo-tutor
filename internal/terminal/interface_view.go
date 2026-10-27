@@ -284,7 +284,7 @@ func (model interfaceModel) sidebar() string {
 		content += "\n\n" + title.Render("QUIZ GOAL") + fmt.Sprintf("\n%d / %d answered", quiz.Completed(), quiz.Goal)
 	}
 	if model.bodyHeight() >= 19 {
-		content += "\n\n" + muted.Render("KEEP GOING") + "\n" + model.sidebarShortcuts()
+		content += "\n\n" + muted.Render(model.sidebarShortcutsTitle()) + "\n" + model.sidebarShortcuts()
 	}
 	return lipgloss.NewStyle().Width(sidebarWidth).Height(model.bodyHeight()).MaxHeight(model.bodyHeight()).BorderRight(true).BorderStyle(lipgloss.NormalBorder()).BorderForeground(palette.border).Render(content)
 }
