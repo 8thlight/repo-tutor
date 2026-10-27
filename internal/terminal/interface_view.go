@@ -266,20 +266,13 @@ func (model interfaceModel) sidebar() string {
 	palette := model.palette()
 	muted := lipgloss.NewStyle().Foreground(palette.muted)
 	title := lipgloss.NewStyle().Foreground(palette.accent).Bold(true)
-	visited, correct, attempts := 0, 0, 0
-	for _, progress := range model.application.state.Progress {
-		if progress.Lessons > 0 {
-			visited++
-		}
-		correct += progress.Correct
-		attempts += progress.Correct + progress.Partial + progress.Missed
-	}
-	total := len(model.application.course)
+	score := tutor.ScoreCourse(model.application.course, model.application.state.Progress)
+	visited, total := score.Read, score.Total
 	filled := 0
 	if total > 0 {
 		filled = min(20, visited*20/total)
 	}
-	content := title.Render("YOUR COURSE") + "\n\n" + fmt.Sprintf("%d / %d topics read", visited, total) + "\n" + title.Render(strings.Repeat("━", filled)) + muted.Render(strings.Repeat("─", 20-filled)) + "\n\n" + fmt.Sprintf("%d assessed answers\n%d correct", attempts, correct) + "\n\n" + muted.Render("CURRENT TOPIC") + "\n" + lipgloss.NewStyle().Width(sidebarWidth-3).Render(model.topicTitle())
+	content := title.Render("YOUR COURSE") + "\n\n" + fmt.Sprintf("%d / %d topics read", visited, total) + "\n" + title.Render(strings.Repeat("━", filled)) + muted.Render(strings.Repeat("─", 20-filled)) + "\n\n" + fmt.Sprintf("Understanding %d%%", score.Percent) + "\n\n" + muted.Render("CURRENT TOPIC") + "\n" + lipgloss.NewStyle().Width(sidebarWidth-3).Render(model.topicTitle())
 	if quiz := model.application.state.Quiz; quiz != nil && !model.movingToAnotherTopic() {
 		content += "\n\n" + title.Render("QUIZ GOAL") + fmt.Sprintf("\n%d / %d answered\nCtrl+B  Question index", quiz.Completed(), quiz.Goal)
 	}

@@ -2,6 +2,7 @@ package terminal
 
 import (
 	tea "charm.land/bubbletea/v2"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -339,5 +340,49 @@ func TestFinishingAQuizScoresTheTopicAndARetakeReplacesIt(t *testing.T) {
 	again := unfinished.application.recordReply("answer", "x", tutor.Overview, "A?", tutor.Reply{Assessment: "correct", Feedback: "Yes.", Explanation: "Yes."})
 	if again.Progress[tutor.Overview].QuizGoal != 0 {
 		t.Fatalf("a quiz with questions left must not be scored yet: %+v", again.Progress[tutor.Overview])
+	}
+}
+
+func TestProgressShowsCoverageUnderstandingAndEachTopicsLatestQuiz(t *testing.T) {
+	model := interfaceFixture()
+	core := model.application.course[1]
+	model.application.state.Progress = map[string]tutor.Progress{
+		tutor.Overview: {Lessons: 2, QuizCredit: 9, QuizGoal: 5},
+		core.ID:        {Lessons: 1},
+	}
+	text := model.progressText()
+	total := len(model.application.course)
+	for _, expected := range []string{
+		"Goal\n" + model.application.state.Goal,
+		"Coverage        2 of " + strconv.Itoa(total) + " topics read",
+		"Understanding   45% across the topics you have read",
+		"Repository overview\n  read · quiz 90% · solid",
+		tutor.Plain(core.Title) + "\n  read · no quiz yet",
+	} {
+		if !strings.Contains(text, expected) {
+			t.Fatalf("Progress is missing %q:\n%s", expected, text)
+		}
+	}
+}
+
+func TestProgressNamesAKnownTopicAndAQuizInProgress(t *testing.T) {
+	model := interfaceFixture()
+	core := model.application.course[1]
+	model.application.state.Progress = map[string]tutor.Progress{core.ID: {Held: true}}
+	model.application.state.Quiz = &tutor.Quiz{Topic: core.ID, Goal: 5, Questions: []tutor.QuizQuestion{{Text: "A?", Assessment: "correct"}}}
+	text := model.progressText()
+	if !strings.Contains(text, "not read · known from the probe · 100% · quiz in progress (1 of 5)") {
+		t.Fatalf("got:\n%s", text)
+	}
+}
+
+func TestTheSidebarShowsUnderstandingInsteadOfAnswerCounts(t *testing.T) {
+	model := interfaceFixture()
+	model.width, model.height = 120, 36
+	model.resize()
+	model.application.state.Progress = map[string]tutor.Progress{tutor.Overview: {Lessons: 1, QuizCredit: 4, QuizGoal: 5}}
+	content := ansi.Strip(model.View().Content)
+	if !strings.Contains(content, "Understanding 40%") || strings.Contains(content, "assessed answers") {
+		t.Fatalf("the sidebar should lead with the understanding figure:\n%s", content)
 	}
 }

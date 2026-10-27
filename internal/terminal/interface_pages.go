@@ -347,22 +347,38 @@ func (model interfaceModel) aboutText() string {
 
 func (model interfaceModel) progressText() string {
 	var text strings.Builder
-	fmt.Fprintf(&text, "Goal\n%s\n\n", ansi.Wrap(tutor.Plain(model.application.state.Goal), model.bodyWidth(), ""))
+	state := model.application.state
+	score := tutor.ScoreCourse(model.application.course, state.Progress)
+	fmt.Fprintf(&text, "Goal\n%s\n\n", ansi.Wrap(tutor.Plain(state.Goal), model.bodyWidth(), ""))
+	fmt.Fprintf(&text, "Coverage        %d of %d topics read\nUnderstanding   %d%% across the topics you have read\n\n", score.Read, score.Total, score.Percent)
+	listed := false
 	for _, topic := range model.application.course {
-		progress := model.application.state.Progress[topic.ID]
-		if progress == (tutor.Progress{}) {
+		progress := state.Progress[topic.ID]
+		percent, scored := tutor.Understanding(progress)
+		if progress.Lessons == 0 && !scored {
 			continue
 		}
-		title := topic.Title
-		if progress.Held {
-			title += " (known)"
+		listed = true
+		reading := "not read"
+		if progress.Lessons > 0 {
+			reading = "read"
 		}
-		fmt.Fprintf(&text, "%s\n  %d lessons   %d correct   %d partial   %d incorrect\n\n", title, progress.Lessons, progress.Correct, progress.Partial, progress.Missed)
+		result := "no quiz yet"
+		switch {
+		case progress.QuizGoal > 0:
+			result = fmt.Sprintf("quiz %d%% · %s", percent, tutor.Band(percent))
+		case scored:
+			result = fmt.Sprintf("known from the probe · %d%%", percent)
+		}
+		if quiz := state.Quiz; quiz != nil && quiz.Topic == topic.ID && !quiz.Finished() {
+			result += fmt.Sprintf(" · quiz in progress (%d of %d)", quiz.Completed(), quiz.Goal)
+		}
+		fmt.Fprintf(&text, "%s\n  %s · %s\n\n", topic.Title, reading, result)
 	}
-	if text.Len() == 0 {
+	if !listed {
 		text.WriteString("Your first lesson is a good place to start.\n\n")
 	}
-	text.WriteString("Reading counts as a lesson. Only assessed answers count toward quiz outcomes.\nUse /review to revisit a topic with partial or incorrect answers.\n")
+	text.WriteString("Reading is not graded. The latest finished quiz on a topic sets its score, so a retake can raise it.\nA topic under 60% shows up on Home as one to review.\n")
 	return text.String()
 }
 
