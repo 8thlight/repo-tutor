@@ -73,6 +73,7 @@ func (model interfaceModel) homeContent() string {
 	} else {
 		content.WriteString(ansi.Wrap("repo-tutor teaches you this repository from its own files. It explains one small idea at a time, asks a question, and checks your answer against the code it cites.", width, "") + "\n\n")
 	}
+	content.WriteString(muted.Render("Goal") + "\n" + ansi.Wrap(tutor.Plain(model.application.state.Goal), width, "") + "\n\n")
 	if model.busy {
 		content.WriteString(muted.Render(ansi.Wrap("Preparing the overview in the background. Browse while you wait.", width, "")) + "\n\n")
 	}

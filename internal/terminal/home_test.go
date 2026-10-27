@@ -373,3 +373,18 @@ func TestEnterClosesASourceFileTheWayItOpenedIt(t *testing.T) {
 		t.Fatalf("Enter on a file opened with /read should return to the lesson, got %s", back.page)
 	}
 }
+
+func TestGoalAppearsOnHomeAndProgressAndNotInTheHeader(t *testing.T) {
+	model := newLearnerFixture()
+	goal := model.application.state.Goal
+	if !strings.Contains(ansi.Strip(model.homeContent()), "Goal\n"+goal) {
+		t.Fatalf("Home should show the goal:\n%s", ansi.Strip(model.homeContent()))
+	}
+	if !strings.HasPrefix(model.progressText(), "Goal\n"+goal) {
+		t.Fatalf("Progress should open with the goal:\n%s", model.progressText())
+	}
+	lines := strings.Split(ansi.Strip(model.View().Content), "\n")
+	if !strings.Contains(lines[0], "repo-tutor") || strings.TrimSpace(lines[1]) != "" {
+		t.Fatalf("the header should be one line with a blank row under it:\n%s", strings.Join(lines[:4], "\n"))
+	}
+}

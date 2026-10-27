@@ -356,6 +356,7 @@ func (model interfaceModel) aboutText() string {
 
 func (model interfaceModel) progressText() string {
 	var text strings.Builder
+	fmt.Fprintf(&text, "Goal\n%s\n\n", ansi.Wrap(tutor.Plain(model.application.state.Goal), model.bodyWidth(), ""))
 	for _, topic := range model.application.course {
 		progress := model.application.state.Progress[topic.ID]
 		if progress == (tutor.Progress{}) {
