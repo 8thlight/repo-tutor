@@ -274,7 +274,7 @@ func (model interfaceModel) sidebar() string {
 	}
 	content := title.Render("YOUR COURSE") + "\n\n" + fmt.Sprintf("%d / %d topics read", visited, total) + "\n" + title.Render(strings.Repeat("━", filled)) + muted.Render(strings.Repeat("─", 20-filled)) + "\n\n" + fmt.Sprintf("Understanding %d%%", score.Percent) + "\n\n" + muted.Render("CURRENT TOPIC") + "\n" + lipgloss.NewStyle().Width(sidebarWidth-3).Render(model.topicTitle())
 	if quiz := model.application.state.Quiz; quiz != nil && !model.movingToAnotherTopic() {
-		content += "\n\n" + title.Render("QUIZ GOAL") + fmt.Sprintf("\n%d / %d answered\nCtrl+B  Question index", quiz.Completed(), quiz.Goal)
+		content += "\n\n" + title.Render("QUIZ GOAL") + fmt.Sprintf("\n%d / %d answered", quiz.Completed(), quiz.Goal)
 	}
 	if model.bodyHeight() >= 19 {
 		content += "\n\n" + muted.Render("KEEP GOING") + "\n" + model.sidebarShortcuts()
@@ -313,7 +313,7 @@ func (model interfaceModel) View() tea.View {
 		title = model.historyTitle()
 	}
 	if quiz := model.application.state.Quiz; model.inQuiz() && quiz != nil {
-		title = fmt.Sprintf("Question %d / %d · %s · Ctrl+B index", quiz.Active+1, quiz.Goal, model.topicTitle())
+		title = fmt.Sprintf("Question %d / %d · %s", quiz.Active+1, quiz.Goal, model.topicTitle())
 	}
 	body := model.viewport.View()
 	if model.busy && model.page == "lesson" {

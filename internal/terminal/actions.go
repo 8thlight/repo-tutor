@@ -79,6 +79,9 @@ func (model interfaceModel) sidebarShortcuts() string {
 	if quiz := model.application.state.Quiz; quiz != nil && quiz.Completed() < quiz.Goal {
 		actions[1][1] = "Next question"
 	}
+	if model.application.state.Quiz != nil {
+		actions = append(actions, [2]string{"Ctrl+B", "Question index"})
+	}
 	actions = append(actions, [2]string{"Ctrl+K", "Choose a topic"}, [2]string{"Ctrl+S", "Follow a citation"})
 	palette := model.palette()
 	key := lipgloss.NewStyle().Foreground(palette.foreground).Bold(true)

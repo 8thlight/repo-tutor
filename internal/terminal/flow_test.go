@@ -386,3 +386,21 @@ func TestTheSidebarShowsUnderstandingInsteadOfAnswerCounts(t *testing.T) {
 		t.Fatalf("the sidebar should lead with the understanding figure:\n%s", content)
 	}
 }
+
+func TestTheQuestionIndexKeyLivesInTheSidebarAndNotInTheTitle(t *testing.T) {
+	model := readingFixture()
+	model.width, model.height = 120, 36
+	model.resize()
+	model.application.state.Quiz = &tutor.Quiz{Topic: tutor.Overview, Goal: 5, Questions: []tutor.QuizQuestion{{Text: "First?"}}}
+	model.application.state.Question = "First?"
+	content := ansi.Strip(model.View().Content)
+	if !strings.Contains(content, "Question 1 / 5 · ") || strings.Contains(content, "Ctrl+B index") {
+		t.Fatalf("the title should name the page and no keys:\n%s", content)
+	}
+	if !strings.Contains(ansi.Strip(model.sidebarShortcuts()), "Ctrl+B  Question index") {
+		t.Fatalf("the sidebar should list Ctrl+B during a quiz:\n%s", ansi.Strip(model.sidebarShortcuts()))
+	}
+	if strings.Contains(ansi.Strip(readingFixture().sidebarShortcuts()), "Ctrl+B") {
+		t.Fatal("with no quiz there is no index to open")
+	}
+}
