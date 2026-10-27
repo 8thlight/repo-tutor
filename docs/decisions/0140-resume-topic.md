@@ -1,6 +1,6 @@
 # 0140. Resume a topic
 
-Status: accepted. A topic resumes into its latest lesson or question and reply, never a quiz or probe turn, under [0300](0300-course-flow.md).
+Status: accepted. A topic resumes into its latest lesson, never a quiz, probe, or reply turn, under [0300](0300-course-flow.md).
 
 ## Context
 
