@@ -10,6 +10,7 @@ import (
 	"charm.land/bubbles/v2/textarea"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/glamour/v2"
+	glamouransi "charm.land/glamour/v2/ansi"
 	"charm.land/glamour/v2/styles"
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/ansi"
@@ -82,7 +83,7 @@ func (model *interfaceModel) rebuildContent() {
 	}
 }
 
-func (model interfaceModel) markdown(text string) string {
+func (model interfaceModel) markdownStyle() glamouransi.StyleConfig {
 	configuration := styles.DarkStyleConfig
 	if !model.dark {
 		configuration = styles.LightStyleConfig
@@ -95,13 +96,15 @@ func (model interfaceModel) markdown(text string) string {
 	configuration.Document.BlockPrefix = ""
 	configuration.Document.BlockSuffix = ""
 	if !model.noColor {
-		codeColor := "#5EEAD4"
-		if !model.dark {
-			codeColor = "#0F766E"
-		}
+		codeColor := hexOf(model.palette().accent)
 		configuration.Code.Color = &codeColor
 		configuration.Code.BackgroundColor = nil
 	}
+	return configuration
+}
+
+func (model interfaceModel) markdown(text string) string {
+	configuration := model.markdownStyle()
 	options := []glamour.TermRendererOption{glamour.WithStyles(configuration), glamour.WithWordWrap(max(12, min(92, model.bodyWidth()-3)))}
 	renderer, err := glamour.NewTermRenderer(options...)
 	if err != nil {

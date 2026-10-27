@@ -1,6 +1,7 @@
 package terminal
 
 import (
+	"fmt"
 	"image/color"
 	"math"
 
@@ -41,6 +42,11 @@ func (model interfaceModel) backgroundColor() color.Color {
 
 func (model interfaceModel) highlight(id string) color.Color {
 	return readableOn(lipgloss.Color(highlightByID(id).hex), model.backgroundColor())
+}
+
+func hexOf(shade color.Color) string {
+	red, green, blue, _ := shade.RGBA()
+	return fmt.Sprintf("#%02X%02X%02X", red>>8, green>>8, blue>>8)
 }
 
 func channels(shade color.Color) (float64, float64, float64) {
