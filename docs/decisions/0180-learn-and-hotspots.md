@@ -1,6 +1,6 @@
 # 0180. Learn and Hotspots tabs
 
-Status: accepted
+Status: superseded by [0190](0190-course-and-quiz-tabs.md)
 
 ## Context
 
