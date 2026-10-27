@@ -199,7 +199,7 @@ func TestProbeMarksKnownTopicAndSurvivesResume(t *testing.T) {
 	}
 	state := saved(t, stateDirectory)
 	probe := state["probe"].(map[string]any)
-	if probe["answered"] != float64(1) || len(state["turns"].([]any)) != 3 || state["version"] != float64(3) {
+	if probe["answered"] != float64(1) || len(state["turns"].([]any)) != 3 || state["version"] != float64(4) {
 		t.Fatalf("probe was not saved after one answer: %+v", state)
 	}
 	output, err = run(t, "/topics\n/quit\n", arguments...)
