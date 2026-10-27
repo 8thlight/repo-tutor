@@ -134,12 +134,12 @@ func TestTheRuleIsHeavyUnderTheActiveTabAndLightElsewhere(t *testing.T) {
 	model.noColor = false
 	bar, rule := tabRows(model)
 	start := strings.Index(bar, " Course ")
-	heavy := strings.Index(rule, "━")
-	if start < 0 || heavy < 0 || len([]rune(rule[:heavy])) != len([]rune(bar[:start])) {
-		t.Fatalf("the heavy stretch should start under Course:\n%q\n%q", bar, rule)
+	thick := strings.Index(rule, "▀")
+	if start < 0 || thick < 0 || len([]rune(rule[:thick])) != len([]rune(bar[:start])) {
+		t.Fatalf("the thick stretch should start under Course:\n%q\n%q", bar, rule)
 	}
-	if strings.Count(rule, "━") != len([]rune(" Course ")) {
-		t.Fatalf("the heavy stretch should cover exactly the Course tab:\n%q", rule)
+	if strings.Count(rule, "▀") != len([]rune(" Course ")) {
+		t.Fatalf("the thick stretch should cover exactly the Course tab:\n%q", rule)
 	}
 }
 
@@ -147,21 +147,21 @@ func TestTheRuleIsAllLightWhenNoTabIsActive(t *testing.T) {
 	model := settingsPageFixture(t)
 	model.noColor = false
 	_, rule := tabRows(model)
-	if strings.Contains(rule, "━") || !strings.Contains(rule, "─") {
-		t.Fatalf("with no active tab the rule should be light all the way:\n%q", rule)
+	if strings.Contains(rule, "▀") || !strings.Contains(rule, "▔") {
+		t.Fatalf("with no active tab the rule should be thin all the way:\n%q", rule)
 	}
 }
 
 func TestTheRuleStillMarksTheActiveTabWithoutColor(t *testing.T) {
 	model := interfaceFixture()
 	_, rule := tabRows(model)
-	if !strings.Contains(rule, "━") {
+	if !strings.Contains(rule, "▀") {
 		t.Fatalf("thickness should carry the signal when color is off:\n%q", rule)
 	}
 }
 
 func TestTheRuleStartsWhereTheBarStarts(t *testing.T) {
-	for style, prefix := range map[string]string{"joined_arrows": "─", "block": "  ─"} {
+	for style, prefix := range map[string]string{"joined_arrows": "▔", "block": "  ▔"} {
 		model := interfaceFixture()
 		model.noColor = false
 		model.application.settings.TabStyle = style

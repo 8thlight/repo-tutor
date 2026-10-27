@@ -142,10 +142,10 @@ func (model interfaceModel) tabRule(width int) string {
 	start, end, found := model.activeTabSpan(model.application.settings.TabStyle, active)
 	end = min(end, width)
 	if !found || start >= width {
-		return lipgloss.NewStyle().Foreground(palette.muted).Render(strings.Repeat("─", width))
+		return lipgloss.NewStyle().Foreground(palette.muted).Render(strings.Repeat("▔", width))
 	}
 	line := lipgloss.NewStyle().Foreground(palette.accent)
-	return line.Render(strings.Repeat("─", start) + strings.Repeat("━", end-start) + strings.Repeat("─", width-end))
+	return line.Render(strings.Repeat("▔", start) + strings.Repeat("▀", end-start) + strings.Repeat("▔", width-end))
 }
 
 func (model interfaceModel) tabBar(width int) string {
