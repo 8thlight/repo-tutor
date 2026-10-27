@@ -2,6 +2,7 @@ package terminal
 
 import (
 	"image/color"
+	"math"
 	"strings"
 
 	"charm.land/lipgloss/v2"
@@ -32,9 +33,63 @@ var tabEdges = map[string][2]string{
 	settings.TabStyleRounded: {"\ue0b6", "\ue0b4"},
 }
 
-func (model interfaceModel) tabs(style, active string) string {
+var joinedSeparators = map[string]string{
+	settings.TabStyleJoinedSlanted: "\ue0bc",
+	settings.TabStyleJoinedRounded: "\ue0b4",
+	settings.TabStyleJoinedArrows:  "\ue0b0",
+}
+
+var tabPages = []struct{ page, label string }{{"home", "Home"}, {"course", "Course"}, {"quiz", "Quiz"}, {"progress", "Progress"}}
+
+func (model interfaceModel) tabsBleed() bool {
+	_, joined := joinedSeparators[model.application.settings.TabStyle]
+	return joined && !model.noColor
+}
+
+func blend(from, to color.Color, share float64) color.Color {
+	fromRed, fromGreen, fromBlue := channels(from)
+	toRed, toGreen, toBlue := channels(to)
+	mix := func(start, end float64) uint8 { return uint8(math.Round((start + (end-start)*share) * 255)) }
+	return color.RGBA{mix(fromRed, toRed), mix(fromGreen, toGreen), mix(fromBlue, toBlue), 255}
+}
+
+func (model interfaceModel) joinedFills(active string) []color.Color {
 	palette := model.palette()
-	pages := []struct{ page, label string }{{"home", "Home"}, {"course", "Course"}, {"quiz", "Quiz"}, {"progress", "Progress"}}
+	end := color.Color(lipgloss.Color("#E4E4E7"))
+	if !model.dark {
+		end = lipgloss.Color("#1F1F23")
+	}
+	fills := make([]color.Color, len(tabPages))
+	for index, page := range tabPages {
+		fills[index] = blend(palette.muted, end, float64(index)/float64(len(tabPages)-1))
+		if page.page == active {
+			fills[index] = palette.accent
+		}
+	}
+	return fills
+}
+
+func (model interfaceModel) joinedTabs(style, active string) string {
+	palette := model.palette()
+	fills := model.joinedFills(active)
+	var bar strings.Builder
+	for index, page := range tabPages {
+		bar.WriteString(lipgloss.NewStyle().Background(fills[index]).Foreground(palette.cutout).Bold(page.page == active).Render(" " + page.label + " "))
+		separator := lipgloss.NewStyle().Foreground(fills[index])
+		if index+1 < len(fills) {
+			separator = separator.Background(fills[index+1])
+		}
+		bar.WriteString(separator.Render(joinedSeparators[style]))
+	}
+	return bar.String()
+}
+
+func (model interfaceModel) tabs(style, active string) string {
+	if _, joined := joinedSeparators[style]; joined && !model.noColor {
+		return model.joinedTabs(style, active)
+	}
+	palette := model.palette()
+	pages := tabPages
 	rendered := make([]string, len(pages))
 	for index, page := range pages {
 		current := active == page.page
