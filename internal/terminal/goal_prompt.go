@@ -13,7 +13,6 @@ const (
 	goalLimit         = 500
 	goalPendingNotice = "Choose your goal first. Enter keeps the default."
 	goalQuestion      = "What do you want to learn?"
-	goalComposerLabel = goalQuestion + "\nEnter keeps the default · type your own goal and press Enter"
 	goalSavedNotice   = "Goal saved"
 )
 

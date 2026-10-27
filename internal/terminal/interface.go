@@ -153,10 +153,11 @@ func newInterface(ctx context.Context, application application, runner turnRunne
 	input.Prompt = "  "
 	input.ShowLineNumbers = false
 	input.CharLimit = 16000
-	input.MaxHeight = 2
+	input.DynamicHeight = true
+	input.MinHeight = 1
+	input.MaxHeight = inputMaxRows
 	input.MaxWidth = 0
-	input.SetHeight(2)
-	input.KeyMap.InsertNewline = key.NewBinding(key.WithKeys("alt+enter", "shift+enter"))
+	input.KeyMap.InsertNewline = key.NewBinding(key.WithDisabled())
 	input.Focus()
 	activity := spinner.New()
 	activity.Spinner = spinner.MiniDot
@@ -202,7 +203,10 @@ func (model interfaceModel) Init() tea.Cmd {
 	return tea.Batch(commands...)
 }
 
-const lessonPlaceholder = ""
+const (
+	lessonPlaceholder = ""
+	inputMaxRows      = 6
+)
 
 type beginFirstLesson struct{}
 
@@ -240,6 +244,14 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		model.width, model.height = message.Width, message.Height
 		model.resize()
+		return model, nil
+	case tea.PasteMsg:
+		if model.askingGoal() || (model.page == "lesson" && !model.busy) {
+			flattened := tea.PasteMsg{Content: strings.Join(strings.Fields(strings.ReplaceAll(strings.ReplaceAll(message.Content, "\r", " "), "\n", " ")), " ")}
+			var command tea.Cmd
+			model.input, command = model.input.Update(flattened)
+			return model, command
+		}
 		return model, nil
 	case tea.ColorProfileMsg:
 		model.richColor = message.Profile == colorprofile.TrueColor || message.Profile == colorprofile.ANSI256
