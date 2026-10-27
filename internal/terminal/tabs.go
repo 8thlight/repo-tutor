@@ -16,7 +16,8 @@ var (
 	tabKey      = tabHint{"Tab", "Next"}
 	helpKey     = tabHint{"F1", "Help"}
 	aboutKey    = tabHint{"F2", "About"}
-	tabHintSets = [][]tabHint{{tabKey, helpKey, aboutKey}, {helpKey, aboutKey}, {helpKey}}
+	settingsKey = tabHint{"F3", "Settings"}
+	tabHintSets = [][]tabHint{{tabKey, helpKey, aboutKey, settingsKey}, {helpKey, aboutKey, settingsKey}, {helpKey, aboutKey}, {helpKey}}
 )
 
 func (model interfaceModel) cutoutColor(fallback string) color.Color {

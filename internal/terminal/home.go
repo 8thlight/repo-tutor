@@ -15,6 +15,7 @@ const (
 	placeTopics   = "topics"
 	placeProgress = "progress"
 	placeAbout    = "about"
+	placeSettings = "settings"
 	placeProbe    = "probe"
 	placeRefresh  = "refresh"
 )
@@ -48,6 +49,7 @@ func (model interfaceModel) homeEntries() []homeEntry {
 	if tutor.Started(state.Progress) {
 		entries = append(entries, homeEntry{placeProgress, "Progress", "Lessons read and answers assessed so far.", ""})
 	}
+	entries = append(entries, homeEntry{placeSettings, "Settings", "Look and behavior. F3 opens it from anywhere.", ""})
 	entries = append(entries, homeEntry{placeAbout, "About", "Version, copyright, and credits. F2 opens it from anywhere.", ""})
 	for index, entry := range entries {
 		if entry.place == recommendation.Place {
@@ -154,6 +156,8 @@ func (model interfaceModel) openHomeEntry(entry homeEntry) (tea.Model, tea.Cmd) 
 		return model.openPicker("topics", "")
 	case placeAbout:
 		return model.openAbout()
+	case placeSettings:
+		return model.openSettings()
 	case placeProbe:
 		intent, err := probeIntent(model.application.state, model.application.course)
 		if err != nil {

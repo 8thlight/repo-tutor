@@ -54,7 +54,7 @@ func TestTabTextUsesTheReportedTerminalBackground(t *testing.T) {
 func TestTabHintsShortenAsTheLineNarrows(t *testing.T) {
 	model := interfaceFixture()
 	model.noColor = false
-	for width, want := range map[int]string{70: "Tab Next  F1 Help  F2 About", 56: "F1 Help  F2 About", 44: "F1 Help", 40: ""} {
+	for width, want := range map[int]string{80: "Tab Next  F1 Help  F2 About  F3 Settings", 70: "F1 Help  F2 About  F3 Settings", 56: "F1 Help  F2 About", 44: "F1 Help", 40: ""} {
 		bar := ansi.Strip(model.tabBar(width))
 		if ansi.StringWidth(bar) > width {
 			t.Fatalf("width %d: the bar is %d columns wide", width, ansi.StringWidth(bar))

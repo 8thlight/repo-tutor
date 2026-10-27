@@ -49,6 +49,7 @@ type interfaceModel struct {
 	homeSelected      int
 	origin            string
 	sourceList        string
+	settingsFocus     int
 	prefetcher        lessonPrefetcher
 	prefetching       bool
 	prefetchScheduled bool
@@ -341,6 +342,12 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 			return model.continueQuiz(false)
 		case "f2":
 			return model.toggled("about", model.openAbout)
+		case "f3":
+			return model.toggled("settings", model.openSettings)
+		case "space":
+			if model.page == "settings" {
+				return model.chooseSetting()
+			}
 		case "f1":
 			return model.toggled("help", func() (tea.Model, tea.Cmd) {
 				return model.openDocument("help", "A few ways to keep learning", interfaceHelp)
@@ -373,6 +380,14 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 		case "up", "down", "j", "k", "1", "2", "3", "4", "5", "6", "7", "8", "9":
 			if model.page == "home" {
 				return model.homeKey(message.String())
+			}
+			if model.page == "settings" {
+				switch message.String() {
+				case "up", "k":
+					return model.moveSetting(-1)
+				case "down", "j":
+					return model.moveSetting(1)
+				}
 			}
 		case "tab", "shift+tab":
 			return model.cyclePage(message.String() == "shift+tab")

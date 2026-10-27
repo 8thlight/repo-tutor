@@ -74,6 +74,8 @@ func (model *interfaceModel) rebuildContent() {
 		model.viewport.SetContent(model.lessonContent())
 	} else if model.page == "home" {
 		model.viewport.SetContent(model.homeContent())
+	} else if model.page == "settings" {
+		model.viewport.SetContent(model.settingsContent())
 	} else {
 		model.viewport.SetContent(model.pageContent)
 	}
