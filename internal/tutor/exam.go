@@ -7,8 +7,6 @@ import (
 
 const ExamMinimum = 10
 
-var ExamLengths = []int{10, 20, 30}
-
 type ExamTopicResult struct {
 	Topic  string `json:"topic"`
 	Credit int    `json:"credit"`

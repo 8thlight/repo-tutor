@@ -164,7 +164,7 @@ func TestHighlightChoiceIsSavedAndChangesTheAccent(t *testing.T) {
 	model.noColor = false
 	model.dark = true
 	before := model.palette().accent
-	for range 12 {
+	for range 15 {
 		model, _ = press(model, tea.KeyDown, 0)
 	}
 	model, _ = press(model, tea.KeySpace, 0)
@@ -243,4 +243,23 @@ func readingFixtureWith(model interfaceModel) interfaceModel {
 	reading := readingFixture()
 	reading.application.settings = model.application.settings
 	return reading
+}
+
+func TestExamLengthIsChosenSavedAndExplainedOnce(t *testing.T) {
+	model := settingsPageFixture(t)
+	for range 13 {
+		model, _ = press(model, tea.KeyDown, 0)
+	}
+	model, _ = press(model, tea.KeySpace, 0)
+	if model.application.settings.ExamLength != 20 {
+		t.Fatalf("choosing 20 questions should set the exam length: %+v", model.application.settings)
+	}
+	saved, _, _ := session.LoadSettings(model.application.settingsBase)
+	if saved.ExamLength != 20 {
+		t.Fatalf("the exam length should be saved: %+v", saved)
+	}
+	content := ansi.Strip(model.settingsContent())
+	if strings.Count(content, examLengthNote) != 1 || !strings.Contains(content, "(•) 20 questions") {
+		t.Fatalf("the group should explain itself once and show the choice:\n%s", content)
+	}
 }
