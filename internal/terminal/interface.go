@@ -345,8 +345,6 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 			return model.toggled("topics", func() (tea.Model, tea.Cmd) { return model.openPicker("topics", "") })
 		case "ctrl+s":
 			return model.toggled("sources", func() (tea.Model, tea.Cmd) { return model.openPicker("sources", "") })
-		case "ctrl+o":
-			return model.toggled("hotspots", func() (tea.Model, tea.Cmd) { return model.openPicker("hotspots", "") })
 		case "ctrl+p":
 			return model.toggled("progress", func() (tea.Model, tea.Cmd) {
 				return model.openDocument("progress", "Progress", model.progressText())

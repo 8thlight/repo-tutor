@@ -123,7 +123,7 @@ func (model interfaceModel) lessonContent() string {
 		if model.errorText != "" {
 			return heading.Render("Your progress is safe. Let's try again.") + "\n\n" + ansi.Wrap(model.errorText, model.bodyWidth(), "") + "\n\n" + muted.Render("Ctrl+R retries · Ctrl+Q exits · use --plain for line input")
 		}
-		return heading.Render("A codebase, one idea at a time.") + "\n\n" + model.markdown("Your tutor is preparing an overview grounded in this repository's files.\n\nThen you can ask questions, try a short quiz, or follow a citation into the code.") + "\n\n" + muted.Render("Browse topics with Ctrl+K or reading hotspots with Ctrl+O while you wait.")
+		return heading.Render("A codebase, one idea at a time.") + "\n\n" + model.markdown("Your tutor is preparing an overview grounded in this repository's files.\n\nThen you can ask questions, try a short quiz, or follow a citation into the code.") + "\n\n" + muted.Render("Browse topics with Ctrl+K or sources with Ctrl+S while you wait.")
 	}
 	index := max(0, min(model.history, len(turns)-1))
 	turn := turns[index]
@@ -193,7 +193,7 @@ func (model interfaceModel) activeTab() string {
 		return "quiz"
 	}
 	switch model.page {
-	case "lesson", "topics", "sources", "source", "hotspots":
+	case "lesson", "topics", "sources", "source":
 		return "course"
 	}
 	return model.page
@@ -337,12 +337,6 @@ func (model interfaceModel) View() tea.View {
 	notice := model.notice
 	if model.busy {
 		notice = fmt.Sprintf("%s Preparing a grounded %s · %s elapsed · limit %s", model.spinner.View(), turnLabel(model.intent.action), time.Since(model.started).Round(time.Second), model.application.timeout)
-	}
-	if model.page == "hotspots" {
-		notice = "Reading hints, not defect predictions · 180 days / 2000 local commits · branch estimates"
-		if !model.application.snapshot.History {
-			notice = "Git history unavailable · ranked by source branch estimates · reading hints, not defect predictions"
-		}
 	}
 	if model.isPicker() {
 		notice += " · / search · ↑↓ move · Enter open"

@@ -28,7 +28,6 @@ Ctrl+F          Continue after reviewing an answer
 Ctrl+B          Open the quiz question index and goal
 Ctrl+K          Browse and search topics
 Ctrl+S          Browse cited sources and open the code
-Ctrl+O          Open hotspots: churn and branching
 v               Switch a Markdown file between rendered and source
 Ctrl+P          See lessons and recorded answer outcomes
 Esc             Go back to where you opened this page (its key again also works)
@@ -70,7 +69,7 @@ func (item browserItem) Description() string { return tutor.Plain(item.descripti
 func (item browserItem) FilterValue() string { return tutor.Plain(item.title + " " + item.description) }
 
 func (model interfaceModel) isPicker() bool {
-	return model.page == "topics" || model.page == "sources" || model.page == "hotspots" || model.page == "quiz"
+	return model.page == "topics" || model.page == "sources" || model.page == "quiz"
 }
 
 func (model interfaceModel) openPicker(page, filter string) (tea.Model, tea.Cmd) {
@@ -140,15 +139,6 @@ func (model *interfaceModel) configurePicker(filter string) {
 				seen[excerpt.Path] = true
 			}
 		}
-	case "hotspots":
-		model.pageTitle = "Hotspots · Where to pay attention"
-		for _, hotspot := range model.application.snapshot.Hotspots {
-			description := fmt.Sprintf("%d recent commits · %d branch points · %d lines", hotspot.Commits, hotspot.Branches, hotspot.Lines)
-			if !model.application.snapshot.History {
-				description = fmt.Sprintf("%d branch points · %d lines · Git history unavailable", hotspot.Branches, hotspot.Lines)
-			}
-			items = append(items, browserItem{hotspot.Path, description, hotspot.Path, hotspot.Line})
-		}
 	}
 	palette := model.palette()
 	delegate := list.NewDefaultDelegate()
@@ -201,7 +191,7 @@ func (model interfaceModel) openSource(location repository.Location) (tea.Model,
 
 func (model interfaceModel) openFile(location repository.Location) (tea.Model, tea.Cmd) {
 	switch model.page {
-	case "sources", "hotspots":
+	case "sources":
 		model.sourceList = model.page
 	case "source":
 	default:
@@ -435,9 +425,18 @@ func (model interfaceModel) slash(text string) (tea.Model, tea.Cmd) {
 		return model.openPicker("quiz", "")
 	case "/quit", "/exit":
 		return model, tea.Quit
-	case "/topics", "/sources", "/hotspots":
+	case "/topics", "/sources":
 		model.input.Reset()
 		return model.openPicker(strings.TrimPrefix(parts[0], "/"), argument)
+	case "/hotspots":
+		model.input.Reset()
+		for _, topic := range model.application.course {
+			if topic.ID == tutor.HotspotsTopic {
+				return model.openTopic(topic.ID)
+			}
+		}
+		model.notice = "This repository has no hotspots to teach."
+		return model, nil
 	case "/topic":
 		topic, err := model.application.findTopic(argument)
 		if err != nil {

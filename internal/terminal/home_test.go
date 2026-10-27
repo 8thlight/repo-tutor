@@ -178,7 +178,6 @@ func TestPressingAPageKeyAgainReturnsToTheLesson(t *testing.T) {
 	for name, key := range map[string]tea.KeyPressMsg{
 		"topics":   {Code: 'k', Mod: tea.ModCtrl},
 		"sources":  {Code: 's', Mod: tea.ModCtrl},
-		"hotspots": {Code: 'o', Mod: tea.ModCtrl},
 		"progress": {Code: 'p', Mod: tea.ModCtrl},
 		"quiz":     {Code: 'b', Mod: tea.ModCtrl},
 		"help":     {Code: tea.KeyF1},
@@ -304,7 +303,7 @@ func TestHomeOffersProbeAndRefreshOnlyWhenTheyApply(t *testing.T) {
 
 func TestTabsGroupPagesByActivity(t *testing.T) {
 	model := interfaceFixture()
-	for page, want := range map[string]string{"home": "home", "lesson": "course", "topics": "course", "quiz": "quiz", "sources": "course", "source": "course", "hotspots": "course", "progress": "progress", "help": "help", "about": "about"} {
+	for page, want := range map[string]string{"home": "home", "lesson": "course", "topics": "course", "quiz": "quiz", "sources": "course", "source": "course", "progress": "progress", "help": "help", "about": "about"} {
 		model.page = page
 		if got := model.activeTab(); got != want {
 			t.Fatalf("%s page should highlight %s, got %s", page, want, got)
@@ -343,7 +342,7 @@ func TestTabKeyStepsThroughTheFourTabs(t *testing.T) {
 }
 
 func TestEscLeavesASourceFileForTheListItCameFrom(t *testing.T) {
-	for _, list := range []string{"sources", "hotspots"} {
+	for _, list := range []string{"sources"} {
 		opened, _ := newLearnerFixture().openPicker(list, "")
 		model := opened.(interfaceModel)
 		file, _ := model.openFile(repository.Location{Path: "main.go", Line: 1})
@@ -359,7 +358,7 @@ func TestEscLeavesASourceFileForTheListItCameFrom(t *testing.T) {
 }
 
 func TestEnterClosesASourceFileTheWayItOpenedIt(t *testing.T) {
-	for _, list := range []string{"sources", "hotspots"} {
+	for _, list := range []string{"sources"} {
 		opened, _ := newLearnerFixture().openPicker(list, "")
 		file, _ := opened.(interfaceModel).openFile(repository.Location{Path: "main.go", Line: 1})
 		back, _ := press(file.(interfaceModel), tea.KeyEnter, 0)
