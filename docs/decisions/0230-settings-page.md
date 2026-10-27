@@ -1,6 +1,6 @@
 # 0230. Settings page
 
-Status: accepted
+Status: accepted. A Quiz length group is added under [0300](0300-course-flow.md).
 
 ## Context
 

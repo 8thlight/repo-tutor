@@ -18,9 +18,9 @@ In a terminal, the tutor opens a full-screen workspace with a lesson, the curren
 
 | Shortcut | What it does |
 | -- | -- |
-| `Enter` / `Alt+Enter` | Send your answer / add a line |
-| `Ctrl+N` / `Ctrl+G` | Next topic / new quiz |
-| `Ctrl+F` | Continue after reviewing an answer |
+| `Enter` / `Alt+Enter` | Send your question or answer / add a line |
+| `Ctrl+N` / `Ctrl+G` | Next topic / quiz this topic |
+| `Ctrl+F` | More on this topic, or the next quiz question after feedback |
 | `Ctrl+B` | Quiz question index and goal |
 | `Ctrl+K` | Search topics |
 | `Ctrl+S` | Browse citations and open source at the cited line |
@@ -35,7 +35,7 @@ In a terminal, the tutor opens a full-screen workspace with a lesson, the curren
 
 Topic and source lists support arrow keys and `/` to filter. Press `Enter` to confirm a filter, then `Enter` again to open an item. You can browse while the tutor thinks. A failed turn keeps your draft and completed progress.
 
-After an answer, the tutor stops at feedback. Press `Enter` with an empty answer box, use `Ctrl+F`, or type `/continue` when you are ready for the next exercise. You can ask about the feedback before moving on. Each quiz starts with a five-question goal; `Ctrl+B` shows answered, current, and upcoming questions. Incorrect answers and skips still count toward completion, while correctness is tracked separately. After finishing, `/extend` adds five more questions. Future questions are generated as you continue, so their text is not available in advance.
+A lesson is reading and ends with no question, so the box under it is always for your own questions. An action line offers a quiz on the topic, more on the topic, or the next topic. In a quiz, the tutor stops at feedback after an answer. Press `Enter` with an empty answer box, use `Ctrl+F`, or type `/continue` when you are ready for the next question. You can ask about the feedback before moving on. Each quiz has a goal of 3, 5, or 10 questions, set on the `F3` page; `Ctrl+B` shows answered, current, and upcoming questions. Incorrect answers and skips still count toward completion, while correctness is tracked separately. After finishing, `/extend` adds five more questions. Future questions are generated as you continue, so their text is not available in advance.
 
 While an exercise loads, the lesson pane shows a loading view. Sources remain available and use syntax highlighting with a marker at the cited line. Highlighting needs no language server or extra installation.
 
@@ -49,9 +49,9 @@ Slash commands also work in the answer box and in plain mode:
 | `/topic 3` or `/topic internal/tutor` | Study a topic |
 | `/next` | Move to the next topic |
 | `/probe` | Answer three short questions; topics you know are marked known and skipped by `/next` |
-| `/quiz` | Start a five-question quiz |
+| `/quiz` | Start a quiz on this topic (3, 5, or 10 questions, set with `F3`) |
 | `/continue` | Move on after reviewing an answer |
-| `/questions` or `/extend` | Show the quiz index or add five questions after finishing |
+| `/questions` or `/extend` | Show the quiz index or add more questions after finishing |
 | `/progress` or `/review` | See recorded outcomes or revisit a weak topic |
 | `/hotspots` | Open the "Where change happens" lesson (the plain interface lists the files) |
 | `/sources` or `/read README.md:1` | Inspect the source snapshot |
