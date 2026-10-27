@@ -63,7 +63,7 @@ func TestLoadingReplacesPreviousLessonAndKeepsBrowsingAvailable(t *testing.T) {
 	model = started.(interfaceModel)
 	defer model.cancel()
 	content := ansi.Strip(model.View().Content)
-	if !strings.Contains(content, "Loading your next exercise") || strings.Contains(content, "The CLI is the front door") {
+	if !strings.Contains(content, "Preparing your question") || strings.Contains(content, "The CLI is the front door") {
 		t.Fatalf("loading should replace the stale lesson:\n%s", content)
 	}
 	model, _ = press(model, 's', tea.ModCtrl)
