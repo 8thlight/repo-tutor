@@ -437,6 +437,10 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				return model.stepTurns(1)
 			}
+		case "t":
+			if model.page == "source" && model.sourcePath != "" {
+				return model.openTopic(tutor.FileTopic(model.sourcePath))
+			}
 		case "a":
 			if model.page == "quiz" && model.isPicker() && !model.picker.SettingFilter() {
 				return model.revealSlot()
