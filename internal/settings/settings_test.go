@@ -22,7 +22,7 @@ func TestKnownValuesAreRead(t *testing.T) {
 
 func TestAnUnknownValueUsesThatFieldsDefault(t *testing.T) {
 	got, status := settings.Decode([]byte(`{"tab_style":"zigzag","highlight":"pink","markdown_opens_rendered":false}`))
-	if got.TabStyle != settings.TabStyleBlock || got.Highlight != "green" || got.MarkdownOpensRendered || status.Unreadable {
+	if got.TabStyle != settings.TabStyleNone || got.Highlight != "green" || got.MarkdownOpensRendered || status.Unreadable {
 		t.Fatalf("got %+v %+v", got, status)
 	}
 }

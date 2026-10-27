@@ -1,6 +1,6 @@
 # 0210. Filled tabs
 
-Status: accepted
+Status: accepted. The filled block is the Block tab style. The default style is None under [0260](0260-tab-rule.md).
 
 ## Context
 

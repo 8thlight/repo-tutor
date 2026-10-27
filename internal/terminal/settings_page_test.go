@@ -34,6 +34,7 @@ func TestF3OpensSettingsAndPressingItAgainReturns(t *testing.T) {
 func TestSpaceChoosesAndSavesTheFocusedChoice(t *testing.T) {
 	model := settingsPageFixture(t)
 	model, _ = press(model, tea.KeyDown, 0)
+	model, _ = press(model, tea.KeyDown, 0)
 	model, _ = press(model, tea.KeySpace, 0)
 	if model.application.settings.TabStyle != "slanted" || model.notice != settingsSavedNotice {
 		t.Fatalf("Space should choose the focused style: %+v %q", model.application.settings, model.notice)
@@ -59,7 +60,7 @@ func TestEnterDoesNotChangeASetting(t *testing.T) {
 
 func TestMarkdownChoiceIsSavedAndUsed(t *testing.T) {
 	model := settingsPageFixture(t)
-	for range 7 {
+	for range 8 {
 		model, _ = press(model, tea.KeyDown, 0)
 	}
 	model, _ = press(model, tea.KeySpace, 0)
@@ -90,6 +91,7 @@ func TestAFailedSaveKeepsTheChangeForTheSession(t *testing.T) {
 	blocker := filepath.Join(t.TempDir(), "file")
 	os.WriteFile(blocker, nil, 0600)
 	model.application.settingsBase = filepath.Join(blocker, "inside")
+	model, _ = press(model, tea.KeyDown, 0)
 	model, _ = press(model, tea.KeyDown, 0)
 	model, _ = press(model, tea.KeySpace, 0)
 	if model.application.settings.TabStyle != "slanted" || model.notice != settingsUnsavedNotice {
@@ -161,7 +163,7 @@ func TestHighlightChoiceIsSavedAndChangesTheAccent(t *testing.T) {
 	model.noColor = false
 	model.dark = true
 	before := model.palette().accent
-	for range 8 {
+	for range 9 {
 		model, _ = press(model, tea.KeyDown, 0)
 	}
 	model, _ = press(model, tea.KeySpace, 0)
