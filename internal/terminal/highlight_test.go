@@ -1,8 +1,6 @@
 package terminal
 
 import (
-	"fmt"
-	"image/color"
 	"slices"
 	"testing"
 
@@ -12,11 +10,6 @@ import (
 )
 
 var terminalBackgrounds = []string{"#000000", "#09090B", "#1E1E1E", "#282C34", "#FFFFFF", "#FAFAFA", "#F4F4F4", "#EEEEEE"}
-
-func hexOf(shade color.Color) string {
-	red, green, blue, _ := shade.RGBA()
-	return fmt.Sprintf("#%02X%02X%02X", red>>8, green>>8, blue>>8)
-}
 
 func TestEveryBrandColorIsReadableOnEveryBackground(t *testing.T) {
 	for _, brand := range highlightColors {
@@ -78,5 +71,21 @@ func TestEverySettingsHighlightHasABrandColor(t *testing.T) {
 	}
 	if !slices.Equal(ids, settings.Highlights) {
 		t.Fatalf("the brand table and the settings values must list the same colors in the same order: %v vs %v", ids, settings.Highlights)
+	}
+}
+
+func TestInlineCodeFollowsTheChosenHighlight(t *testing.T) {
+	model := interfaceFixture()
+	model.noColor = false
+	model.dark = true
+	for _, id := range []string{"green", "purple", "orange"} {
+		model.application.settings.Highlight = id
+		if got := *model.markdownStyle().Code.Color; got != hexOf(model.palette().accent) {
+			t.Fatalf("%s: inline code is %s, the highlight is %s", id, got, hexOf(model.palette().accent))
+		}
+	}
+	model.noColor = true
+	if model.markdownStyle().Code.Color != nil && *model.markdownStyle().Code.Color == hexOf(model.palette().accent) {
+		t.Fatal("with no color the ASCII style should keep its own code color")
 	}
 }
