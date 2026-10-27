@@ -28,7 +28,7 @@ Ctrl+F          Continue after reviewing an answer
 Ctrl+B          Open the quiz question index and goal
 Ctrl+K          Browse and search topics
 Ctrl+S          Browse cited sources and open the code
-Ctrl+O          Open the Hotspots tab: churn and branching
+Ctrl+O          Open hotspots: churn and branching
 v               Switch a Markdown file between rendered and source
 Ctrl+P          See lessons and recorded answer outcomes
 Esc             Go back to where you opened this page (its key again also works)
@@ -382,7 +382,7 @@ func (model interfaceModel) next() (tea.Model, tea.Cmd) {
 }
 
 func (model interfaceModel) cyclePage(backward bool) (tea.Model, tea.Cmd) {
-	tabs := []string{"home", "learn", "hotspots", "progress"}
+	tabs := []string{"home", "course", "quiz", "progress"}
 	selected := 0
 	for index, tab := range tabs {
 		if tab == model.activeTab() {
@@ -396,10 +396,10 @@ func (model interfaceModel) cyclePage(backward bool) (tea.Model, tea.Cmd) {
 	switch tabs[(selected+step+len(tabs))%len(tabs)] {
 	case "home":
 		return model.openHome()
-	case "learn":
+	case "course":
 		return model.learn()
-	case "hotspots":
-		return model.openPicker("hotspots", "")
+	case "quiz":
+		return model.openPicker("quiz", "")
 	}
 	return model.openDocument("progress", "Progress", model.progressText())
 }

@@ -13,7 +13,6 @@ import (
 
 const (
 	placeTopics   = "topics"
-	placeHotspots = "hotspots"
 	placeProgress = "progress"
 	placeAbout    = "about"
 	placeProbe    = "probe"
@@ -34,7 +33,7 @@ func (model interfaceModel) homeEntries() []homeEntry {
 	if recommendation.Place == tutor.PlaceContinue {
 		entries = append(entries, homeEntry{tutor.PlaceContinue, "Continue", "Move on from the answer you just reviewed.", ""})
 	}
-	entries = append(entries, homeEntry{tutor.PlaceLearn, "Learn", "Read the repository overview, then one idea at a time with a question to answer.", ""})
+	entries = append(entries, homeEntry{tutor.PlaceLearn, "Course", "Read the repository overview, then one idea at a time with a question to answer.", ""})
 	if _, err := probeIntent(state, model.application.course); err == nil && state.Probe == nil && len(state.Turns) > 0 {
 		entries = append(entries, homeEntry{placeProbe, "Check what you know", "Optional. Already know this repository's foundations? Answer a few short questions to skip topics you know. New here? Skip this.", ""})
 	}
@@ -42,8 +41,7 @@ func (model interfaceModel) homeEntries() []homeEntry {
 		entries = append(entries, homeEntry{tutor.PlaceQuiz, "Quiz", "Answer five questions on this topic and revisit any you skipped.", ""})
 	}
 	entries = append(entries,
-		homeEntry{placeTopics, "Topics", "Pick any topic to study or revisit.", ""},
-		homeEntry{placeHotspots, "Hotspots", "Files that change often or branch a lot, ranked as reading hints.", ""})
+		homeEntry{placeTopics, "Topics", "Pick any topic to study or revisit.", ""})
 	if model.overviewStale {
 		entries = append(entries, homeEntry{placeRefresh, "Refresh the overview", "The repository changed since the overview was written. Generate a new one.", ""})
 	}
@@ -154,8 +152,6 @@ func (model interfaceModel) openHomeEntry(entry homeEntry) (tea.Model, tea.Cmd) 
 		return model.learn()
 	case placeTopics:
 		return model.openPicker("topics", "")
-	case placeHotspots:
-		return model.openPicker("hotspots", "")
 	case placeAbout:
 		return model.openAbout()
 	case placeProbe:
