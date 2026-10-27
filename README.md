@@ -58,7 +58,7 @@ Slash commands also work in the answer box and in plain mode:
 | `/map` or `/glossary` | Show a dependency diagram or type index |
 | `/quit` | Save and exit |
 
-Completed turns save automatically. Run the same command to resume. Use `--new` to archive the previous session and start again, or `--goal "Trace the persistence pipeline"` when starting a course. `--model NAME` selects a model through the chosen CLI.
+The first time you open a repository, the tutor asks what you want to learn. Press `Enter` to keep the suggested goal or type your own. `--goal` answers it ahead of time. Completed turns save automatically. Run the same command to resume. Use `--new` to archive the previous session and start again, or `--goal "Trace the persistence pipeline"` when starting a course. `--model NAME` selects a model through the chosen CLI.
 
 ## Scan without an agent
 

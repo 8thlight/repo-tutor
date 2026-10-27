@@ -49,6 +49,7 @@ type interfaceModel struct {
 	homeSelected      int
 	origin            string
 	sourceList        string
+	goalPending       bool
 	settingsFocus     int
 	prefetcher        lessonPrefetcher
 	prefetching       bool
@@ -148,7 +149,7 @@ func plainCursorMovement(environment []string) []string {
 
 func newInterface(ctx context.Context, application application, runner turnRunner, noColor bool) interfaceModel {
 	input := textarea.New()
-	input.Placeholder = "Answer the question, ask a follow-up, or type /help"
+	input.Placeholder = lessonPlaceholder
 	input.Prompt = "  "
 	input.ShowLineNumbers = false
 	input.CharLimit = 16000
@@ -169,6 +170,10 @@ func newInterface(ctx context.Context, application application, runner turnRunne
 		notice: "Completed turns save automatically",
 	}
 	model.viewport.SoftWrap = true
+	if len(application.state.Turns) == 0 && !application.state.GoalChosen {
+		model.goalPending = true
+		model.input.Placeholder = application.state.Goal
+	}
 	switch {
 	case application.settingsStatus.Unreadable:
 		model.notice = settingsUnreadableNotice
@@ -185,6 +190,9 @@ func newInterface(ctx context.Context, application application, runner turnRunne
 
 func (model interfaceModel) Init() tea.Cmd {
 	commands := []tea.Cmd{tea.RequestBackgroundColor, textarea.Blink}
+	if model.goalPending {
+		return tea.Batch(append(commands, model.input.Focus())...)
+	}
 	if len(model.application.state.Turns) == 0 {
 		return tea.Batch(append(commands, func() tea.Msg { return beginFirstLesson{} })...)
 	}
@@ -193,6 +201,8 @@ func (model interfaceModel) Init() tea.Cmd {
 	}
 	return tea.Batch(commands...)
 }
+
+const lessonPlaceholder = "Answer the question, ask a follow-up, or type /help"
 
 type beginFirstLesson struct{}
 
@@ -297,6 +307,11 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return model, tea.Batch(commands...)
 	case tea.KeyPressMsg:
+		if model.askingGoal() {
+			if next, command, handled := model.goalKey(message); handled {
+				return next, command
+			}
+		}
 		switch message.String() {
 		case "ctrl+q":
 			if model.cancel != nil {
