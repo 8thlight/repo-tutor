@@ -360,11 +360,11 @@ func (model interfaceModel) View() tea.View {
 	}
 	footer := model.footerLine(notice, indicator, width, muted) + "\n" + muted.Render(ansi.Truncate(keys, width, "…"))
 	margin := lipgloss.NewStyle().Padding(0, 2)
-	navigationRow := margin.Render(navigation)
+	navigationRows := margin.Render(navigation + "\n" + model.tabRule(navigationWidth))
 	if model.tabsBleed() {
-		navigationRow = navigation
+		navigationRows = navigation + "\n" + model.tabRule(navigationWidth)
 	}
-	content := lipgloss.JoinVertical(lipgloss.Left, margin.Render(lipgloss.JoinVertical(lipgloss.Left, header, "")), navigationRow, margin.Render(lipgloss.JoinVertical(lipgloss.Left, "", main, "", composer, "", footer)))
+	content := lipgloss.JoinVertical(lipgloss.Left, margin.Render(lipgloss.JoinVertical(lipgloss.Left, header, "")), navigationRows, margin.Render(lipgloss.JoinVertical(lipgloss.Left, main, "", composer, "", footer)))
 	content = lipgloss.NewStyle().MaxWidth(model.width).MaxHeight(model.height).Render(content)
 	if model.noColor {
 		content = ansi.Strip(content)

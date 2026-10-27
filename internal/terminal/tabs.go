@@ -69,24 +69,28 @@ func (model interfaceModel) joinedFills(active string) []color.Color {
 	return fills
 }
 
-func (model interfaceModel) joinedTabs(style, active string) string {
+func (model interfaceModel) joinedCells(style, active string) []string {
 	palette := model.palette()
 	fills := model.joinedFills(active)
-	var bar strings.Builder
+	cells := make([]string, len(tabPages))
 	for index, page := range tabPages {
-		bar.WriteString(lipgloss.NewStyle().Background(fills[index]).Foreground(palette.cutout).Bold(page.page == active).Render(" " + page.label + " "))
 		separator := lipgloss.NewStyle().Foreground(fills[index])
 		if index+1 < len(fills) {
 			separator = separator.Background(fills[index+1])
 		}
-		bar.WriteString(separator.Render(joinedSeparators[style]))
+		cells[index] = lipgloss.NewStyle().Background(fills[index]).Foreground(palette.cutout).Bold(page.page == active).Render(" "+page.label+" ") + separator.Render(joinedSeparators[style])
 	}
-	return bar.String()
+	return cells
 }
 
 func (model interfaceModel) tabs(style, active string) string {
+	cells, joiner := model.tabCells(style, active)
+	return strings.Join(cells, joiner)
+}
+
+func (model interfaceModel) tabCells(style, active string) ([]string, string) {
 	if _, joined := joinedSeparators[style]; joined && !model.noColor {
-		return model.joinedTabs(style, active)
+		return model.joinedCells(style, active), ""
 	}
 	palette := model.palette()
 	pages := tabPages
@@ -116,7 +120,32 @@ func (model interfaceModel) tabs(style, active string) string {
 			rendered[index] = block
 		}
 	}
-	return strings.Join(rendered, " ")
+	return rendered, " "
+}
+
+func (model interfaceModel) activeTabSpan(style, active string) (int, int, bool) {
+	cells, joiner := model.tabCells(style, active)
+	start := 0
+	for index, cell := range cells {
+		end := start + lipgloss.Width(cell)
+		if tabPages[index].page == active {
+			return start, end, true
+		}
+		start = end + lipgloss.Width(joiner)
+	}
+	return 0, 0, false
+}
+
+func (model interfaceModel) tabRule(width int) string {
+	palette := model.palette()
+	active := model.activeTab()
+	start, end, found := model.activeTabSpan(model.application.settings.TabStyle, active)
+	end = min(end, width)
+	if !found || start >= width {
+		return lipgloss.NewStyle().Foreground(palette.muted).Render(strings.Repeat("─", width))
+	}
+	line := lipgloss.NewStyle().Foreground(palette.accent)
+	return line.Render(strings.Repeat("─", start) + strings.Repeat("━", end-start) + strings.Repeat("─", width-end))
 }
 
 func (model interfaceModel) tabBar(width int) string {
