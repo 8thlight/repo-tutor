@@ -30,7 +30,8 @@ In a terminal, the tutor opens a full-screen workspace with a lesson, the curren
 | `Alt+Left` / `Alt+Right` | Read earlier or later saved turns |
 | `Esc` | Return to the lesson, or stop a running turn |
 | `Ctrl+R` | Retry a failed turn with your draft kept |
-| `F1` / `Ctrl+Q` | Help / save and quit |
+| `F1` / `F2` / `F3` | Help / About / Settings |
+| `Ctrl+Q` | Save and quit |
 
 Topic and source lists support arrow keys and `/` to filter. Press `Enter` to confirm a filter, then `Enter` again to open an item. You can browse while the tutor thinks. A failed turn keeps your draft and completed progress.
 
