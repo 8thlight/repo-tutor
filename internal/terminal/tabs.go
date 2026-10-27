@@ -6,6 +6,8 @@ import (
 
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/ansi"
+
+	"repo-tutor/internal/settings"
 )
 
 type tabHint struct{ key, label string }
@@ -24,24 +26,45 @@ func (model interfaceModel) cutoutColor(fallback string) color.Color {
 	return lipgloss.Color(fallback)
 }
 
-func (model interfaceModel) tabBar(width int) string {
+var tabEdges = map[string][2]string{
+	settings.TabStyleSlanted: {"\ue0ba", "\ue0b8"},
+	settings.TabStyleRounded: {"\ue0b6", "\ue0b4"},
+}
+
+func (model interfaceModel) tabs(style, active string) string {
 	palette := model.palette()
 	pages := []struct{ page, label string }{{"home", "Home"}, {"course", "Course"}, {"quiz", "Quiz"}, {"progress", "Progress"}}
-	var tabs []string
-	for _, page := range pages {
-		active := model.activeTab() == page.page
+	rendered := make([]string, len(pages))
+	for index, page := range pages {
+		current := active == page.page
+		label := " " + page.label + " "
+		fill := palette.muted
+		if current {
+			fill = palette.accent
+		}
 		switch {
-		case model.noColor && active:
-			tabs = append(tabs, lipgloss.NewStyle().Underline(true).Render("["+page.label+"]"))
+		case model.noColor && current:
+			rendered[index] = lipgloss.NewStyle().Underline(true).Render("[" + page.label + "]")
 		case model.noColor:
-			tabs = append(tabs, " "+page.label+" ")
-		case active:
-			tabs = append(tabs, lipgloss.NewStyle().Background(palette.accent).Foreground(palette.cutout).Bold(true).Render(" "+page.label+" "))
+			rendered[index] = label
+		case style == settings.TabStyleNone && current:
+			rendered[index] = lipgloss.NewStyle().Foreground(palette.accent).Bold(true).Underline(true).Render(label)
+		case style == settings.TabStyleNone:
+			rendered[index] = lipgloss.NewStyle().Foreground(palette.muted).Render(label)
 		default:
-			tabs = append(tabs, lipgloss.NewStyle().Background(palette.muted).Foreground(palette.cutout).Render(" "+page.label+" "))
+			block := lipgloss.NewStyle().Background(fill).Foreground(palette.cutout).Bold(current).Render(label)
+			if edges, found := tabEdges[style]; found {
+				edge := lipgloss.NewStyle().Foreground(fill)
+				block = edge.Render(edges[0]) + block + edge.Render(edges[1])
+			}
+			rendered[index] = block
 		}
 	}
-	bar := strings.Join(tabs, " ")
+	return strings.Join(rendered, " ")
+}
+
+func (model interfaceModel) tabBar(width int) string {
+	bar := model.tabs(model.application.settings.TabStyle, model.activeTab())
 	for _, set := range tabHintSets {
 		hints := model.renderTabHints(set)
 		if lipgloss.Width(bar)+2+lipgloss.Width(hints) <= width {
