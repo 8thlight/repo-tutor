@@ -1,6 +1,6 @@
 # 0340. Understanding score
 
-Status: accepted
+Status: accepted. An exam gives a separate score under [0450](0450-exam.md).
 
 ## Context
 
