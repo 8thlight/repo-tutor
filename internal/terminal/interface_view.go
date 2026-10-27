@@ -17,16 +17,16 @@ import (
 	"repo-tutor/internal/tutor"
 )
 
-type interfacePalette struct{ accent, foreground, muted, border, warning color.Color }
+type interfacePalette struct{ accent, foreground, muted, border, warning, cutout color.Color }
 
 func (model interfaceModel) palette() interfacePalette {
 	if model.noColor {
 		return interfacePalette{}
 	}
 	if model.dark {
-		return interfacePalette{lipgloss.Color("#5EEAD4"), lipgloss.Color("#E4E4E7"), lipgloss.Color("#A1A1AA"), lipgloss.Color("#3F3F46"), lipgloss.Color("#FBBF24")}
+		return interfacePalette{lipgloss.Color("#5EEAD4"), lipgloss.Color("#E4E4E7"), lipgloss.Color("#A1A1AA"), lipgloss.Color("#3F3F46"), lipgloss.Color("#FBBF24"), model.cutoutColor("#09090B")}
 	}
-	return interfacePalette{lipgloss.Color("#0F766E"), lipgloss.Color("#18181B"), lipgloss.Color("#52525B"), lipgloss.Color("#D4D4D8"), lipgloss.Color("#92400E")}
+	return interfacePalette{lipgloss.Color("#0F766E"), lipgloss.Color("#18181B"), lipgloss.Color("#52525B"), lipgloss.Color("#D4D4D8"), lipgloss.Color("#92400E"), model.cutoutColor("#FAFAFA")}
 }
 
 func (model interfaceModel) bodyWidth() int {
@@ -291,18 +291,7 @@ func (model interfaceModel) View() tea.View {
 	brand = ansi.Truncate(brand, max(8, width-lipgloss.Width(status)-2), "…")
 	space := max(1, width-lipgloss.Width(brand)-lipgloss.Width(status))
 	header := ansi.Truncate(brand+strings.Repeat(" ", space)+muted.Render(status), width, "") + "\n" + muted.Render(ansi.Truncate("Goal  "+tutor.Plain(model.application.state.Goal), width, "…"))
-	pages := []struct{ page, label string }{{"home", "Home"}, {"course", "Course"}, {"quiz", "Quiz"}, {"progress", "Progress"}}
-	var tabs []string
-	for _, page := range pages {
-		label := " " + page.label + " "
-		if model.activeTab() == page.page {
-			label = accent.Underline(true).Render(label)
-		} else {
-			label = muted.Render(label)
-		}
-		tabs = append(tabs, label)
-	}
-	navigation := ansi.Truncate(strings.Join(tabs, "  ")+muted.Render("    Tab to browse · F1 help"), width, "…")
+	navigation := model.tabBar(width)
 	title := tutor.Plain(model.pageTitle)
 	if model.page == "lesson" {
 		title = model.topicTitle()
