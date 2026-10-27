@@ -293,7 +293,11 @@ func (model interfaceModel) View() tea.View {
 	brand = ansi.Truncate(brand, max(8, width-lipgloss.Width(status)-2), "…")
 	space := max(1, width-lipgloss.Width(brand)-lipgloss.Width(status))
 	header := ansi.Truncate(brand+strings.Repeat(" ", space)+muted.Render(status), width, "") + "\n" + muted.Render(ansi.Truncate("Goal  "+tutor.Plain(model.application.state.Goal), width, "…"))
-	navigation := model.tabBar(width)
+	navigationWidth := width
+	if model.tabsBleed() {
+		navigationWidth += 2
+	}
+	navigation := model.tabBar(navigationWidth)
 	title := tutor.Plain(model.pageTitle)
 	if model.page == "lesson" {
 		title = model.topicTitle()
@@ -354,8 +358,13 @@ func (model interfaceModel) View() tea.View {
 		indicator = model.prefetchSpinner.View() + " Preparing next lesson"
 	}
 	footer := model.footerLine(notice, indicator, width, muted) + "\n" + muted.Render(ansi.Truncate(keys, width, "…"))
-	content := lipgloss.JoinVertical(lipgloss.Left, header, "", navigation, "", main, "", composer, "", footer)
-	content = lipgloss.NewStyle().Padding(0, 2).MaxWidth(model.width).MaxHeight(model.height).Render(content)
+	margin := lipgloss.NewStyle().Padding(0, 2)
+	navigationRow := margin.Render(navigation)
+	if model.tabsBleed() {
+		navigationRow = navigation
+	}
+	content := lipgloss.JoinVertical(lipgloss.Left, margin.Render(lipgloss.JoinVertical(lipgloss.Left, header, "")), navigationRow, margin.Render(lipgloss.JoinVertical(lipgloss.Left, "", main, "", composer, "", footer)))
+	content = lipgloss.NewStyle().MaxWidth(model.width).MaxHeight(model.height).Render(content)
 	if model.noColor {
 		content = ansi.Strip(content)
 	}
