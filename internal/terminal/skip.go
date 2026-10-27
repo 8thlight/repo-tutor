@@ -1,6 +1,7 @@
 package terminal
 
 import (
+	"fmt"
 	"time"
 
 	tea "charm.land/bubbletea/v2"
@@ -66,11 +67,18 @@ func (model interfaceModel) leavePrompt() string {
 	if model.flowName() == "probe" {
 		return "Press Ctrl+L again to leave this probe."
 	}
+	if quiz := model.application.state.Quiz; model.flowName() == "exam" && quiz != nil {
+		if quiz.Completed() >= tutor.ExamMinimum {
+			return fmt.Sprintf("Press Ctrl+L again to leave this exam. Your %d answers will be scored.", quiz.Completed())
+		}
+		return fmt.Sprintf("Press Ctrl+L again to leave this exam. It will not be scored until %d questions are answered.", tutor.ExamMinimum)
+	}
 	return "Press Ctrl+L again to leave this " + model.flowName() + ". It will not be scored."
 }
 
 func (model interfaceModel) leaveQuiz() (tea.Model, tea.Cmd) {
 	flow := model.flowName()
+	earlier := model.application.state.LastExam
 	model = model.disarmSkip()
 	left, found := leaveQuestions(model.application.state)
 	if !found {
@@ -86,6 +94,9 @@ func (model interfaceModel) leaveQuiz() (tea.Model, tea.Cmd) {
 	model.application.state = left
 	model.history = len(left.Turns) - 1
 	model.notice = "Left the " + flow
+	if saved := left.LastExam; flow == "exam" && saved != nil && saved != earlier {
+		model.notice = fmt.Sprintf("Left the exam. Saved %d%% on %d of %d questions.", saved.Percent(), saved.Goal, max(saved.Planned, saved.Goal))
+	}
 	return model.learn()
 }
 

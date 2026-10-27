@@ -176,7 +176,7 @@ func TestTheExamNamesItselfInTheTitleSidebarAndLeavePrompt(t *testing.T) {
 		t.Fatal("the sidebar should offer leaving the exam")
 	}
 	armed, _ := press(model, 'l', tea.ModCtrl)
-	if armed.notice != "Press Ctrl+L again to leave this exam. It will not be scored." {
+	if armed.notice != "Press Ctrl+L again to leave this exam. It will not be scored until 10 questions are answered." {
 		t.Fatalf("got %q", armed.notice)
 	}
 }
@@ -237,5 +237,80 @@ func TestHomeNamesTheRealCountForAnUncappedExam(t *testing.T) {
 	entry, offered := homeHas(model, placeExam)
 	if !offered || !strings.Contains(entry.description, "13 questions") {
 		t.Fatalf("an uncapped exam on thirteen topics should say 13: %+v", entry)
+	}
+}
+
+func examAfter(t *testing.T, completed int) interfaceModel {
+	t.Helper()
+	model := examFixture(t, 14)
+	model.application.settings.ExamLength = 0
+	plan := tutor.ExamPlan(model.application.course, model.application.state.Progress, 0)
+	first := model.application.recordReply("exam", examMessage, plan[0], "", tutor.Reply{Question: "Q0?", Assessment: "none", Citations: model.application.state.Turns[0].Reply.Citations})
+	model.application.state = first
+	quiz := model.application.state.Quiz
+	for index := 0; index < completed; index++ {
+		if index >= len(quiz.Questions) {
+			quiz.Questions = append(quiz.Questions, tutor.QuizQuestion{Text: "Q?", Topic: quiz.Plan[index]})
+		}
+		quiz.Questions[index].Assessment = "correct"
+	}
+	if completed >= len(quiz.Questions) {
+		quiz.Questions = append(quiz.Questions, tutor.QuizQuestion{Text: "Open?", Topic: quiz.Plan[completed]})
+	}
+	quiz.Active = len(quiz.Questions) - 1
+	model.application.state.Topic, model.application.state.Question, model.application.state.Review = quiz.Plan[quiz.Active], "Open?", false
+	model.application.state.Turns = append(model.application.state.Turns, session.Turn{Topic: tutor.Overview, Action: "lesson", Reply: model.application.state.Turns[0].Reply})
+	model.application.state.Turns[len(model.application.state.Turns)-1].Topic = quiz.Plan[quiz.Active]
+	model.history = len(model.application.state.Turns) - 1
+	return model
+}
+
+func TestLeavingAnExamAfterTenQuestionsSavesAPartialResult(t *testing.T) {
+	model := examAfter(t, 11)
+	armed, _ := press(model, 'l', tea.ModCtrl)
+	if armed.notice != "Press Ctrl+L again to leave this exam. Your 11 answers will be scored." {
+		t.Fatalf("the prompt should say the answers will be scored: %q", armed.notice)
+	}
+	left, _ := press(armed, 'l', tea.ModCtrl)
+	saved := left.application.state.LastExam
+	if saved == nil || saved.Goal != 11 || saved.Planned != 14 || left.application.state.Quiz != nil {
+		t.Fatalf("leaving should keep eleven of fourteen questions: %+v", saved)
+	}
+	if !strings.HasPrefix(left.notice, "Left the exam. Saved 100% on 11 of 14 questions.") {
+		t.Fatalf("the notice should say what was saved: %q", left.notice)
+	}
+	if !strings.Contains(left.progressText(), "Latest exam     100% · solid (left early: 11 of 14 questions)") {
+		t.Fatalf("Progress should mark the exam as left early:\n%s", left.progressText())
+	}
+}
+
+func TestLeavingAnExamBeforeTenQuestionsSavesNothingAndKeepsTheOldResult(t *testing.T) {
+	model := examAfter(t, 4)
+	previous := &tutor.ExamResult{Credit: 12, Goal: 10, Topics: []tutor.ExamTopicResult{{Topic: "pkg01", Credit: 2}}}
+	model.application.state.LastExam = previous
+	armed, _ := press(model, 'l', tea.ModCtrl)
+	if !strings.Contains(armed.notice, "will not be scored until 10 questions are answered") {
+		t.Fatalf("the prompt should explain the threshold: %q", armed.notice)
+	}
+	left, _ := press(armed, 'l', tea.ModCtrl)
+	if left.application.state.LastExam != previous || left.notice != "Left the exam" {
+		t.Fatalf("a short exam keeps the previous result: %+v %q", left.application.state.LastExam, left.notice)
+	}
+}
+
+func TestPickingATopicOrStartingALessonAlsoSavesAPartialExam(t *testing.T) {
+	model := examAfter(t, 12)
+	model.application.state.Turns = append(model.application.state.Turns, session.Turn{Topic: "pkg02", Action: "lesson", Reply: model.application.state.Turns[0].Reply})
+	resumed, found := resumeTopic(model.application.state, "pkg02")
+	if !found || resumed.LastExam == nil || resumed.LastExam.Goal != 12 || resumed.Quiz != nil {
+		t.Fatalf("switching topics should save the partial exam: %+v", resumed.LastExam)
+	}
+	lesson := model.application.recordReply("lesson", firstLessonMessage, "pkg02", "", tutor.Reply{Explanation: "x", Assessment: "none", Citations: model.application.state.Turns[0].Reply.Citations})
+	if lesson.LastExam == nil || lesson.LastExam.Goal != 12 || lesson.Quiz != nil {
+		t.Fatalf("starting a lesson should save it too: %+v", lesson.LastExam)
+	}
+	short := examAfter(t, 3)
+	if next := short.application.recordReply("lesson", firstLessonMessage, "pkg02", "", tutor.Reply{Explanation: "x", Assessment: "none", Citations: short.application.state.Turns[0].Reply.Citations}); next.LastExam != nil {
+		t.Fatal("a short exam saves nothing when a lesson starts")
 	}
 }

@@ -200,6 +200,11 @@ func (application application) recordReply(action, message, topic, pending strin
 	if action == "question" && reviewing(application.state) && reply.Question == "" {
 		updated.Review = true
 	}
+	if prior := application.state.Quiz; prior != nil && prior.Exam && (action == "lesson" || action == "probe" || action == "quiz" || action == "exam") {
+		if result, saved := tutor.PartialResult(prior); saved {
+			updated.LastExam = &result
+		}
+	}
 	if action == "exam" {
 		updated.Quiz = tutor.StartExam(tutor.ExamPlan(application.course, application.state.Progress, application.settings.ExamLength), reply)
 	} else {

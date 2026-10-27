@@ -353,7 +353,11 @@ func (model interfaceModel) progressText() string {
 	fmt.Fprintf(&text, "Goal\n%s\n\n", ansi.Wrap(tutor.Plain(state.Goal), model.bodyWidth(), ""))
 	fmt.Fprintf(&text, "Coverage        %d of %d topics read\nUnderstanding   %d%% across the topics you have read\n", score.Read, score.Total, score.Percent)
 	if exam := state.LastExam; exam != nil {
-		fmt.Fprintf(&text, "Latest exam     %d%% · %s (%d questions)\n", exam.Percent(), tutor.Band(exam.Percent()), exam.Goal)
+		if exam.Planned > exam.Goal {
+			fmt.Fprintf(&text, "Latest exam     %d%% · %s (left early: %d of %d questions)\n", exam.Percent(), tutor.Band(exam.Percent()), exam.Goal, exam.Planned)
+		} else {
+			fmt.Fprintf(&text, "Latest exam     %d%% · %s (%d questions)\n", exam.Percent(), tutor.Band(exam.Percent()), exam.Goal)
+		}
 	}
 	text.WriteString("\n")
 	listed := false
