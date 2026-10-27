@@ -1,6 +1,6 @@
 # 0230. Settings page
 
-Status: accepted. A Quiz length group is added under [0300](0300-course-flow.md).
+Status: accepted. Settings moves to `F2` under [0350](0350-settings-on-f2.md). A Quiz length group is added under [0300](0300-course-flow.md).
 
 ## Context
 

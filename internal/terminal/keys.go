@@ -14,8 +14,8 @@ var (
 	topicsHint   = keyHint{"Ctrl+K", "topics"}
 	sourcesHint  = keyHint{"Ctrl+S", "sources"}
 	helpHint     = keyHint{"F1", "Help"}
-	aboutHint    = keyHint{"F2", "About"}
-	settingsHint = keyHint{"F3", "Settings"}
+	aboutHint    = keyHint{"F3", "About"}
+	settingsHint = keyHint{"F2", "Settings"}
 	escapeHint   = keyHint{"Esc", "back or stop"}
 	quitHint     = keyHint{"Ctrl+Q", "quit"}
 )
@@ -38,8 +38,8 @@ func (model interfaceModel) sidebarVisible() bool {
 func (model interfaceModel) footerHintSets() [][]keyHint {
 	if model.sidebarVisible() {
 		return [][]keyHint{
-			{helpHint, aboutHint, settingsHint, escapeHint, quitHint},
-			{helpHint, aboutHint, settingsHint, quitHint},
+			{helpHint, settingsHint, aboutHint, escapeHint, quitHint},
+			{helpHint, settingsHint, aboutHint, quitHint},
 			{helpHint, quitHint},
 		}
 	}
@@ -48,8 +48,8 @@ func (model interfaceModel) footerHintSets() [][]keyHint {
 		navigation = []keyHint{topicsHint}
 	}
 	return [][]keyHint{
-		append(append([]keyHint(nil), navigation...), helpHint, aboutHint, settingsHint, escapeHint, quitHint),
-		append(append([]keyHint(nil), navigation...), helpHint, aboutHint, settingsHint, quitHint),
+		append(append([]keyHint(nil), navigation...), helpHint, settingsHint, aboutHint, escapeHint, quitHint),
+		append(append([]keyHint(nil), navigation...), helpHint, settingsHint, aboutHint, quitHint),
 		append(append([]keyHint(nil), navigation...), helpHint, quitHint),
 		{helpHint, quitHint},
 	}

@@ -1,6 +1,6 @@
 # 0310. Controls and notices
 
-Status: accepted. The typing keys move from the divider to the input frame, and `Alt+Enter` is dropped, under [0330](0330-input-frame.md).
+Status: accepted. The footer reads `F1 Help · F2 Settings · F3 About` under [0350](0350-settings-on-f2.md). The typing keys move from the divider to the input frame, and `Alt+Enter` is dropped, under [0330](0330-input-frame.md).
 
 ## Context
 
