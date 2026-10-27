@@ -12,7 +12,7 @@ import (
 
 func TestReplyBoundary(t *testing.T) {
 	prepared := tutor.Context{Excerpts: []tutor.Excerpt{{Path: "main.go", StartLine: 2, EndLine: 5}}}
-	request := tutor.Request{Topic: "overview", Action: "answer", Question: "Where does it start?"}
+	request := tutor.Request{Topic: tutor.Overview, Action: "answer", Question: "Where does it start?"}
 	valid := tutor.Reply{Explanation: "Execution begins in main.go:3.", Question: "What is delegated?", Assessment: "correct", Feedback: "You found the entry point.", Citations: []repository.Location{{Path: "main.go", Line: 3}}}
 	for _, test := range []struct {
 		name   string
@@ -62,7 +62,7 @@ func TestContextIsBoundedAndRelevant(t *testing.T) {
 		files = append(files, repository.File{Path: strings.Repeat("a", index+1) + ".go", Content: "package course\n" + strings.Repeat("var value = 1\n", 1000)})
 	}
 	snapshot := repository.Analyze(files)
-	prepared := tutor.Prepare(snapshot, tutor.Request{Action: "question", Topic: "overview", Message: "Explain target/target.go."})
+	prepared := tutor.Prepare(snapshot, tutor.Request{Action: "question", Topic: tutor.Overview, Message: "Explain target/target.go."})
 	bytes := 0
 	found := false
 	for _, excerpt := range prepared.Excerpts {
@@ -87,7 +87,7 @@ func TestQuizContextRetainsTeachingSeparateFromLastFeedback(t *testing.T) {
 	})
 	lesson := tutor.Reply{Explanation: "Core owns calculations; CLI handles commands.", Assessment: "none", Citations: []repository.Location{{Path: "core/value.go", Line: 2}}}
 	feedback := tutor.Reply{Explanation: "That is correct.", Assessment: "correct", Feedback: "You identified core."}
-	prepared := tutor.Prepare(snapshot, tutor.Request{Topic: "overview", Action: "quiz", Lesson: &lesson, Previous: &feedback})
+	prepared := tutor.Prepare(snapshot, tutor.Request{Topic: tutor.Overview, Action: "quiz", Lesson: &lesson, Previous: &feedback})
 	_, payload, found := strings.Cut(prepared.Prompt, "Turn and source excerpts:\n")
 	if !found {
 		t.Fatal("missing structured tutor context")
@@ -114,9 +114,9 @@ func TestQuizContextRetainsTeachingSeparateFromLastFeedback(t *testing.T) {
 }
 
 func TestProgressIsEvidenceBasedAndImmutable(t *testing.T) {
-	previous := map[string]tutor.Progress{"overview": {Lessons: 1}}
+	previous := map[string]tutor.Progress{tutor.Overview: {Lessons: 1}}
 	read := tutor.Record(previous, "course/value", "lesson", tutor.Reply{Assessment: "none"})
-	if read["course/value"] != (tutor.Progress{Lessons: 1}) || !reflect.DeepEqual(previous, map[string]tutor.Progress{"overview": {Lessons: 1}}) {
+	if read["course/value"] != (tutor.Progress{Lessons: 1}) || !reflect.DeepEqual(previous, map[string]tutor.Progress{tutor.Overview: {Lessons: 1}}) {
 		t.Fatalf("reading counted as mastery or changed prior progress: %v %v", read, previous)
 	}
 	graded := tutor.Record(read, "course/value", "answer", tutor.Reply{Assessment: "partial"})
@@ -136,8 +136,8 @@ func TestFollowUpRetainsEvidenceAndFindsNamedSymbols(t *testing.T) {
 	}
 	snapshot := repository.Analyze(files)
 	for _, request := range []tutor.Request{
-		{Action: "question", Topic: "overview", Message: "How does TraceRename work?"},
-		{Action: "answer", Topic: "overview", Message: "Why does it do that?", Previous: &tutor.Reply{Citations: []repository.Location{{Path: "deep/behavior.go", Line: 2}}}},
+		{Action: "question", Topic: tutor.Overview, Message: "How does TraceRename work?"},
+		{Action: "answer", Topic: tutor.Overview, Message: "Why does it do that?", Previous: &tutor.Reply{Citations: []repository.Location{{Path: "deep/behavior.go", Line: 2}}}},
 	} {
 		prepared := tutor.Prepare(snapshot, request)
 		found := false
@@ -203,7 +203,7 @@ func TestTheHotspotsTopicQuotesTheTopFivePlacesFirst(t *testing.T) {
 
 func TestALessonNeverCarriesAQuestion(t *testing.T) {
 	prepared := tutor.Context{Excerpts: []tutor.Excerpt{{Path: "main.go", StartLine: 2, EndLine: 5}}}
-	request := tutor.Request{Topic: "overview", Action: "lesson"}
+	request := tutor.Request{Topic: tutor.Overview, Action: "lesson"}
 	for name, question := range map[string]string{"without a question": "", "with a question": "What is delegated?"} {
 		reply := tutor.Reply{Explanation: "Execution begins in main.go:3.", Question: question, Assessment: "none", Citations: []repository.Location{{Path: "main.go", Line: 3}}}
 		data, _ := json.Marshal(reply)

@@ -19,7 +19,7 @@ func TestPersistenceLockAndArchive(t *testing.T) {
 	if _, err := session.Open(base, "/repository"); err == nil {
 		t.Fatal("two tutors obtained the same session lock")
 	}
-	state := session.State{Version: session.Version, Repository: "/repository", Agent: "codex", Topic: "overview", SessionID: "session-id", Question: "Where does it begin?", Progress: map[string]tutor.Progress{"overview": {Correct: 1}}}
+	state := session.State{Version: session.Version, Repository: "/repository", Agent: "codex", Topic: tutor.Overview, SessionID: "session-id", Question: "Where does it begin?", Progress: map[string]tutor.Progress{tutor.Overview: {Correct: 1}}}
 	if err := store.Save(state); err != nil {
 		t.Fatal(err)
 	}

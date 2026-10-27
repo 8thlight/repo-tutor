@@ -18,9 +18,9 @@ func TestPruneRemovesOnlyOldLessonsOfOtherGoals(t *testing.T) {
 	defer store.Close()
 	current, other := "Trace the pipeline", "Learn the settings"
 	files := map[string]time.Duration{
-		tutor.LessonKey(current, "overview"): 200 * 24 * time.Hour,
-		tutor.LessonKey(other, "overview"):   200 * 24 * time.Hour,
-		tutor.LessonKey(other, "core"):       3 * 24 * time.Hour,
+		tutor.LessonKey(current, tutor.Overview): 200 * 24 * time.Hour,
+		tutor.LessonKey(other, tutor.Overview):   200 * 24 * time.Hour,
+		tutor.LessonKey(other, "core"):           3 * 24 * time.Hour,
 	}
 	now := time.Now()
 	for key, age := range files {
@@ -40,9 +40,9 @@ func TestPruneRemovesOnlyOldLessonsOfOtherGoals(t *testing.T) {
 		t.Fatalf("only the old file for the other goal should go, removed %d", removed)
 	}
 	for key, want := range map[string]bool{
-		tutor.LessonKey(current, "overview"): true,
-		tutor.LessonKey(other, "overview"):   false,
-		tutor.LessonKey(other, "core"):       true,
+		tutor.LessonKey(current, tutor.Overview): true,
+		tutor.LessonKey(other, tutor.Overview):   false,
+		tutor.LessonKey(other, "core"):           true,
 	} {
 		_, found, _ := store.LoadLesson(key)
 		if found != want {
