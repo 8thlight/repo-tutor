@@ -42,6 +42,18 @@ func licenseText(directory string) (string, error) {
 	return "", fmt.Errorf("no license file in %s", directory)
 }
 
+func standardLibrary() (module, error) {
+	root, err := exec.Command("go", "env", "GOROOT").Output()
+	if err != nil {
+		return module{}, err
+	}
+	version, err := exec.Command("go", "env", "GOVERSION").Output()
+	if err != nil {
+		return module{}, err
+	}
+	return module{"Go standard library", strings.TrimSpace(string(version)), strings.TrimSpace(string(root))}, nil
+}
+
 func main() {
 	if len(os.Args) != 2 {
 		fmt.Fprintln(os.Stderr, "usage: generate OUTPUT")
@@ -52,8 +64,14 @@ func main() {
 		fmt.Fprintln(os.Stderr, "list modules:", err)
 		os.Exit(1)
 	}
+	library, err := standardLibrary()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "find the Go standard library:", err)
+		os.Exit(1)
+	}
+	modules = append([]module{library}, modules...)
 	var notices strings.Builder
-	notices.WriteString("Third-party software linked into repo-tutor, with each license.\n")
+	notices.WriteString("Third-party software linked into repo-tutor, with each license. The Go standard library comes first.\n")
 	for _, current := range modules {
 		text, err := licenseText(current.directory)
 		if err != nil {
