@@ -20,7 +20,7 @@ func (quiz Quiz) Finished() bool {
 }
 
 func RecordQuizScore(previous map[string]Progress, topic string, quiz *Quiz) map[string]Progress {
-	if quiz == nil || !quiz.Finished() {
+	if quiz == nil || quiz.Exam || !quiz.Finished() {
 		return previous
 	}
 	result := make(map[string]Progress, len(previous)+1)

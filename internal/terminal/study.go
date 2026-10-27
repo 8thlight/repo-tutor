@@ -405,7 +405,7 @@ Each lesson is saved before it is displayed. Ctrl-C exits; completed turns remai
 		}
 		return false, application.turn(ctx, "lesson", "Teach this topic and connect it to its foundations.", topic.ID)
 	case "/review":
-		selected, found := tutor.WeakTopic(application.course, application.state.Progress)
+		selected, found := tutor.WeakTopic(application.course, application.state.Progress, application.state.LastExam)
 		if !found {
 			fmt.Fprintln(application.output, "No topic currently needs review from recorded answers. Try /quiz or /next.")
 			return false, nil
