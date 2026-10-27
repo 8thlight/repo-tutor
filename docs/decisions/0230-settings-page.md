@@ -1,6 +1,6 @@
 # 0230. Settings page
 
-Status: proposed
+Status: accepted
 
 ## Context
 
