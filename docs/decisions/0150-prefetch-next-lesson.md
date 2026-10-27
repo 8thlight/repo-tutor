@@ -1,6 +1,6 @@
 # 0150. Prefetch the next lesson
 
-Status: accepted
+Status: accepted. Quiz questions are prefetched too under [0380](0380-prefetch-the-next-question.md).
 
 ## Context
 
