@@ -204,6 +204,9 @@ func (model interfaceModel) topicTitle() string {
 	if model.page == "lesson" && model.history >= 0 && model.history < len(model.application.state.Turns) {
 		identifier = model.application.state.Turns[model.history].Topic
 	}
+	if model.movingToAnotherTopic() {
+		identifier = model.intent.topic
+	}
 	for _, topic := range model.application.course {
 		if topic.ID == identifier {
 			return tutor.Plain(topic.Title)
@@ -274,11 +277,15 @@ func (model interfaceModel) sidebar() string {
 		filled = min(20, visited*20/total)
 	}
 	content := title.Render("YOUR COURSE") + "\n\n" + fmt.Sprintf("%d / %d topics read", visited, total) + "\n" + title.Render(strings.Repeat("━", filled)) + muted.Render(strings.Repeat("─", 20-filled)) + "\n\n" + fmt.Sprintf("%d assessed answers\n%d correct", attempts, correct) + "\n\n" + muted.Render("CURRENT TOPIC") + "\n" + lipgloss.NewStyle().Width(23).Render(model.topicTitle())
-	if quiz := model.application.state.Quiz; quiz != nil {
+	if quiz := model.application.state.Quiz; quiz != nil && !model.movingToAnotherTopic() {
 		content += "\n\n" + title.Render("QUIZ GOAL") + fmt.Sprintf("\n%d / %d answered\nCtrl+B  Question index", quiz.Completed(), quiz.Goal)
 	}
 	if model.bodyHeight() >= 19 {
-		content += "\n\n" + muted.Render("KEEP GOING") + "\n" + "Ctrl+N  Next topic\nCtrl+G  Quiz me\nCtrl+K  Choose a topic\nCtrl+S  Follow a citation"
+		keepGoing := "Ctrl+N  Next topic\nCtrl+G  Quiz me\nCtrl+K  Choose a topic\nCtrl+S  Follow a citation"
+		if model.movingToAnotherTopic() {
+			keepGoing = "Ctrl+K  Choose a topic"
+		}
+		content += "\n\n" + muted.Render("KEEP GOING") + "\n" + keepGoing
 	}
 	return lipgloss.NewStyle().Width(26).Height(model.bodyHeight()).MaxHeight(model.bodyHeight()).BorderRight(true).BorderStyle(lipgloss.NormalBorder()).BorderForeground(palette.border).Render(content)
 }
@@ -324,7 +331,7 @@ func (model interfaceModel) View() tea.View {
 				title += " · " + tutor.Plain(topic.Title)
 			}
 		}
-		body = accent.Render(model.spinner.View()+" "+waitingText(model.intent.action)) + "\n\n" + muted.Render("Grounding the reply in repository sources.\n\nYou can browse topics (Ctrl+K) or the last lesson's sources (Ctrl+S) while you wait.\nEsc stops this request; your progress is saved.")
+		body = accent.Render(model.spinner.View()+" "+waitingText(model.intent.action)) + "\n\n" + muted.Render("Grounding the reply in repository sources.\n\n"+model.browsingHint()+"\nEsc stops this request; your progress is saved.")
 	}
 	if model.isPicker() {
 		body = model.picker.View()
@@ -349,6 +356,9 @@ func (model interfaceModel) View() tea.View {
 		notice = "Earlier step · Esc returns to the current question · Alt+←/→ steps through this topic"
 	}
 	keys := "Enter send   Ctrl+K topics   Ctrl+S sources   Ctrl+Q quit"
+	if model.movingToAnotherTopic() {
+		keys = "Enter send   Ctrl+K topics   Ctrl+Q quit"
+	}
 	if reviewing(model.application.state) {
 		keys = "Ctrl+F continue   Ctrl+B quiz index   Ctrl+S sources   Ctrl+Q quit"
 	}

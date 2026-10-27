@@ -150,19 +150,68 @@ func TestACompleteQuizOffersTheNextTopicAndExtend(t *testing.T) {
 	}
 }
 
-func TestWaitingTextPointsAtWhatCanActuallyBeOpened(t *testing.T) {
+func TestWaitingOnTheSameTopicStillOffersItsSources(t *testing.T) {
 	model := interfaceFixture()
-	started, _ := model.begin(turnIntent{"lesson", "go", tutor.Overview})
+	started, _ := model.begin(turnIntent{"question", "go", tutor.Overview})
 	model = started.(interfaceModel)
 	defer model.cancel()
 	content := ansi.Strip(model.View().Content)
-	if !strings.Contains(content, "topics (Ctrl+K) or the last lesson's sources (Ctrl+S)") {
-		t.Fatalf("the wait should name the keys and say whose sources open:\n%s", content)
+	if !strings.Contains(content, "topics (Ctrl+K) or this lesson's sources (Ctrl+S)") {
+		t.Fatalf("a wait on the same topic should name both keys:\n%s", content)
 	}
 	for _, key := range []rune{'k', 's'} {
 		opened, _ := press(model, key, tea.ModCtrl)
 		if opened.page == "lesson" {
 			t.Fatalf("Ctrl+%c should open a page while a turn runs", key)
 		}
+	}
+}
+
+func movingFixture(t *testing.T) interfaceModel {
+	model := interfaceFixture()
+	model.width, model.height = 120, 36
+	model.resize()
+	next := model.application.course[1]
+	started, _ := model.begin(turnIntent{"lesson", firstLessonMessage, next.ID})
+	moving := started.(interfaceModel)
+	t.Cleanup(moving.cancel)
+	return moving
+}
+
+func TestMovingToAnotherTopicHidesTheLastLessonsSourcesAndShortcuts(t *testing.T) {
+	model := movingFixture(t)
+	if !model.movingToAnotherTopic() {
+		t.Fatal("a lesson request for a different topic is a move")
+	}
+	content := ansi.Strip(model.View().Content)
+	if strings.Contains(content, "Ctrl+S") || strings.Contains(content, "Follow a citation") || strings.Contains(content, "QUIZ GOAL") {
+		t.Fatalf("a move should not mention the last lesson's sources or quiz:\n%s", content)
+	}
+	if !strings.Contains(content, "You can browse topics (Ctrl+K) while you wait.") {
+		t.Fatalf("a move should still offer Topics:\n%s", content)
+	}
+	if !strings.Contains(content, ansi.Strip(model.topicTitle())) || model.topicTitle() != tutor.Plain(model.application.course[1].Title) {
+		t.Fatalf("the sidebar should name the requested topic: %q", model.topicTitle())
+	}
+}
+
+func TestSourcesStayClosedWhileMovingAndTopicsStayOpen(t *testing.T) {
+	model := movingFixture(t)
+	blocked, _ := press(model, 's', tea.ModCtrl)
+	if blocked.page != "lesson" || blocked.notice != sourcesWaitNotice {
+		t.Fatalf("Ctrl+S should be held with a notice: page %s notice %q", blocked.page, blocked.notice)
+	}
+	topics, _ := press(model, 'k', tea.ModCtrl)
+	if topics.page != "topics" {
+		t.Fatalf("Ctrl+K should still open Topics, got %s", topics.page)
+	}
+}
+
+func TestSourcesReturnOnceTheMoveEnds(t *testing.T) {
+	model := movingFixture(t)
+	model.busy = false
+	opened, _ := press(model, 's', tea.ModCtrl)
+	if opened.page != "sources" {
+		t.Fatalf("with no turn running, Ctrl+S should open Sources, got %s", opened.page)
 	}
 }
