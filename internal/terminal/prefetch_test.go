@@ -188,7 +188,7 @@ func TestFirstLessonTurnUsesAFreshCachedLessonBeforeAskingTheAgent(t *testing.T)
 		t.Fatal(err)
 	}
 	state, err := model.application.completeTurn(context.Background(), "lesson", firstLessonMessage, topic)
-	if err != nil || state.Topic != topic || state.Question != reply.Question || state.Progress[topic].Lessons != 1 || len(state.Turns) != 3 {
+	if err != nil || state.Topic != topic || state.Question != "" || state.Progress[topic].Lessons != 1 || len(state.Turns) != 3 {
 		t.Fatalf("the cached lesson should be used without an agent: %v %+v", err, state)
 	}
 }
