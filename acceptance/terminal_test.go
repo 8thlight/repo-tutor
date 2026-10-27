@@ -313,3 +313,19 @@ func TestVersionNoticesPrintsThirdPartyLicenses(t *testing.T) {
 		t.Fatalf("notices are missing: %v\n%.300s", err, output)
 	}
 }
+
+func TestTheGoalIsMarkedChosenOnlyWhenTheFlagIsGiven(t *testing.T) {
+	for flag, want := range map[string]any{"--goal": true, "": nil} {
+		repository, stateDirectory := fixture(t), t.TempDir()
+		arguments := []string{repository, "--agent", "codex", "--state-dir", stateDirectory}
+		if flag != "" {
+			arguments = append(arguments, flag, "Trace the entry point")
+		}
+		if output, err := run(t, "/quit\n", arguments...); err != nil {
+			t.Fatalf("%q: %v\n%s", flag, err, output)
+		}
+		if got := saved(t, stateDirectory)["goal_chosen"]; got != want {
+			t.Fatalf("%q: goal_chosen is %v, want %v", flag, got, want)
+		}
+	}
+}
