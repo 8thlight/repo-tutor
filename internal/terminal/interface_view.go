@@ -259,7 +259,7 @@ func (model interfaceModel) composer() string {
 	if above != "" {
 		above = muted.Render(ansi.Wrap(above, model.bodyWidth(), "")) + "\n"
 	}
-	return actions + model.sectionDivider("") + "\n" + above + model.framedInput(title, model.typingHints(), tint)
+	return actions + model.sectionDivider("") + "\n\n" + above + model.framedInput(title, model.typingHints(), tint)
 }
 
 func (model interfaceModel) sidebar() string {
