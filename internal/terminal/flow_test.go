@@ -288,3 +288,38 @@ func TestControlFExtendsAFinishedQuiz(t *testing.T) {
 		t.Fatal("an unfinished quiz should not extend")
 	}
 }
+
+func TestSourcesEndsWithEveryOtherFileInPathOrder(t *testing.T) {
+	model := interfaceFixture()
+	model.application.snapshot.Files = append(model.application.snapshot.Files,
+		repository.File{Path: "zeta/notes.txt", Content: "later\n"}, repository.File{Path: "alpha/notes.txt", Content: "earlier\n"})
+	opened, _ := model.openPicker("sources", "")
+	var paths, descriptions []string
+	for _, item := range opened.(interfaceModel).picker.Items() {
+		entry := item.(browserItem)
+		paths, descriptions = append(paths, entry.value), append(descriptions, entry.description)
+	}
+	seen := map[string]int{}
+	for _, path := range paths {
+		seen[path]++
+	}
+	for _, file := range model.application.snapshot.Files {
+		if file.Content != "" && seen[file.Path] != 1 {
+			t.Fatalf("%s should appear exactly once, appeared %d times: %v", file.Path, seen[file.Path], paths)
+		}
+	}
+	var rest []string
+	for index, description := range descriptions {
+		if strings.HasPrefix(description, "Repository file") {
+			rest = append(rest, paths[index])
+		}
+	}
+	if len(rest) == 0 {
+		t.Fatalf("files not cited or excerpted should still be listed: %v", descriptions)
+	}
+	for index := 1; index < len(rest); index++ {
+		if rest[index-1] > rest[index] {
+			t.Fatalf("the remaining files should be in path order: %v", rest)
+		}
+	}
+}

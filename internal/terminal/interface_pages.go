@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"charm.land/bubbles/v2/list"
@@ -137,6 +138,15 @@ func (model *interfaceModel) configurePicker(filter string) {
 			if !seen[excerpt.Path] {
 				items = append(items, browserItem{excerpt.Path, fmt.Sprintf("Available excerpt · lines %d–%d", excerpt.StartLine, excerpt.EndLine), excerpt.Path, excerpt.StartLine})
 				seen[excerpt.Path] = true
+			}
+		}
+		files := append([]repository.File(nil), model.application.snapshot.Files...)
+		sort.Slice(files, func(first, second int) bool { return files[first].Path < files[second].Path })
+		for _, file := range files {
+			if !seen[file.Path] && file.Content != "" {
+				lines := strings.Count(strings.TrimSuffix(file.Content, "\n"), "\n") + 1
+				items = append(items, browserItem{file.Path, fmt.Sprintf("Repository file · %d lines", lines), file.Path, 1})
+				seen[file.Path] = true
 			}
 		}
 	}
