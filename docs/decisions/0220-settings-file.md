@@ -1,6 +1,6 @@
 # 0220. Settings file
 
-Status: proposed
+Status: accepted
 
 ## Context
 
@@ -10,7 +10,7 @@ The learner will soon choose how the workspace looks and behaves: the tab style,
 
 Settings live in one JSON file, `settings.json`, in the base directory that already holds the session directories. That is `--state-dir` when given, then `XDG_STATE_HOME`, then the user configuration directory, in a folder named `repo-tutor`. One shared function resolves this base for the session store and for settings, so the two cannot drift. Because `--state-dir` moves the settings too, a test or a scratch run is fully isolated from the learner's real settings.
 
-The file holds a `version` and one field per setting. Version 1 holds `tabStyle`, `markdownOpensRendered`, and `highlight`. Each field has a default, and the file may omit any field. The core package holds the settings value, the defaults, and a decoder and encoder that do no input or output. The driver reads and writes the file.
+The file holds a `version` and one field per setting. Version 1 holds `tab_style`, `markdown_opens_rendered`, and `highlight`, named in snake case like the session file. Each field has a default, and the file may omit any field. The core package holds the settings value, the defaults, and a decoder and encoder that do no input or output. The driver reads and writes the file.
 
 Reading follows these rules.
 
