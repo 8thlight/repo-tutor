@@ -117,6 +117,9 @@ func runInterface(ctx context.Context, application application, input io.Reader,
 			}
 			worker := application
 			worker.state = state
+			if isQuestionKey(topic) {
+				return worker.prefetchQuestion(prefetchContext)
+			}
 			return worker.prefetchLesson(prefetchContext, topic)
 		}
 	}

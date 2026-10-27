@@ -29,6 +29,12 @@ func (model interfaceModel) prefetchTarget() (string, bool) {
 	if model.prefetcher == nil || model.busy || model.prefetching || len(state.Turns) == 0 || model.application.store == nil {
 		return "", false
 	}
+	if key, wanted := nextQuestionKey(state); wanted {
+		if model.prefetchFailed[key] || model.application.questionStash.has(key) {
+			return "", false
+		}
+		return key, true
+	}
 	next, found := tutor.NextUnheld(model.application.course, state.Progress, state.Topic)
 	if !found || model.prefetchFailed[next.ID] {
 		return "", false
@@ -74,6 +80,9 @@ func (model interfaceModel) startPrefetch() (interfaceModel, tea.Cmd) {
 }
 
 func (model interfaceModel) prefetchingTopic(intent turnIntent) bool {
+	if key, wanted := nextQuestionKey(model.application.state); wanted && intent.action == "quiz-next" {
+		return model.prefetching && model.prefetchTopic == key
+	}
 	return model.prefetching && model.prefetchTopic == intent.topic && intent.action == "lesson" && intent.message == firstLessonMessage
 }
 

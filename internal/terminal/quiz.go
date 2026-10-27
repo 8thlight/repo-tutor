@@ -56,7 +56,7 @@ func continueIntent(state session.State, course []tutor.Topic, extend bool) (tur
 		if quiz.Completed() >= quiz.Goal {
 			return turnIntent{}, fmt.Errorf("quiz complete: %d / %d answered. Use /extend for more or choose another topic", quiz.Completed(), quiz.Goal)
 		}
-		return turnIntent{"quiz-next", fmt.Sprintf("Ask question %d of %d for this quiz. Choose a different exercise from previous questions.", len(quiz.Questions)+1, quiz.Goal), state.Topic}, nil
+		return turnIntent{"quiz-next", nextQuestionMessage(quiz), state.Topic}, nil
 	}
 	return turnIntent{"lesson", "Continue with the next small idea in this topic and one new question.", state.Topic}, nil
 }
