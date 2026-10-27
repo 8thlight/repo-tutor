@@ -1,6 +1,7 @@
 package settings_test
 
 import (
+	"strconv"
 	"testing"
 
 	"repo-tutor/internal/settings"
@@ -49,7 +50,7 @@ func TestANewerVersionIsReadButReadOnly(t *testing.T) {
 }
 
 func TestEncodedSettingsDecodeToThemselves(t *testing.T) {
-	want := settings.Settings{TabStyle: "slanted", MarkdownOpensRendered: false, Highlight: "dark_blue", QuizLength: 10}
+	want := settings.Settings{TabStyle: "slanted", MarkdownOpensRendered: false, Highlight: "dark_blue", QuizLength: 10, ExamLength: 30}
 	got, status := settings.Decode(settings.Encode(want))
 	if got != want || status != (settings.Status{}) {
 		t.Fatalf("got %+v %+v", got, status)
@@ -81,6 +82,22 @@ func TestQuizLengthAcceptsOnlyTheOfferedValues(t *testing.T) {
 		got, status := settings.Decode([]byte(`{"quiz_length":` + value + `}`))
 		if got.QuizLength != 5 || status.Unreadable {
 			t.Fatalf("%s should fall back to 5, got %d", value, got.QuizLength)
+		}
+	}
+}
+
+func TestExamLengthAcceptsOnlyTheOfferedValuesAndDefaultsToTen(t *testing.T) {
+	if got, _ := settings.Decode([]byte(`{}`)); got.ExamLength != 10 {
+		t.Fatalf("the default should be 10, got %d", got.ExamLength)
+	}
+	for _, value := range []string{"20", "30"} {
+		if got, _ := settings.Decode([]byte(`{"exam_length":` + value + `}`)); strconv.Itoa(got.ExamLength) != value {
+			t.Fatalf("%s should be accepted, got %d", value, got.ExamLength)
+		}
+	}
+	for _, value := range []string{"5", "15", "0", "100"} {
+		if got, status := settings.Decode([]byte(`{"exam_length":` + value + `}`)); got.ExamLength != 10 || status.Unreadable {
+			t.Fatalf("%s should fall back to 10, got %d", value, got.ExamLength)
 		}
 	}
 }

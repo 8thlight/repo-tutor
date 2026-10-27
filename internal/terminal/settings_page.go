@@ -22,6 +22,7 @@ const (
 	noColorHighlightNote  = "Color is off, so highlight color does not apply."
 	highlightShiftNote    = "Colors shift to stay readable on your terminal's background."
 	settingsLabelWidth    = 14
+	examLengthNote        = "At most; an exam has one question for each topic you have read."
 )
 
 type settingChoice struct {
@@ -64,6 +65,17 @@ func quizLengthChoice(length int) settingChoice {
 	}
 }
 
+func examLengthChoice(length int) settingChoice {
+	return settingChoice{
+		group: "EXAM LENGTH", label: fmt.Sprintf("%d questions", length),
+		selected: func(current settings.Settings) bool { return current.ExamLength == length },
+		apply: func(current settings.Settings) settings.Settings {
+			current.ExamLength = length
+			return current
+		},
+	}
+}
+
 func highlightChoice(brand highlightColor) settingChoice {
 	return settingChoice{
 		group: "HIGHLIGHT COLOR", label: brand.label, highlight: brand.id,
@@ -89,6 +101,9 @@ func settingChoices() []settingChoice {
 	}
 	for _, length := range settings.QuizLengths {
 		choices = append(choices, quizLengthChoice(length))
+	}
+	for _, length := range settings.ExamLengths {
+		choices = append(choices, examLengthChoice(length))
 	}
 	for _, brand := range highlightColors {
 		choices = append(choices, highlightChoice(brand))
@@ -171,6 +186,8 @@ func (model interfaceModel) settingsLayout() (string, int) {
 				lines = append(lines, muted.Render(noColorHighlightNote))
 			case group == "HIGHLIGHT COLOR":
 				lines = append(lines, muted.Render(highlightShiftNote))
+			case group == "EXAM LENGTH":
+				lines = append(lines, muted.Render(examLengthNote))
 			}
 		}
 		marker, radio := "  ", "( )"
