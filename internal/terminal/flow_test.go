@@ -430,6 +430,7 @@ func openQuestionFixture() interfaceModel {
 	model.application.state.Review = false
 	model.application.state.Turns = model.application.state.Turns[:1]
 	model.application.state.Question = "First?"
+	model.application.state.Quiz.Questions[0].Assessment = ""
 	return model
 }
 
@@ -440,12 +441,46 @@ func TestControlNOnAnOpenQuestionOnlyArmsTheSkip(t *testing.T) {
 	}
 }
 
-func TestASecondControlNWithinTheWindowSendsTheSkip(t *testing.T) {
-	armed, _ := press(openQuestionFixture(), 'n', tea.ModCtrl)
+func TestASecondControlNSkipsLocallyAndAsksTheNextQuestion(t *testing.T) {
+	model := openQuestionFixture()
+	turns := len(model.application.state.Turns)
+	armed, _ := press(model, 'n', tea.ModCtrl)
 	skipped, _ := press(armed, 'n', tea.ModCtrl)
 	defer skipped.cancel()
-	if !skipped.busy || skipped.intent.action != "answer" || skipped.intent.message != skipText || skipped.skipArmed {
-		t.Fatalf("the second press should send the skip as an answer: %+v", skipped.intent)
+	state := skipped.application.state
+	if state.Quiz.Questions[0].Assessment != "skipped" || state.Question != "" || !state.Review || len(state.Turns) != turns {
+		t.Fatalf("the skip should be recorded in the quiz with no model message: %+v turns=%d", state.Quiz.Questions[0], len(state.Turns))
+	}
+	if !skipped.busy || skipped.intent.action != "quiz-next" || skipped.skipArmed {
+		t.Fatalf("after the skip the next question should be requested, not an answer review: %+v", skipped.intent)
+	}
+}
+
+func TestSkippingTheLastQuestionFinishesTheQuizAndScoresItWithoutARequest(t *testing.T) {
+	model := openQuestionFixture()
+	model.application.state.Quiz = &tutor.Quiz{Topic: tutor.Overview, Goal: 2, Active: 1, Questions: []tutor.QuizQuestion{{Text: "A?", Assessment: "correct"}, {Text: "B?"}}}
+	model.application.state.Question = "B?"
+	armed, _ := press(model, 'n', tea.ModCtrl)
+	done, _ := press(armed, 'n', tea.ModCtrl)
+	if done.busy || !quizFinished(done.application.state) || done.notice != "Skipped. That was the last question." {
+		t.Fatalf("the last skip should finish the quiz and ask for nothing: busy=%v %q", done.busy, done.notice)
+	}
+	if got := done.application.state.Progress[tutor.Overview]; got.QuizGoal != 2 || got.QuizCredit != 2 {
+		t.Fatalf("a correct answer and a skip on two questions earn 2 half points: %+v", got)
+	}
+}
+
+func TestSkippingAProbeQuestionMovesTheProbeOnWithoutAModelMessage(t *testing.T) {
+	model := readingFixture()
+	model.application.course = append(model.application.course, tutor.Topic{ID: "core", Title: "core"}, tutor.Topic{ID: "cli", Title: "cli"})
+	model.application.state.Quiz = nil
+	model.application.state.Probe = &tutor.Probe{Topics: []string{"core", "cli"}, Asked: 1}
+	model.application.state.Topic, model.application.state.Question = "core", "Do you know core?"
+	armed, _ := press(model, 'n', tea.ModCtrl)
+	skipped, _ := press(armed, 'n', tea.ModCtrl)
+	defer skipped.cancel()
+	if skipped.application.state.Probe.Answered != 1 || !skipped.busy || skipped.intent.action != "probe" || skipped.intent.topic != "cli" {
+		t.Fatalf("the skip should count and the next probe question should be requested: %+v %+v", skipped.application.state.Probe, skipped.intent)
 	}
 }
 
