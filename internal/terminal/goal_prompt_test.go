@@ -107,7 +107,8 @@ func TestOnlyAFreshUnchosenSessionAsks(t *testing.T) {
 
 func TestEnterOnAnEmptyBoxKeepsTheDefaultAndStartsTheOverview(t *testing.T) {
 	model := pendingGoalFixture(t)
-	next, command := press(model, tea.KeyEnter, 0)
+	chosen, command := model.submitGoal()
+	next := chosen.(interfaceModel)
 	if next.askingGoal() || next.application.state.Goal != tutor.DefaultGoal || !next.application.state.GoalChosen {
 		t.Fatalf("Enter should choose the default: %+v", next.application.state)
 	}
@@ -171,7 +172,8 @@ func TestHelpAndSettingsStillOpenAndReturnToTheQuestion(t *testing.T) {
 
 func TestATooLongGoalKeepsTheBoxAndExplains(t *testing.T) {
 	model := typeText(pendingGoalFixture(t), strings.Repeat("a", goalLimit+1))
-	next, command := press(model, tea.KeyEnter, 0)
+	refused, command := model.submitGoal()
+	next := refused.(interfaceModel)
 	if !next.askingGoal() || command != nil || !strings.Contains(next.notice, "500") || next.input.Value() == "" {
 		t.Fatalf("a long goal should be refused and kept: %q", next.notice)
 	}

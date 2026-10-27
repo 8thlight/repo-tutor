@@ -50,6 +50,7 @@ type interfaceModel struct {
 	origin            string
 	sourceList        string
 	goalPending       bool
+	noticeGeneration  int
 	skipArmed         bool
 	leaveArmed        bool
 	skipGeneration    int
@@ -224,7 +225,8 @@ func (model interfaceModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	if model.primaryPage() && !updated.primaryPage() {
 		updated.origin = model.page
 	}
-	return updated, command
+	updated, expiry := updated.expireNotice(model)
+	return updated, tea.Batch(command, expiry)
 }
 
 func (model interfaceModel) primaryPage() bool {
@@ -324,6 +326,11 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 			commands = append(commands, command)
 		}
 		return model, tea.Batch(commands...)
+	case noticeExpired:
+		if message.generation == model.noticeGeneration && !model.noticeSticky() {
+			model.notice = ""
+		}
+		return model, nil
 	case skipExpired:
 		if message.generation == model.skipGeneration {
 			model = model.disarmSkip()
