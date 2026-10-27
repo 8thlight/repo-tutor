@@ -24,7 +24,7 @@ In a terminal, the tutor opens a full-screen workspace with a lesson, the curren
 | `Ctrl+B` | Quiz question index and goal |
 | `Ctrl+K` | Search topics |
 | `Ctrl+S` | Browse citations and open source at the cited line |
-| `Ctrl+O` / `Ctrl+P` | Hotspots / progress |
+| `Ctrl+P` | Progress |
 | `Tab` / `Shift+Tab` | Switch views |
 | `PgUp` / `PgDown` | Scroll the lesson or source |
 | `Alt+Left` / `Alt+Right` | Read earlier or later saved turns |
@@ -53,7 +53,7 @@ Slash commands also work in the answer box and in plain mode:
 | `/continue` | Move on after reviewing an answer |
 | `/questions` or `/extend` | Show the quiz index or add five questions after finishing |
 | `/progress` or `/review` | See recorded outcomes or revisit a weak topic |
-| `/hotspots` | Find files with churn and branching logic |
+| `/hotspots` | Open the "Where change happens" lesson (the plain interface lists the files) |
 | `/sources` or `/read README.md:1` | Inspect the source snapshot |
 | `/map` or `/glossary` | Show a dependency diagram or type index |
 | `/quit` | Save and exit |

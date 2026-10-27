@@ -1,6 +1,6 @@
 # 0190. Course and Quiz tabs
 
-Status: accepted. Enter also closes a file under [0200](0200-enter-closes-a-source-file.md).
+Status: accepted. Enter also closes a file under [0200](0200-enter-closes-a-source-file.md). The Hotspots sub-page is removed under [0290](0290-hotspots-as-a-lesson.md).
 
 ## Context
 
