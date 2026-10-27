@@ -9,6 +9,8 @@ import (
 
 const Overview = "overview"
 
+const HotspotsTopic = "hotspots"
+
 const DefaultGoal = "Understand the architecture and become ready to make a small change."
 
 type Topic struct {
@@ -22,6 +24,9 @@ func Course(snapshot repository.Snapshot) []Topic {
 		if len(current.Files) > 0 {
 			result = append(result, Topic{current.Path, current.Directory + " (" + current.Name + ")"})
 		}
+	}
+	if len(snapshot.Hotspots) > 0 {
+		result = append(result, Topic{HotspotsTopic, "Where change happens"})
 	}
 	return result
 }
