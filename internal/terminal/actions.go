@@ -53,7 +53,7 @@ func (model interfaceModel) courseActions(titled bool) [][2]string {
 	state := model.application.state
 	if inQuestionFlow(state) {
 		if questionOpen(state) {
-			return nil
+			return [][2]string{{"Ctrl+N", "Skip question"}}
 		}
 		return [][2]string{{"Ctrl+N", "Next question"}}
 	}

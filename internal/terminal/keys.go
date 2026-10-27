@@ -8,25 +8,32 @@ import (
 	"github.com/charmbracelet/x/ansi"
 )
 
-type keyHint struct{ key, label string }
+type keyHint struct {
+	key, label string
+	warning    bool
+}
 
 var (
-	topicsHint   = keyHint{"Ctrl+K", "topics"}
-	sourcesHint  = keyHint{"Ctrl+S", "sources"}
-	helpHint     = keyHint{"F1", "Help"}
-	aboutHint    = keyHint{"F3", "About"}
-	settingsHint = keyHint{"F2", "Settings"}
-	escapeHint   = keyHint{"Esc", "back or stop"}
-	quitHint     = keyHint{"Ctrl+Q", "quit"}
+	topicsHint   = keyHint{"Ctrl+K", "topics", false}
+	sourcesHint  = keyHint{"Ctrl+S", "sources", false}
+	helpHint     = keyHint{"F1", "Help", false}
+	aboutHint    = keyHint{"F3", "About", false}
+	settingsHint = keyHint{"F2", "Settings", false}
+	escapeHint   = keyHint{"Esc", "back or stop", false}
+	quitHint     = keyHint{"Ctrl+Q", "quit", false}
 )
 
 func (model interfaceModel) renderKeyHints(hints []keyHint, separator string) string {
 	palette := model.palette()
 	key := lipgloss.NewStyle().Foreground(palette.foreground).Bold(true)
 	label := lipgloss.NewStyle().Foreground(palette.muted)
+	alert := lipgloss.NewStyle().Foreground(palette.warning).Bold(true)
 	rendered := make([]string, len(hints))
 	for index, hint := range hints {
 		rendered[index] = key.Render(hint.key) + " " + label.Render(hint.label)
+		if hint.warning {
+			rendered[index] = alert.Render(hint.key + " " + hint.label)
+		}
 	}
 	return strings.Join(rendered, label.Render(separator))
 }
@@ -68,19 +75,25 @@ func (model interfaceModel) typingHints() []keyHint {
 	state := model.application.state
 	switch {
 	case model.askingGoal() && strings.TrimSpace(model.input.Value()) != "":
-		return []keyHint{{"Enter", "saves your goal"}}
+		return []keyHint{{"Enter", "saves your goal", false}}
 	case model.askingGoal():
-		return []keyHint{{"Enter", "keeps the default"}}
+		return []keyHint{{"Enter", "keeps the default", false}}
 	case model.busy:
-		return []keyHint{{"Esc", "stops it"}}
+		return []keyHint{{"Esc", "stops it", false}}
 	case model.page == "lesson" && model.history < len(state.Turns)-1:
 		return nil
 	case reviewing(state) && state.Quiz != nil && state.Quiz.Completed() >= state.Quiz.Goal:
-		return []keyHint{{"Ctrl+F", "more questions"}}
+		return []keyHint{{"Ctrl+F", "more questions", false}}
 	case reviewing(state):
-		return []keyHint{{"Enter or Ctrl+N", "continue"}}
+		return []keyHint{{"Enter or Ctrl+N", "continue", false}}
 	}
-	return []keyHint{{"Enter", "send"}}
+	if questionOpen(state) {
+		if model.skipArmed {
+			return []keyHint{{"Ctrl+N", "again to skip", true}}
+		}
+		return []keyHint{{"Enter", "send", false}, {"Ctrl+N", "skip", false}}
+	}
+	return []keyHint{{"Enter", "send", false}}
 }
 
 func (model interfaceModel) framedInput(title string, hints []keyHint, tint color.Color) string {

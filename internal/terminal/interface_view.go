@@ -351,7 +351,11 @@ func (model interfaceModel) View() tea.View {
 	if model.prefetching && !model.busy {
 		indicator = model.prefetchSpinner.View() + " Preparing next lesson"
 	}
-	footer := model.footerLine(notice, indicator, width, muted) + "\n" + model.footerKeys(width)
+	noticeStyle := muted
+	if model.skipArmed {
+		noticeStyle = lipgloss.NewStyle().Foreground(palette.warning).Bold(true)
+	}
+	footer := model.footerLine(notice, indicator, width, noticeStyle) + "\n" + model.footerKeys(width)
 	margin := lipgloss.NewStyle().Padding(0, 2)
 	navigationRows := margin.Render(navigation + "\n" + model.tabRule(navigationWidth))
 	if model.tabsBleed() {

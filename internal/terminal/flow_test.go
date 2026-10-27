@@ -2,9 +2,11 @@ package terminal
 
 import (
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/charmbracelet/x/ansi"
 
@@ -423,14 +425,79 @@ func TestControlNAsksTheNextQuestionWhileAQuizHasQuestionsLeft(t *testing.T) {
 	}
 }
 
-func TestControlNWaitsForAnAnswerBeforeAskingTheNextQuestion(t *testing.T) {
+func openQuestionFixture() interfaceModel {
 	model := quizFeedbackFixture()
 	model.application.state.Review = false
 	model.application.state.Turns = model.application.state.Turns[:1]
 	model.application.state.Question = "First?"
-	next, _ := press(model, 'n', tea.ModCtrl)
-	if next.busy || !strings.Contains(next.notice, "Answer or skip this question first") {
-		t.Fatalf("an open question should hold Ctrl+N: %q", next.notice)
+	return model
+}
+
+func TestControlNOnAnOpenQuestionOnlyArmsTheSkip(t *testing.T) {
+	armed, command := press(openQuestionFixture(), 'n', tea.ModCtrl)
+	if armed.busy || !armed.skipArmed || armed.notice != skipPrompt || command == nil {
+		t.Fatalf("the first press should arm and start a timer: busy=%v armed=%v %q", armed.busy, armed.skipArmed, armed.notice)
+	}
+}
+
+func TestASecondControlNWithinTheWindowSendsTheSkip(t *testing.T) {
+	armed, _ := press(openQuestionFixture(), 'n', tea.ModCtrl)
+	skipped, _ := press(armed, 'n', tea.ModCtrl)
+	defer skipped.cancel()
+	if !skipped.busy || skipped.intent.action != "answer" || skipped.intent.message != skipText || skipped.skipArmed {
+		t.Fatalf("the second press should send the skip as an answer: %+v", skipped.intent)
+	}
+}
+
+func TestAnyOtherKeyDisarmsTheSkip(t *testing.T) {
+	armed, _ := press(openQuestionFixture(), 'n', tea.ModCtrl)
+	typed := typeText(armed, "a")
+	if typed.skipArmed || typed.notice == skipPrompt {
+		t.Fatal("typing should cancel a pending skip and clear its prompt")
+	}
+	again, _ := press(typed, 'n', tea.ModCtrl)
+	if again.busy || !again.skipArmed {
+		t.Fatal("after disarming, Ctrl+N should arm again and not skip")
+	}
+}
+
+func TestTheSkipPromptLapsesAfterTheWindowAndStaleTimersAreIgnored(t *testing.T) {
+	skipWindow = time.Millisecond
+	defer func() { skipWindow = 5 * time.Second }()
+	armed, command := press(openQuestionFixture(), 'n', tea.ModCtrl)
+	expired, ok := command().(skipExpired)
+	if !ok {
+		t.Fatal("arming should schedule an expiry message")
+	}
+	lapsed, _ := armed.Update(expired)
+	if lapsed.(interfaceModel).skipArmed || lapsed.(interfaceModel).notice != "" {
+		t.Fatal("the prompt should lapse when its timer fires")
+	}
+	typed := typeText(armed, "a")
+	rearmed, _ := press(typed, 'n', tea.ModCtrl)
+	stillArmed, _ := rearmed.Update(expired)
+	if !stillArmed.(interfaceModel).skipArmed {
+		t.Fatal("a timer from an earlier press must not disarm a newer one")
+	}
+}
+
+func TestTheFrameAndFooterShowTheSkipPromptInTheWarningColor(t *testing.T) {
+	model := openQuestionFixture()
+	model.noColor = false
+	if lines := frameLines(model); !strings.Contains(lines[len(lines)-1], "Enter send · Ctrl+N skip") {
+		t.Fatalf("an open question offers send and skip:\n%s", strings.Join(lines, "\n"))
+	}
+	armed, _ := press(model, 'n', tea.ModCtrl)
+	if lines := frameLines(armed); !strings.Contains(lines[len(lines)-1], "Ctrl+N again to skip") || strings.Contains(lines[len(lines)-1], "Enter send") {
+		t.Fatalf("an armed skip replaces the hint:\n%s", strings.Join(lines, "\n"))
+	}
+	warning := lipgloss.NewStyle().Foreground(armed.palette().warning).Bold(true).Render("Ctrl+N again to skip")
+	if !strings.Contains(armed.composer(), warning) {
+		t.Fatal("the frame's skip prompt should use the warning color")
+	}
+	footer := lipgloss.NewStyle().Foreground(armed.palette().warning).Bold(true).Render(skipPrompt)
+	if !strings.Contains(armed.View().Content, footer[:strings.Index(footer, skipPrompt)]) {
+		t.Fatal("the footer prompt should use the warning color")
 	}
 }
 
@@ -456,18 +523,13 @@ func TestAfterAFinishedQuizControlFAddsQuestionsAndTheSidebarOffersNext(t *testi
 	}
 }
 
-func TestTheSidebarOffersNextQuestionOnlyOnceTheOpenQuestionIsAnswered(t *testing.T) {
-	open := quizFeedbackFixture()
-	open.application.state.Review = false
-	open.application.state.Turns = open.application.state.Turns[:1]
-	open.application.state.Question = "First?"
-	shortcuts := ansi.Strip(open.sidebarShortcuts())
-	if strings.Contains(shortcuts, "Ctrl+N") || !strings.Contains(shortcuts, "Ctrl+B  Question index") {
-		t.Fatalf("an open question cannot be skipped past with a key, so the sidebar should not offer one:\n%s", shortcuts)
+func TestTheSidebarOffersSkipOnAnOpenQuestionAndNextAfterFeedback(t *testing.T) {
+	shortcuts := ansi.Strip(openQuestionFixture().sidebarShortcuts())
+	if !strings.Contains(shortcuts, "Ctrl+N  Skip question") || !strings.Contains(shortcuts, "Ctrl+B  Question index") {
+		t.Fatalf("an open question can be skipped with Ctrl+N:\n%s", shortcuts)
 	}
-	answered := quizFeedbackFixture()
-	if !strings.Contains(ansi.Strip(answered.sidebarShortcuts()), "Ctrl+N  Next question") {
-		t.Fatal("after feedback the sidebar should offer Ctrl+N")
+	if !strings.Contains(ansi.Strip(quizFeedbackFixture().sidebarShortcuts()), "Ctrl+N  Next question") {
+		t.Fatal("after feedback the sidebar should offer the next question")
 	}
 }
 
