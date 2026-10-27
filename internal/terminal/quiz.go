@@ -37,8 +37,11 @@ func continueIntent(state session.State, course []tutor.Topic, extend bool) (tur
 		}
 		return turnIntent{"quiz-extend", "Extend this quiz with five more questions. Ask the next question without repeating earlier exercises.", state.Topic}, nil
 	}
+	if state.Question != "" && !reviewing(state) {
+		return turnIntent{}, fmt.Errorf("answer or skip the current question before continuing")
+	}
 	if !reviewing(state) {
-		return turnIntent{}, fmt.Errorf("answer the current question before continuing")
+		return turnIntent{"lesson", "Continue with the next small idea in this topic.", state.Topic}, nil
 	}
 	if probe := state.Probe; probe != nil {
 		if next, more := probe.Next(); more {

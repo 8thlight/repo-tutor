@@ -165,7 +165,8 @@ func (application application) recordReply(action, message, topic, pending strin
 	if action == "answer" && reply.Assessment != "none" {
 		reply.Question = ""
 	}
-	if action == "question" && reviewing(application.state) {
+	questionOpen := application.state.Question != "" && !reviewing(application.state)
+	if action == "lesson" || (action == "question" && !questionOpen) {
 		reply.Question = ""
 	}
 	updated := application.state

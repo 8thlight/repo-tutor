@@ -202,7 +202,7 @@ func (model interfaceModel) Init() tea.Cmd {
 	return tea.Batch(commands...)
 }
 
-const lessonPlaceholder = "Answer the question, ask a follow-up, or type /help"
+const lessonPlaceholder = "Ask about this topic, or type /help"
 
 type beginFirstLesson struct{}
 

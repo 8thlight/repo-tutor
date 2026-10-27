@@ -100,7 +100,7 @@ func TestNextTopicOpensAFreshCachedLessonWithoutARequestAndIgnoresAStaleOne(t *t
 			continue
 		}
 		state := next.application.state
-		if next.busy || state.Topic != "cli" || state.Question != reply.Question || state.Progress["cli"].Lessons != 1 || len(state.Turns) != 3 {
+		if next.busy || state.Topic != "cli" || state.Question != "" || state.Progress["cli"].Lessons != 1 || len(state.Turns) != 3 {
 			t.Fatalf("a fresh cached lesson should open with no request: busy=%v %+v", next.busy, state)
 		}
 	}

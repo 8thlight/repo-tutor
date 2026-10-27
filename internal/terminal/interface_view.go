@@ -222,7 +222,7 @@ func (model interfaceModel) composer() string {
 		}
 		return content
 	}
-	label := "Your answer or question"
+	label := "Ask about this topic"
 	border := palette.accent
 	if model.application.state.Question != "" {
 		question := ansi.Wrap(tutor.Plain(model.application.state.Question), model.bodyWidth(), "")
