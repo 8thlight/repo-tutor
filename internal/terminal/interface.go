@@ -53,6 +53,7 @@ type interfaceModel struct {
 	noticeGeneration  int
 	skipArmed         bool
 	leaveArmed        bool
+	armedPrompt       string
 	skipGeneration    int
 	settingsFocus     int
 	prefetcher        lessonPrefetcher

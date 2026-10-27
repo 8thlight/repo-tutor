@@ -13,8 +13,6 @@ var skipWindow = 5 * time.Second
 
 const (
 	skipPrompt = "Press Ctrl+N again to skip this question."
-
-	leavePrompt = "Press Ctrl+L again to leave this quiz. It will not be scored."
 )
 
 type skipExpired struct{ generation int }
@@ -23,18 +21,22 @@ func (model interfaceModel) skipOrArm() (tea.Model, tea.Cmd) {
 	if model.skipArmed {
 		return model.skipQuestion()
 	}
-	model.skipArmed = true
+	return model.arm(skipPrompt, false)
+}
+
+func (model interfaceModel) arm(prompt string, leaving bool) (tea.Model, tea.Cmd) {
+	model.skipArmed, model.leaveArmed = !leaving, leaving
 	model.skipGeneration++
-	model.notice = skipPrompt
+	model.armedPrompt, model.notice = prompt, prompt
 	generation := model.skipGeneration
 	return model, tea.Tick(skipWindow, func(time.Time) tea.Msg { return skipExpired{generation} })
 }
 
 func (model interfaceModel) disarmSkip() interfaceModel {
-	if model.notice == skipPrompt || model.notice == leavePrompt {
+	if model.armedPrompt != "" && model.notice == model.armedPrompt {
 		model.notice = ""
 	}
-	model.skipArmed, model.leaveArmed = false, false
+	model.skipArmed, model.leaveArmed, model.armedPrompt = false, false, ""
 	return model
 }
 
@@ -47,14 +49,25 @@ func (model interfaceModel) leaveOrArm() (tea.Model, tea.Cmd) {
 	if model.leaveArmed {
 		return model.leaveQuiz()
 	}
-	model.skipArmed, model.leaveArmed = false, true
-	model.skipGeneration++
-	model.notice = leavePrompt
-	generation := model.skipGeneration
-	return model, tea.Tick(skipWindow, func(time.Time) tea.Msg { return skipExpired{generation} })
+	return model.arm(model.leavePrompt(), true)
+}
+
+func (model interfaceModel) flowName() string {
+	if model.application.state.Probe != nil {
+		return "probe"
+	}
+	return "quiz"
+}
+
+func (model interfaceModel) leavePrompt() string {
+	if model.flowName() == "probe" {
+		return "Press Ctrl+L again to leave this probe."
+	}
+	return "Press Ctrl+L again to leave this quiz. It will not be scored."
 }
 
 func (model interfaceModel) leaveQuiz() (tea.Model, tea.Cmd) {
+	flow := model.flowName()
 	model = model.disarmSkip()
 	left, found := leaveQuestions(model.application.state)
 	if !found {
@@ -69,7 +82,7 @@ func (model interfaceModel) leaveQuiz() (tea.Model, tea.Cmd) {
 	}
 	model.application.state = left
 	model.history = len(left.Turns) - 1
-	model.notice = "Left the quiz"
+	model.notice = "Left the " + flow
 	return model.learn()
 }
 

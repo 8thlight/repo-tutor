@@ -92,11 +92,7 @@ func (model interfaceModel) sidebarShortcuts() string {
 		actions = append(actions, [2]string{"Ctrl+B", "Question index"})
 	}
 	if state := model.application.state; model.leavable() || (inQuestionFlow(state) && model.page == "lesson") {
-		leave := "Leave quiz"
-		if state.Quiz == nil {
-			leave = "Leave check"
-		}
-		actions = append(actions, [2]string{"Ctrl+L", leave})
+		actions = append(actions, [2]string{"Ctrl+L", "Leave " + model.flowName()})
 	}
 	actions = append(actions, [2]string{"Ctrl+K", "Choose a topic"}, [2]string{"Ctrl+S", "Follow a citation"})
 	palette := model.palette()

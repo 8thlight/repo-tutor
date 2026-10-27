@@ -591,7 +591,7 @@ func quizWithLessonFixture() interfaceModel {
 
 func TestControlLInAQuizOnlyArmsTheExit(t *testing.T) {
 	armed, command := press(quizWithLessonFixture(), 'l', tea.ModCtrl)
-	if !armed.leaveArmed || armed.notice != leavePrompt || command == nil || armed.application.state.Quiz == nil {
+	if !armed.leaveArmed || armed.notice != armed.leavePrompt() || command == nil || armed.application.state.Quiz == nil {
 		t.Fatalf("the first press should arm and keep the quiz: armed=%v %q", armed.leaveArmed, armed.notice)
 	}
 	if lines := frameLines(armed); !strings.Contains(lines[len(lines)-1], "Ctrl+L again to leave") {
@@ -618,7 +618,7 @@ func TestASecondControlLLeavesTheQuizAndShowsTheLesson(t *testing.T) {
 func TestAnyOtherKeyOrTheTimerCancelsTheExit(t *testing.T) {
 	armed, command := press(quizWithLessonFixture(), 'l', tea.ModCtrl)
 	typed := typeText(armed, "a")
-	if typed.leaveArmed || typed.notice == leavePrompt {
+	if typed.leaveArmed || typed.notice == armed.leavePrompt() {
 		t.Fatal("typing should cancel the exit prompt")
 	}
 	skipWindow = time.Millisecond
@@ -664,7 +664,7 @@ func TestTheSidebarOffersLeaveDuringAQuizAndAProbe(t *testing.T) {
 	}
 	probe := readingFixture()
 	probe.application.state.Probe = &tutor.Probe{Topics: []string{"core"}, Asked: 1}
-	if !strings.Contains(ansi.Strip(probe.sidebarShortcuts()), "Ctrl+L  Leave check") {
+	if !strings.Contains(ansi.Strip(probe.sidebarShortcuts()), "Ctrl+L  Leave probe") {
 		t.Fatal("a probe can be left too")
 	}
 	if strings.Contains(ansi.Strip(readingFixture().sidebarShortcuts()), "Ctrl+L") {
@@ -682,5 +682,40 @@ func TestAnOpenQuestionWithoutAQuizStillGatesControlN(t *testing.T) {
 	}
 	if !strings.Contains(ansi.Strip(model.sidebarShortcuts()), "Ctrl+N  Skip question") {
 		t.Fatal("the sidebar should offer a skip for any open question")
+	}
+}
+
+func TestTheLeavePromptNamesWhatIsBeingLeft(t *testing.T) {
+	quiz := quizWithLessonFixture()
+	if got := quiz.leavePrompt(); got != "Press Ctrl+L again to leave this quiz. It will not be scored." {
+		t.Fatalf("got %q", got)
+	}
+	probe := readingFixture()
+	probe.application.state.Quiz = nil
+	probe.application.state.Probe = &tutor.Probe{Topics: []string{"core"}, Asked: 1}
+	probe.application.state.Question = "Do you know core?"
+	armed, _ := press(probe, 'l', tea.ModCtrl)
+	if armed.notice != "Press Ctrl+L again to leave this probe." || armed.flowName() != "probe" {
+		t.Fatalf("a probe should be named in its prompt, got %q", armed.notice)
+	}
+	left, _ := press(armed, 'l', tea.ModCtrl)
+	if left.notice != "Left the probe" || left.application.state.Probe != nil {
+		t.Fatalf("leaving a probe should say so and end it: %q", left.notice)
+	}
+}
+
+func TestOneHelperArmsEverySecondPressPrompt(t *testing.T) {
+	skipping, _ := openQuestionFixture().arm("Press X again.", false)
+	armed := skipping.(interfaceModel)
+	if !armed.skipArmed || armed.leaveArmed || armed.notice != "Press X again." || armed.armedPrompt != "Press X again." {
+		t.Fatal("the helper should arm a skip with the prompt it was given")
+	}
+	cleared := armed.disarmSkip()
+	if cleared.notice != "" || cleared.armedPrompt != "" || cleared.skipArmed {
+		t.Fatal("disarming should clear exactly the prompt the helper showed")
+	}
+	leaving, _ := openQuestionFixture().arm("Press Y again.", true)
+	if !leaving.(interfaceModel).leaveArmed || leaving.(interfaceModel).skipArmed {
+		t.Fatal("the helper should arm a leave when asked")
 	}
 }
