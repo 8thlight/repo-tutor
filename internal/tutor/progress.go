@@ -6,6 +6,9 @@ type Progress struct {
 	Partial int  `json:"partial"`
 	Missed  int  `json:"missed"`
 	Held    bool `json:"held,omitempty"`
+
+	QuizCredit int `json:"quiz_credit,omitempty"`
+	QuizGoal   int `json:"quiz_goal,omitempty"`
 }
 
 func Record(previous map[string]Progress, topic string, action string, reply Reply) map[string]Progress {

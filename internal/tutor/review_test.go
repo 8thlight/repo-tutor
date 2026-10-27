@@ -6,25 +6,27 @@ import (
 	"repo-tutor/internal/tutor"
 )
 
-func TestTheWeakestTopicHasTheMostMissesAndPartialsOverCorrect(t *testing.T) {
-	course := []tutor.Topic{{ID: "a", Title: "A"}, {ID: "b", Title: "B"}, {ID: "c", Title: "C"}}
+func TestTheWeakestTopicHasTheLowestFinishedQuizUnderTheBar(t *testing.T) {
+	course := []tutor.Topic{{ID: "a", Title: "A"}, {ID: "b", Title: "B"}, {ID: "c", Title: "C"}, {ID: "d", Title: "D"}}
 	progress := map[string]tutor.Progress{
-		"a": {Correct: 2, Partial: 1},
-		"b": {Missed: 2, Partial: 1, Correct: 1},
-		"c": {Missed: 1},
+		"a": {Lessons: 1, QuizCredit: 10, QuizGoal: 5},
+		"b": {Lessons: 1, QuizCredit: 4, QuizGoal: 5},
+		"c": {Lessons: 1, QuizCredit: 2, QuizGoal: 5},
+		"d": {Lessons: 1},
 	}
 	topic, found := tutor.WeakTopic(course, progress)
-	if !found || topic.ID != "b" {
+	if !found || topic.ID != "c" {
 		t.Fatalf("got %+v %v", topic, found)
 	}
 }
 
-func TestNoTopicNeedsReviewWhenCorrectAnswersKeepUp(t *testing.T) {
-	course := []tutor.Topic{{ID: "a", Title: "A"}}
-	if _, found := tutor.WeakTopic(course, map[string]tutor.Progress{"a": {Correct: 2, Missed: 1, Partial: 1}}); found {
-		t.Fatal("a topic with as many correct answers as misses needs no review")
+func TestNoTopicNeedsReviewWithoutAFinishedQuizUnderTheBar(t *testing.T) {
+	course := []tutor.Topic{{ID: "a", Title: "A"}, {ID: "b", Title: "B"}}
+	progress := map[string]tutor.Progress{"a": {Lessons: 1, Missed: 3}, "b": {Lessons: 1, QuizCredit: 6, QuizGoal: 5}}
+	if _, found := tutor.WeakTopic(course, progress); found {
+		t.Fatal("answers outside a finished quiz, and a quiz at 60%, need no review")
 	}
 	if _, found := tutor.WeakTopic(course, nil); found {
-		t.Fatal("a topic with no answers needs no review")
+		t.Fatal("a course with no answers needs no review")
 	}
 }

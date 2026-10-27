@@ -396,7 +396,7 @@ func TestHomeOffersReviewOnlyWhenATopicIsWeak(t *testing.T) {
 		}
 	}
 	core := model.application.course[1]
-	model.application.state.Progress = map[string]tutor.Progress{core.ID: {Lessons: 1, Missed: 2, Correct: 1}}
+	model.application.state.Progress = map[string]tutor.Progress{core.ID: {Lessons: 1, QuizCredit: 3, QuizGoal: 5}}
 	var review homeEntry
 	for _, entry := range model.homeEntries() {
 		if entry.place == placeReview {
