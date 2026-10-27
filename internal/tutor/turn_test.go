@@ -200,3 +200,28 @@ func TestTheHotspotsTopicQuotesTheTopFivePlacesFirst(t *testing.T) {
 		t.Fatal("other topics should not lead with the hotspots")
 	}
 }
+
+func TestALessonNeverCarriesAQuestion(t *testing.T) {
+	prepared := tutor.Context{Excerpts: []tutor.Excerpt{{Path: "main.go", StartLine: 2, EndLine: 5}}}
+	request := tutor.Request{Topic: "overview", Action: "lesson"}
+	for name, question := range map[string]string{"without a question": "", "with a question": "What is delegated?"} {
+		reply := tutor.Reply{Explanation: "Execution begins in main.go:3.", Question: question, Assessment: "none", Citations: []repository.Location{{Path: "main.go", Line: 3}}}
+		data, _ := json.Marshal(reply)
+		decoded, err := tutor.DecodeReply(string(data), prepared, request)
+		if err != nil || decoded.Question != "" {
+			t.Fatalf("%s: a lesson should be accepted with an empty question, got %q and %v", name, decoded.Question, err)
+		}
+	}
+}
+
+func TestThePromptKeepsQuestionsForQuizzesAndProbes(t *testing.T) {
+	prompt := tutor.Prepare(hotspotSnapshot(), tutor.Request{Action: "lesson", Topic: tutor.Overview}).Prompt
+	for _, expected := range []string{"only for\nactions quiz and probe", "Do not ask the learner a question"} {
+		if !strings.Contains(prompt, expected) {
+			t.Fatalf("the prompt should say %q", expected)
+		}
+	}
+	if strings.Contains(prompt, "end with one comprehension question") {
+		t.Fatal("lessons no longer end with a question")
+	}
+}
