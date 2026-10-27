@@ -248,7 +248,7 @@ func (model interfaceModel) composer() string {
 		label = goalComposerLabel
 	}
 	if model.busy {
-		label = "Preparing your next turn · Esc stops it"
+		label = waitingPhrase(model.intent.action) + " · Esc stops it"
 		border = palette.border
 	}
 	editor := lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(border).Width(max(1, model.bodyWidth()-2)).Render(model.input.View())
@@ -331,7 +331,7 @@ func (model interfaceModel) View() tea.View {
 				title += " · " + tutor.Plain(topic.Title)
 			}
 		}
-		body = accent.Render(model.spinner.View()+" "+waitingText(model.intent.action)) + "\n\n" + muted.Render("Grounding the reply in repository sources.\n\n"+model.browsingHint()+"\nEsc stops this request; your progress is saved.")
+		body = accent.Render(model.spinner.View()+" "+waitingText(model.intent.action)) + "\n\n" + muted.Render(groundingText(model.intent.action)+"\n\n"+model.browsingHint()+"\nEsc stops this request; your progress is saved.")
 	}
 	if model.isPicker() {
 		body = model.picker.View()
@@ -347,7 +347,7 @@ func (model interfaceModel) View() tea.View {
 	}
 	notice := model.notice
 	if model.busy {
-		notice = fmt.Sprintf("%s Preparing a grounded %s · %s elapsed · limit %s", model.spinner.View(), turnLabel(model.intent.action), time.Since(model.started).Round(time.Second), model.application.timeout)
+		notice = fmt.Sprintf("%s %s · %s elapsed · limit %s", model.spinner.View(), waitingPhrase(model.intent.action), time.Since(model.started).Round(time.Second), model.application.timeout)
 	}
 	if model.isPicker() {
 		notice += " · / search · ↑↓ move · Enter open"
@@ -389,16 +389,33 @@ func (model interfaceModel) View() tea.View {
 	return view
 }
 
-func waitingText(action string) string {
+func waitingPhrase(action string) string {
 	switch action {
 	case "quiz", "quiz-next", "quiz-extend", "probe":
-		return "Preparing your question…"
+		return "Preparing your question"
 	case "answer":
-		return "Reviewing your answer…"
+		return "Reviewing your answer"
 	case "question":
-		return "Thinking about your question…"
+		return "Thinking about your question"
 	default:
-		return "Preparing your lesson…"
+		return "Preparing your lesson"
+	}
+}
+
+func waitingText(action string) string {
+	return waitingPhrase(action) + "…"
+}
+
+func groundingText(action string) string {
+	switch action {
+	case "quiz", "quiz-next", "quiz-extend", "probe":
+		return "Writing a question from this repository's files."
+	case "answer":
+		return "Checking your answer against this repository's files."
+	case "question":
+		return "Looking for the answer in this repository's files."
+	default:
+		return "Writing your lesson from this repository's files."
 	}
 }
 
