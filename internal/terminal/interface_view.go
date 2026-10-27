@@ -32,7 +32,7 @@ func (model interfaceModel) palette() interfacePalette {
 func (model interfaceModel) bodyWidth() int {
 	width := max(1, model.width-4)
 	if model.width >= 108 {
-		width -= 29
+		width -= sidebarOffset
 	}
 	return max(1, width)
 }
@@ -276,18 +276,14 @@ func (model interfaceModel) sidebar() string {
 	if total > 0 {
 		filled = min(20, visited*20/total)
 	}
-	content := title.Render("YOUR COURSE") + "\n\n" + fmt.Sprintf("%d / %d topics read", visited, total) + "\n" + title.Render(strings.Repeat("━", filled)) + muted.Render(strings.Repeat("─", 20-filled)) + "\n\n" + fmt.Sprintf("%d assessed answers\n%d correct", attempts, correct) + "\n\n" + muted.Render("CURRENT TOPIC") + "\n" + lipgloss.NewStyle().Width(23).Render(model.topicTitle())
+	content := title.Render("YOUR COURSE") + "\n\n" + fmt.Sprintf("%d / %d topics read", visited, total) + "\n" + title.Render(strings.Repeat("━", filled)) + muted.Render(strings.Repeat("─", 20-filled)) + "\n\n" + fmt.Sprintf("%d assessed answers\n%d correct", attempts, correct) + "\n\n" + muted.Render("CURRENT TOPIC") + "\n" + lipgloss.NewStyle().Width(sidebarWidth-3).Render(model.topicTitle())
 	if quiz := model.application.state.Quiz; quiz != nil && !model.movingToAnotherTopic() {
 		content += "\n\n" + title.Render("QUIZ GOAL") + fmt.Sprintf("\n%d / %d answered\nCtrl+B  Question index", quiz.Completed(), quiz.Goal)
 	}
 	if model.bodyHeight() >= 19 {
-		keepGoing := "Ctrl+N  Next topic\nCtrl+G  Quiz me\nCtrl+K  Choose a topic\nCtrl+S  Follow a citation"
-		if model.movingToAnotherTopic() {
-			keepGoing = "Ctrl+K  Choose a topic"
-		}
-		content += "\n\n" + muted.Render("KEEP GOING") + "\n" + keepGoing
+		content += "\n\n" + muted.Render("KEEP GOING") + "\n" + model.sidebarShortcuts()
 	}
-	return lipgloss.NewStyle().Width(26).Height(model.bodyHeight()).MaxHeight(model.bodyHeight()).BorderRight(true).BorderStyle(lipgloss.NormalBorder()).BorderForeground(palette.border).Render(content)
+	return lipgloss.NewStyle().Width(sidebarWidth).Height(model.bodyHeight()).MaxHeight(model.bodyHeight()).BorderRight(true).BorderStyle(lipgloss.NormalBorder()).BorderForeground(palette.border).Render(content)
 }
 
 func (model interfaceModel) View() tea.View {
@@ -343,7 +339,7 @@ func (model interfaceModel) View() tea.View {
 	}
 	composer := model.composer()
 	if model.width >= 108 {
-		composer = lipgloss.NewStyle().PaddingLeft(29).Render(composer)
+		composer = lipgloss.NewStyle().PaddingLeft(sidebarOffset).Render(composer)
 	}
 	notice := model.notice
 	if model.busy {

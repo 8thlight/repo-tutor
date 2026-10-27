@@ -44,18 +44,47 @@ func (model interfaceModel) readingActions() bool {
 	return state.Question == "" && !reviewing(state) && (state.Quiz == nil || state.Quiz.Topic != state.Topic)
 }
 
-func (model interfaceModel) actionLine() string {
-	if !model.readingActions() {
-		return ""
-	}
+const (
+	sidebarWidth  = 30
+	sidebarOffset = sidebarWidth + 3
+)
+
+func (model interfaceModel) courseActions(titled bool) [][2]string {
 	actions := [][2]string{
 		{"Ctrl+G", fmt.Sprintf("Quiz this topic (%d)", model.quizLength())},
 		{"Ctrl+F", "More on this topic"},
 	}
 	if title, found := model.nextTopicLabel(); found {
-		actions = append(actions, [2]string{"Ctrl+N", "Next: " + title})
+		next := "Next topic"
+		if titled {
+			next = "Next: " + title
+		}
+		actions = append(actions, [2]string{"Ctrl+N", next})
 	}
-	return model.styledActions(actions)
+	return actions
+}
+
+func (model interfaceModel) actionLine() string {
+	if !model.readingActions() {
+		return ""
+	}
+	return model.styledActions(model.courseActions(true))
+}
+
+func (model interfaceModel) sidebarShortcuts() string {
+	if model.movingToAnotherTopic() {
+		return "Ctrl+K  Choose a topic"
+	}
+	actions := model.courseActions(false)
+	if quiz := model.application.state.Quiz; quiz != nil && quiz.Completed() < quiz.Goal {
+		actions[1][1] = "Next question"
+	}
+	actions = append(actions, [2]string{"Ctrl+K", "Choose a topic"}, [2]string{"Ctrl+S", "Follow a citation"})
+	rows := make([]string, len(actions))
+	for index, action := range actions {
+		rows[index] = action[0] + "  " + action[1]
+	}
+	return strings.Join(rows, "\n")
 }
 
 func (model interfaceModel) quizCompleteLine() string {
