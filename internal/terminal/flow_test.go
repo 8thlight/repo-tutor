@@ -542,3 +542,110 @@ func TestControlNWorksFromTheQuizIndexToo(t *testing.T) {
 		t.Fatalf("Ctrl+N should work on the index as it does on the lesson: %+v page=%s notice=%q", next.intent, next.page, next.notice)
 	}
 }
+
+func quizWithLessonFixture() interfaceModel {
+	model := readingFixture()
+	model.application.state.Turns[0].Action = "lesson"
+	quizReply := tutor.Reply{Explanation: "Try this.", Question: "First?", Assessment: "none", Citations: model.application.state.Turns[0].Reply.Citations}
+	model.application.state.Turns = append(model.application.state.Turns, session.Turn{Topic: tutor.Overview, Action: "quiz", Reply: quizReply})
+	model.application.state.Quiz = &tutor.Quiz{Topic: tutor.Overview, Goal: 5, Questions: []tutor.QuizQuestion{{Text: "First?"}}}
+	model.application.state.Question = "First?"
+	model.history = len(model.application.state.Turns) - 1
+	return model
+}
+
+func TestControlLInAQuizOnlyArmsTheExit(t *testing.T) {
+	armed, command := press(quizWithLessonFixture(), 'l', tea.ModCtrl)
+	if !armed.leaveArmed || armed.notice != leavePrompt || command == nil || armed.application.state.Quiz == nil {
+		t.Fatalf("the first press should arm and keep the quiz: armed=%v %q", armed.leaveArmed, armed.notice)
+	}
+	if lines := frameLines(armed); !strings.Contains(lines[len(lines)-1], "Ctrl+L again to leave") {
+		t.Fatalf("the frame should name the second press:\n%s", strings.Join(lines, "\n"))
+	}
+}
+
+func TestASecondControlLLeavesTheQuizAndShowsTheLesson(t *testing.T) {
+	armed, _ := press(quizWithLessonFixture(), 'l', tea.ModCtrl)
+	left, _ := press(armed, 'l', tea.ModCtrl)
+	state := left.application.state
+	last := state.Turns[len(state.Turns)-1]
+	if state.Quiz != nil || state.Question != "" || reviewing(state) || last.Action != "lesson" || !last.Resumed || left.page != "lesson" || left.history != len(state.Turns)-1 {
+		t.Fatalf("leaving should drop the quiz and show the lesson: quiz=%v question=%q last=%+v", state.Quiz, state.Question, last)
+	}
+	if left.leaveArmed || left.notice != "Left the quiz" || left.activeTab() != "course" {
+		t.Fatalf("after leaving the course tab is active and nothing stays armed: %q %s", left.notice, left.activeTab())
+	}
+	if line := left.actionLine(); line == "" {
+		t.Fatal("the reading actions should come back")
+	}
+}
+
+func TestAnyOtherKeyOrTheTimerCancelsTheExit(t *testing.T) {
+	armed, command := press(quizWithLessonFixture(), 'l', tea.ModCtrl)
+	typed := typeText(armed, "a")
+	if typed.leaveArmed || typed.notice == leavePrompt {
+		t.Fatal("typing should cancel the exit prompt")
+	}
+	skipWindow = time.Millisecond
+	defer func() { skipWindow = 5 * time.Second }()
+	armed, command = press(quizWithLessonFixture(), 'l', tea.ModCtrl)
+	_ = command
+	lapsed, _ := armed.Update(skipExpired{armed.skipGeneration})
+	if lapsed.(interfaceModel).leaveArmed || lapsed.(interfaceModel).notice != "" {
+		t.Fatal("the exit prompt should lapse with its timer")
+	}
+}
+
+func TestArmingASkipAndArmingAnExitCancelEachOther(t *testing.T) {
+	skip, _ := press(quizWithLessonFixture(), 'n', tea.ModCtrl)
+	exit, _ := press(skip, 'l', tea.ModCtrl)
+	if skip.skipArmed != true || exit.skipArmed || !exit.leaveArmed {
+		t.Fatalf("pressing Ctrl+L should replace a pending skip: skip=%v leave=%v", exit.skipArmed, exit.leaveArmed)
+	}
+	back, _ := press(exit, 'n', tea.ModCtrl)
+	if back.leaveArmed || !back.skipArmed {
+		t.Fatal("and Ctrl+N should replace a pending exit")
+	}
+}
+
+func TestControlLStillReturnsToTheLessonFromOtherPagesAndOutsideAQuiz(t *testing.T) {
+	model := quizWithLessonFixture()
+	sources, _ := press(model, 's', tea.ModCtrl)
+	back, _ := press(sources, 'l', tea.ModCtrl)
+	if back.page != "lesson" || back.leaveArmed || back.application.state.Quiz == nil {
+		t.Fatalf("from another page Ctrl+L just returns: page=%s armed=%v", back.page, back.leaveArmed)
+	}
+	reading := readingFixture()
+	same, _ := press(reading, 'l', tea.ModCtrl)
+	if same.leaveArmed || same.page != "lesson" {
+		t.Fatal("with nothing to leave, Ctrl+L arms nothing")
+	}
+}
+
+func TestTheSidebarOffersLeaveDuringAQuizAndAProbe(t *testing.T) {
+	shortcuts := ansi.Strip(quizWithLessonFixture().sidebarShortcuts())
+	if !strings.Contains(shortcuts, "Ctrl+L  Leave quiz") {
+		t.Fatalf("a quiz can be left:\n%s", shortcuts)
+	}
+	probe := readingFixture()
+	probe.application.state.Probe = &tutor.Probe{Topics: []string{"core"}, Asked: 1}
+	if !strings.Contains(ansi.Strip(probe.sidebarShortcuts()), "Ctrl+L  Leave check") {
+		t.Fatal("a probe can be left too")
+	}
+	if strings.Contains(ansi.Strip(readingFixture().sidebarShortcuts()), "Ctrl+L") {
+		t.Fatal("with nothing to leave, the sidebar offers nothing")
+	}
+}
+
+func TestAnOpenQuestionWithoutAQuizStillGatesControlN(t *testing.T) {
+	model := readingFixture()
+	model.application.state.Question = "Which package owns the calculation?"
+	model.application.state.Quiz, model.application.state.Probe = nil, nil
+	next, _ := press(model, 'n', tea.ModCtrl)
+	if !next.skipArmed || next.page != "lesson" || next.busy {
+		t.Fatalf("an open question must ask for confirmation before Ctrl+N moves anywhere: armed=%v page=%s", next.skipArmed, next.page)
+	}
+	if !strings.Contains(ansi.Strip(model.sidebarShortcuts()), "Ctrl+N  Skip question") {
+		t.Fatal("the sidebar should offer a skip for any open question")
+	}
+}

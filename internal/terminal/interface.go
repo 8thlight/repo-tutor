@@ -51,6 +51,7 @@ type interfaceModel struct {
 	sourceList        string
 	goalPending       bool
 	skipArmed         bool
+	leaveArmed        bool
 	skipGeneration    int
 	settingsFocus     int
 	prefetcher        lessonPrefetcher
@@ -329,7 +330,7 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return model, nil
 	case tea.KeyPressMsg:
-		if model.skipArmed && message.String() != "ctrl+n" {
+		if (model.skipArmed && message.String() != "ctrl+n") || (model.leaveArmed && message.String() != "ctrl+l") {
 			model = model.disarmSkip()
 		}
 		if model.askingGoal() {
@@ -381,7 +382,7 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+b":
 			return model.toggled("quiz", func() (tea.Model, tea.Cmd) { return model.openPicker("quiz", "") })
 		case "ctrl+f":
-			if inQuestionFlow(model.application.state) {
+			if inQuestionFlow(model.application.state) || questionOpen(model.application.state) {
 				model.notice = "Ctrl+N asks the next question."
 				return model, nil
 			}
@@ -399,12 +400,15 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 				return model.openDocument("help", "A few ways to keep learning", interfaceHelp)
 			})
 		case "ctrl+l":
+			if model.leavable() {
+				return model.leaveOrArm()
+			}
 			return model.learn()
 		case "ctrl+n":
+			if questionOpen(model.application.state) {
+				return model.skipOrArm()
+			}
 			if inQuestionFlow(model.application.state) {
-				if questionOpen(model.application.state) {
-					return model.skipOrArm()
-				}
 				return model.continueQuiz(false)
 			}
 			return model.next()

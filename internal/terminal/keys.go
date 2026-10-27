@@ -74,6 +74,8 @@ func (model interfaceModel) footerKeys(width int) string {
 func (model interfaceModel) typingHints() []keyHint {
 	state := model.application.state
 	switch {
+	case model.leaveArmed:
+		return []keyHint{{"Ctrl+L", "again to leave", true}}
 	case model.askingGoal() && strings.TrimSpace(model.input.Value()) != "":
 		return []keyHint{{"Enter", "saves your goal", false}}
 	case model.askingGoal():

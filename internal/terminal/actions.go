@@ -51,10 +51,10 @@ const (
 
 func (model interfaceModel) courseActions(titled bool) [][2]string {
 	state := model.application.state
+	if questionOpen(state) {
+		return [][2]string{{"Ctrl+N", "Skip question"}}
+	}
 	if inQuestionFlow(state) {
-		if questionOpen(state) {
-			return [][2]string{{"Ctrl+N", "Skip question"}}
-		}
 		return [][2]string{{"Ctrl+N", "Next question"}}
 	}
 	var actions [][2]string
@@ -88,8 +88,15 @@ func (model interfaceModel) sidebarShortcuts() string {
 		return lipgloss.NewStyle().Foreground(model.palette().foreground).Bold(true).Render("Ctrl+K") + "  " + lipgloss.NewStyle().Foreground(model.palette().muted).Render("Choose a topic")
 	}
 	actions := model.courseActions(false)
-	if model.application.state.Quiz != nil {
+	if state := model.application.state; state.Quiz != nil {
 		actions = append(actions, [2]string{"Ctrl+B", "Question index"})
+	}
+	if state := model.application.state; model.leavable() || (inQuestionFlow(state) && model.page == "lesson") {
+		leave := "Leave quiz"
+		if state.Quiz == nil {
+			leave = "Leave check"
+		}
+		actions = append(actions, [2]string{"Ctrl+L", leave})
 	}
 	actions = append(actions, [2]string{"Ctrl+K", "Choose a topic"}, [2]string{"Ctrl+S", "Follow a citation"})
 	palette := model.palette()
