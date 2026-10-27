@@ -157,3 +157,15 @@ func TestWeakTopicFallsBackToATopicTheExamMissed(t *testing.T) {
 		t.Fatal("a passed exam topic needs no review")
 	}
 }
+
+func TestAnUncappedExamAsksOneQuestionForEveryTopicRead(t *testing.T) {
+	course := courseOf(40)
+	progress := readAll(course, 35)
+	plan := tutor.ExamPlan(course, progress, 0)
+	if len(plan) != 35 {
+		t.Fatalf("no cap means every topic read, got %d", len(plan))
+	}
+	if short := tutor.ExamPlan(course, readAll(course, 9), 0); short != nil {
+		t.Fatal("even uncapped, an exam still needs ten topics read")
+	}
+}

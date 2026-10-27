@@ -64,7 +64,9 @@ func ExamPlan(course []Topic, progress map[string]Progress, length int) []string
 		}
 		return order[chosen[first].ID] < order[chosen[second].ID]
 	})
-	chosen = chosen[:min(max(length, ExamMinimum), len(chosen))]
+	if length > 0 {
+		chosen = chosen[:min(max(length, ExamMinimum), len(chosen))]
+	}
 	sort.SliceStable(chosen, func(first, second int) bool { return order[chosen[first].ID] < order[chosen[second].ID] })
 	plan := make([]string, len(chosen))
 	for index, topic := range chosen {

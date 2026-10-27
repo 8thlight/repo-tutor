@@ -90,12 +90,15 @@ func TestExamLengthAcceptsOnlyTheOfferedValuesAndDefaultsToTen(t *testing.T) {
 	if got, _ := settings.Decode([]byte(`{}`)); got.ExamLength != 10 {
 		t.Fatalf("the default should be 10, got %d", got.ExamLength)
 	}
+	if got, _ := settings.Decode([]byte(`{"exam_length":0}`)); got.ExamLength != 0 {
+		t.Fatalf("0 means every topic read and should be accepted, got %d", got.ExamLength)
+	}
 	for _, value := range []string{"20", "30"} {
 		if got, _ := settings.Decode([]byte(`{"exam_length":` + value + `}`)); strconv.Itoa(got.ExamLength) != value {
 			t.Fatalf("%s should be accepted, got %d", value, got.ExamLength)
 		}
 	}
-	for _, value := range []string{"5", "15", "0", "100"} {
+	for _, value := range []string{"5", "15", "-1", "100"} {
 		if got, status := settings.Decode([]byte(`{"exam_length":` + value + `}`)); got.ExamLength != 10 || status.Unreadable {
 			t.Fatalf("%s should fall back to 10, got %d", value, got.ExamLength)
 		}
