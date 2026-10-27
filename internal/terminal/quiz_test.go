@@ -32,7 +32,7 @@ func TestContinueRequiresReviewAndStopsAtQuizGoal(t *testing.T) {
 	}
 	model.rebuildContent()
 	model.View()
-	if calls != 0 || !strings.Contains(model.composer(), "Continue") {
+	if calls != 0 || !strings.Contains(ansi.Strip(model.composer()), "continue") {
 		t.Fatal("viewing feedback should wait for Continue")
 	}
 	started, command := model.submit()
@@ -81,7 +81,7 @@ func TestSkippedQuestionHasBoundaryAndFailedContinueKeepsReview(t *testing.T) {
 	model.history = 1
 	model.rebuildContent()
 	content := ansi.Strip(model.lessonContent())
-	if !strings.Contains(content, "── FEEDBACK") || !strings.Contains(content, "── END OF QUESTION") || !strings.Contains(model.composer(), "Continue") {
+	if !strings.Contains(content, "── FEEDBACK") || !strings.Contains(content, "── END OF QUESTION") || !strings.Contains(ansi.Strip(model.composer()), "continue") {
 		t.Fatalf("ungraded skip lost its question boundary:\n%s", content)
 	}
 	model.run = func(context.Context, session.State, string, string, string) (session.State, error) {

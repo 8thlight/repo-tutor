@@ -132,7 +132,7 @@ func (model interfaceModel) lessonContent() string {
 	turn := turns[index]
 	var blocks []string
 	if model.errorText != "" {
-		blocks = append(blocks, lipgloss.NewStyle().Foreground(palette.warning).Bold(true).Render("Turn not recorded · Ctrl+R to retry")+"\n"+ansi.Wrap(model.errorText, model.bodyWidth(), ""))
+		blocks = append(blocks, lipgloss.NewStyle().Foreground(palette.warning).Bold(true).Render("That did not finish · Ctrl+R to retry")+"\n"+ansi.Wrap(model.errorText, model.bodyWidth(), ""))
 	}
 	if turn.Action == "answer" {
 		if index > 0 && turns[index-1].Topic == turn.Topic && turns[index-1].Reply.Question != "" {
@@ -242,7 +242,7 @@ func (model interfaceModel) composer() string {
 	if model.history < len(model.application.state.Turns)-1 {
 		label = "Earlier step · Esc returns to the current question"
 	} else if reviewing(model.application.state) {
-		label = "[ Continue → ] Enter empty / Ctrl+F\nAsk about this answer, or continue."
+		label = "Ask about this answer, or continue."
 		if quiz := model.application.state.Quiz; quiz != nil && quiz.Completed() >= quiz.Goal {
 			label = fmt.Sprintf("QUIZ COMPLETE · %d / %d answered\n%s", quiz.Completed(), quiz.Goal, model.quizCompleteLine())
 		}
@@ -259,7 +259,7 @@ func (model interfaceModel) composer() string {
 	if line := model.actionLine(); line != "" {
 		actions = line + "\n"
 	}
-	return actions + model.sectionDivider("") + "\n" + muted.Render(ansi.Wrap(label, model.bodyWidth(), "")) + "\n" + editor
+	return actions + model.composerDivider() + "\n" + muted.Render(ansi.Wrap(label, model.bodyWidth(), "")) + "\n" + editor
 }
 
 func (model interfaceModel) sidebar() string {
@@ -354,24 +354,11 @@ func (model interfaceModel) View() tea.View {
 	if model.page == "lesson" && model.history < len(model.application.state.Turns)-1 {
 		notice = "Earlier step · Esc returns to the current question · Alt+←/→ steps through this topic"
 	}
-	keys := "Enter send   Ctrl+K topics   Ctrl+S sources   Ctrl+Q quit"
-	if model.movingToAnotherTopic() {
-		keys = "Enter send   Ctrl+K topics   Ctrl+Q quit"
-	}
-	if reviewing(model.application.state) {
-		keys = "Ctrl+F continue   Ctrl+B quiz index   Ctrl+S sources   Ctrl+Q quit"
-	}
-	if model.askingGoal() {
-		keys = "Enter keeps the default   F1 help   Ctrl+Q quit"
-	}
-	if width < 80 {
-		keys = "Enter send · F1 help · Ctrl+Q quit"
-	}
 	indicator := ""
 	if model.prefetching && !model.busy {
 		indicator = model.prefetchSpinner.View() + " Preparing next lesson"
 	}
-	footer := model.footerLine(notice, indicator, width, muted) + "\n" + muted.Render(ansi.Truncate(keys, width, "…"))
+	footer := model.footerLine(notice, indicator, width, muted) + "\n" + model.footerKeys(width)
 	margin := lipgloss.NewStyle().Padding(0, 2)
 	navigationRows := margin.Render(navigation + "\n" + model.tabRule(navigationWidth))
 	if model.tabsBleed() {

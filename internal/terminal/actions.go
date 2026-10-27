@@ -73,16 +73,19 @@ func (model interfaceModel) actionLine() string {
 
 func (model interfaceModel) sidebarShortcuts() string {
 	if model.movingToAnotherTopic() {
-		return "Ctrl+K  Choose a topic"
+		return lipgloss.NewStyle().Foreground(model.palette().foreground).Bold(true).Render("Ctrl+K") + "  " + lipgloss.NewStyle().Foreground(model.palette().muted).Render("Choose a topic")
 	}
 	actions := model.courseActions(false)
 	if quiz := model.application.state.Quiz; quiz != nil && quiz.Completed() < quiz.Goal {
 		actions[1][1] = "Next question"
 	}
 	actions = append(actions, [2]string{"Ctrl+K", "Choose a topic"}, [2]string{"Ctrl+S", "Follow a citation"})
+	palette := model.palette()
+	key := lipgloss.NewStyle().Foreground(palette.foreground).Bold(true)
+	label := lipgloss.NewStyle().Foreground(palette.muted)
 	rows := make([]string, len(actions))
 	for index, action := range actions {
-		rows[index] = action[0] + "  " + action[1]
+		rows[index] = key.Render(action[0]) + "  " + label.Render(action[1])
 	}
 	return strings.Join(rows, "\n")
 }

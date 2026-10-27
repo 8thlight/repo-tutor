@@ -15,7 +15,20 @@ func (model interfaceModel) browsingHint() string {
 
 func (model interfaceModel) runningNotice() string {
 	if model.movingToAnotherTopic() {
-		return "A turn is already running. Esc stops it; Topics (Ctrl+K) stay open."
+		return "Something is already loading. Esc stops it; Topics (Ctrl+K) stay open."
 	}
-	return "A turn is already running. Esc stops it; Topics (Ctrl+K) and sources (Ctrl+S) stay open."
+	return "Something is already loading. Esc stops it; Topics (Ctrl+K) and sources (Ctrl+S) stay open."
+}
+
+func finishedNotice(action string) string {
+	switch action {
+	case "quiz", "quiz-next", "quiz-extend", "probe":
+		return "Question ready"
+	case "answer":
+		return "Answer reviewed"
+	case "question":
+		return "Reply ready"
+	default:
+		return "Lesson ready"
+	}
 }

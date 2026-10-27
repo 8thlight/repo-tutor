@@ -167,7 +167,7 @@ func newInterface(ctx context.Context, application application, runner turnRunne
 		input: input, viewport: viewport.New(), spinner: activity, prefetchSpinner: background,
 		width: 100, height: 32, dark: true, noColor: noColor,
 		page: "lesson", history: len(application.state.Turns) - 1,
-		notice: "Completed turns save automatically",
+		notice: "",
 	}
 	model.viewport.SoftWrap = true
 	if len(application.state.Turns) == 0 && !application.state.GoalChosen {
@@ -202,7 +202,7 @@ func (model interfaceModel) Init() tea.Cmd {
 	return tea.Batch(commands...)
 }
 
-const lessonPlaceholder = "Ask about this topic, or type /help"
+const lessonPlaceholder = ""
 
 type beginFirstLesson struct{}
 
@@ -263,7 +263,7 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		if message.err != nil {
 			model.errorText = tutor.Plain(message.err.Error())
-			model.notice = "Turn not recorded. Your completed progress and draft are safe. Ctrl+R retries."
+			model.notice = "That did not finish. Your progress and draft are safe. Ctrl+R tries again."
 		} else {
 			model.application.state = message.state
 			model.history = len(message.state.Turns) - 1
@@ -274,7 +274,7 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 			if model.intent.action == "answer" || model.intent.action == "question" {
 				model.input.Reset()
 			}
-			model.notice = "Saved automatically"
+			model.notice = finishedNotice(model.intent.action)
 		}
 		if model.page == "progress" {
 			model.pageContent = model.progressText()
@@ -323,7 +323,7 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 			if model.busy {
 				model.cancel()
 				model = model.stopPrefetch()
-				model.notice = "Stopping this turn. Completed progress is saved."
+				model.notice = "Stopping. Your progress is saved."
 				return model, nil
 			}
 			model = model.stopPrefetch()
@@ -338,7 +338,7 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 			if model.busy {
 				model.cancel()
 				model = model.stopPrefetch()
-				model.notice = "Stopping this turn. Completed progress is saved."
+				model.notice = "Stopping. Your progress is saved."
 				return model, nil
 			}
 		case "ctrl+k":
@@ -494,7 +494,7 @@ func (model interfaceModel) submit() (tea.Model, tea.Cmd) {
 		return model.slash(text)
 	}
 	if model.history != len(model.application.state.Turns)-1 {
-		model.notice = "You are viewing an earlier turn. Esc returns to the current question; your draft stays."
+		model.notice = "You are viewing an earlier step. Esc returns to the current question; your draft stays."
 		return model, nil
 	}
 	action := "question"

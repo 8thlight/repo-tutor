@@ -31,20 +31,17 @@ func TestTabTextUsesTheReportedTerminalBackground(t *testing.T) {
 	}
 }
 
-func TestTabHintsShortenAsTheLineNarrows(t *testing.T) {
+func TestTheTabLineKeepsOnlyTheTabHint(t *testing.T) {
 	model := interfaceFixture()
 	model.noColor = false
-	for width, want := range map[int]string{80: "Tab Next  F1 Help  F2 About  F3 Settings", 70: "F1 Help  F2 About  F3 Settings", 56: "F1 Help  F2 About", 44: "F1 Help", 40: ""} {
+	for _, width := range []int{120, 80, 44} {
 		bar := ansi.Strip(model.tabBar(width))
-		if ansi.StringWidth(bar) > width {
-			t.Fatalf("width %d: the bar is %d columns wide", width, ansi.StringWidth(bar))
+		if ansi.StringWidth(bar) > width || !strings.HasSuffix(bar, "Tab Next") || strings.Contains(bar, "F1") {
+			t.Fatalf("width %d: the tab line should end with only the Tab hint:\n%q", width, bar)
 		}
-		if want != "" && !strings.HasSuffix(bar, want) {
-			t.Fatalf("width %d should end with %q:\n%q", width, want, bar)
-		}
-		if want == "" && strings.Contains(bar, "F1") {
-			t.Fatalf("width %d should drop the hints:\n%q", width, bar)
-		}
+	}
+	if bar := ansi.Strip(model.tabBar(34)); strings.Contains(bar, "Tab") {
+		t.Fatalf("a bar with no room should drop the hint:\n%q", bar)
 	}
 }
 
