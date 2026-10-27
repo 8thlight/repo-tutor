@@ -324,7 +324,7 @@ func (model interfaceModel) View() tea.View {
 				title += " · " + tutor.Plain(topic.Title)
 			}
 		}
-		body = accent.Render(model.spinner.View()+" "+waitingText(model.intent.action)) + "\n\n" + muted.Render("Grounding the reply in repository sources.\n\nYou can browse topics and sources while you wait.\nEsc stops this request; your progress is saved.")
+		body = accent.Render(model.spinner.View()+" "+waitingText(model.intent.action)) + "\n\n" + muted.Render("Grounding the reply in repository sources.\n\nYou can browse topics (Ctrl+K) or the last lesson's sources (Ctrl+S) while you wait.\nEsc stops this request; your progress is saved.")
 	}
 	if model.isPicker() {
 		body = model.picker.View()
