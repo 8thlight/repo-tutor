@@ -125,11 +125,16 @@ func (model interfaceModel) tabCells(style, active string) ([]string, string) {
 
 func (model interfaceModel) activeTabSpan(style, active string) (int, int, bool) {
 	cells, joiner := model.tabCells(style, active)
+	_, drawsEdges := tabEdges[style]
 	start := 0
 	for index, cell := range cells {
 		end := start + lipgloss.Width(cell)
 		if tabPages[index].page == active {
-			return start, end, true
+			labelStart := start
+			if drawsEdges && !model.noColor {
+				labelStart++
+			}
+			return labelStart, labelStart + lipgloss.Width(" "+tabPages[index].label+" "), true
 		}
 		start = end + lipgloss.Width(joiner)
 	}
@@ -138,14 +143,18 @@ func (model interfaceModel) activeTabSpan(style, active string) (int, int, bool)
 
 func (model interfaceModel) tabRule(width int) string {
 	palette := model.palette()
-	active := model.activeTab()
-	start, end, found := model.activeTabSpan(model.application.settings.TabStyle, active)
-	end = min(end, width)
-	if !found || start >= width {
-		return lipgloss.NewStyle().Foreground(palette.muted).Render(strings.Repeat("▔", width))
+	start, end, found := model.activeTabSpan(model.application.settings.TabStyle, model.activeTab())
+	base := func(count int) string {
+		if model.noColor {
+			return strings.Repeat(" ", count)
+		}
+		return lipgloss.NewStyle().Foreground(palette.rule).Render(strings.Repeat("▔", count))
 	}
-	line := lipgloss.NewStyle().Foreground(palette.accent)
-	return line.Render(strings.Repeat("▔", start) + strings.Repeat("▀", end-start) + strings.Repeat("▔", width-end))
+	if !found || start >= width {
+		return base(width)
+	}
+	end = min(end, width)
+	return base(start) + lipgloss.NewStyle().Foreground(palette.accent).Render(strings.Repeat("▔", end-start)) + base(width-end)
 }
 
 func (model interfaceModel) tabBar(width int) string {
