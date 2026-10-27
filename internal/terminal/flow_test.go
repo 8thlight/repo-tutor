@@ -215,3 +215,22 @@ func TestSourcesReturnOnceTheMoveEnds(t *testing.T) {
 		t.Fatalf("with no turn running, Ctrl+S should open Sources, got %s", opened.page)
 	}
 }
+
+func TestTheWaitDescribesTheWorkInPlainWords(t *testing.T) {
+	for action, want := range map[string]string{
+		"lesson": "Writing your lesson from this repository's files.", "quiz": "Writing a question from this repository's files.",
+		"answer": "Checking your answer against this repository's files.", "question": "Looking for the answer in this repository's files.",
+	} {
+		model := interfaceFixture()
+		started, _ := model.begin(turnIntent{action, "go", tutor.Overview})
+		model = started.(interfaceModel)
+		content := ansi.Strip(model.View().Content)
+		model.cancel()
+		if !strings.Contains(content, want) {
+			t.Fatalf("%s should say %q:\n%s", action, want, content)
+		}
+		if strings.Contains(content, "Grounding") || strings.Contains(content, "grounded") || strings.Contains(content, "next turn") {
+			t.Fatalf("%s still uses the old wording:\n%s", action, content)
+		}
+	}
+}
