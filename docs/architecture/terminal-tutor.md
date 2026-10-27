@@ -102,6 +102,20 @@ Each kind of message has one purpose, and a new message starts by asking which k
 
 See [0310](../decisions/0310-controls-and-notices.md), [0400](../decisions/0400-housekeeping.md), and [0440](../decisions/0440-where-page-keys-go.md).
 
+## Interaction rules
+
+These rules hold across the interface, and a change that breaks one needs a decision that says so.
+
+- A key means one thing in a given state. `Ctrl+N` is next and `Ctrl+F` is more, and neither changes meaning to something unrelated to its place on the course path.
+- A key that opens a page closes it, and `Esc` always goes back one level.
+- Offer a key only when it can act now. A sidebar row, a hint, or a menu entry that the key would refuse is a defect.
+- A costly or hard-to-undo action needs a visible second press that expires: skipping a question, leaving a quiz, an exam, or a probe. The prompt names the action, so it does not rest on color.
+- Color is never the only signal. Every colored element has a word, a shape, or a position that carries the same meaning, and each color pairing is tested against a contrast ratio of 4.5 to 1 for text and 3 to 1 for the tab rule.
+- Every action has one route in the full-screen interface, a key, a list, or a Home entry, and none is reachable only by typing a command.
+- A saved state that can show a wrong screen is repaired at the source and also guarded where it is read, as with the open question that must gate `Ctrl+N` even with no quiz behind it.
+
+See [0110](../decisions/0110-page-origin.md), [0320](../decisions/0320-no-slash-commands-in-the-interface.md), [0360](../decisions/0360-next-and-more.md), [0370](../decisions/0370-skip-with-confirmation.md), and [0390](../decisions/0390-leave-a-quiz.md).
+
 ## Prefetch
 
 A few seconds after a turn finishes, the workspace checks the topic that Ctrl+N would open. When that topic has no saved turn and no fresh cached lesson, it asks the agent for the topic's first lesson in a separate agent session and saves the result to the lesson cache, with a muted spinner and "Preparing next lesson" at the bottom right. The prefetch waits for the same lock as every turn. Starting a foreground turn for another topic, or quitting, cancels it, and a cancelled prefetch is not counted as a failure. A request for the topic being prefetched waits behind it and then uses the lesson it saved; Esc stops both. A first-lesson turn always checks the lesson cache before asking the agent. A failed prefetch is not retried in the same run. Prefetching records nothing in progress or history. `--no-prefetch` turns it off, and plain mode never prefetches. See [0150](../decisions/0150-prefetch-next-lesson.md).
