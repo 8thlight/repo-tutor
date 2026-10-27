@@ -7,9 +7,9 @@ import (
 	"repo-tutor/internal/repository"
 )
 
-const Overview = "overview"
+const Overview = ":overview"
 
-const HotspotsTopic = "hotspots"
+const HotspotsTopic = ":hotspots"
 
 const DefaultGoal = "Understand the architecture and become ready to make a small change."
 

@@ -199,7 +199,7 @@ func TestProbeMarksKnownTopicAndSurvivesResume(t *testing.T) {
 	}
 	state := saved(t, stateDirectory)
 	probe := state["probe"].(map[string]any)
-	if probe["answered"] != float64(1) || len(state["turns"].([]any)) != 3 || state["version"] != float64(5) {
+	if probe["answered"] != float64(1) || len(state["turns"].([]any)) != 3 || state["version"] != float64(6) {
 		t.Fatalf("probe was not saved after one answer: %+v", state)
 	}
 	output, err = run(t, "/topics\n/quit\n", arguments...)
@@ -223,7 +223,7 @@ func TestChangedSourceStartsFreshAndArchivesProgress(t *testing.T) {
 	}
 	files, _ := filepath.Glob(filepath.Join(stateDirectory, "*", "previous.json"))
 	refreshed := saved(t, stateDirectory)
-	overview := refreshed["progress"].(map[string]any)["overview"].(map[string]any)
+	overview := refreshed["progress"].(map[string]any)[":overview"].(map[string]any)
 	if len(files) != 1 || refreshed["goal"] != "Trace the entry point" || overview["lessons"] != float64(2) {
 		t.Fatalf("source refresh lost the previous session, learning goal, or progress: %+v", refreshed)
 	}
