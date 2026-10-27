@@ -1,6 +1,6 @@
 # 0190. Course and Quiz tabs
 
-Status: accepted
+Status: accepted. Enter also closes a file under [0200](0200-enter-closes-a-source-file.md).
 
 ## Context
 
