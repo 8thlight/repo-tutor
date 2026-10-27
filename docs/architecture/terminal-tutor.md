@@ -24,6 +24,8 @@ the About entry on Home and `F2` from any page open the About page, and `repo-tu
 
 Esc and a page's own key return to the page that opened it, either Home or the lesson. The workspace keeps one origin and does not save it; opening another secondary page directly keeps the original origin, and `Ctrl+L` always returns to the lesson. See [0110](../decisions/0110-page-origin.md).
 
+Every page that opens from a key closes with that key. Ctrl+K, Ctrl+S, Ctrl+O, Ctrl+B, Ctrl+P, F1, and F2 each open their page and, pressed again on it, return to the origin. Enter follows the same pairing on lists: it opens the selected item, and on an opened source file it closes the file and returns to its list. Esc closes any secondary page and is the one key that always goes back. A key that opens a page never has a different key as its only way out. See [0110](../decisions/0110-page-origin.md) and [0200](../decisions/0200-enter-closes-a-source-file.md).
+
 ## Repository snapshot
 
 The reader walks the selected directory without following symlinks. It includes Go, Python, JavaScript, TypeScript, Markdown, and the `go.mod`, `pyproject.toml`, and `package.json` manifests. Hidden directories, dependencies, fixtures, and generated output directories are excluded. Git ignore rules apply when Git is available. Generated Go source is excluded from package analysis.
