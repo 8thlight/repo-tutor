@@ -52,7 +52,7 @@ func TestPickingAStudiedTopicResumesItWithoutARequest(t *testing.T) {
 	}
 }
 
-func TestResumingAnAnsweredTopicRestoresReviewAndEndsOtherQuizzes(t *testing.T) {
+func TestResumingATopicEndsOtherQuizzesAndProbesAndLandsOnItsLesson(t *testing.T) {
 	model := twoTopicFixture()
 	graded := tutor.Reply{Explanation: "Right.", Feedback: "Correct.", Assessment: "correct", Citations: model.application.state.Turns[0].Reply.Citations}
 	model.application.state.Turns = append(model.application.state.Turns[:1], session.Turn{Topic: tutor.Overview, Action: "answer", Message: "main", Reply: graded}, model.application.state.Turns[1])
@@ -60,8 +60,8 @@ func TestResumingAnAnsweredTopicRestoresReviewAndEndsOtherQuizzes(t *testing.T) 
 	model.application.state.Probe = &tutor.Probe{Topics: []string{"core"}}
 	back, _ := model.openTopic(tutor.Overview)
 	state := back.(interfaceModel).application.state
-	if !state.Review || state.Question != "" || state.Quiz != nil || state.Probe != nil || !reviewing(state) {
-		t.Fatalf("a graded topic should resume at its review and leave other quizzes: %+v", state)
+	if state.Review || state.Quiz != nil || state.Probe != nil || reviewing(state) || state.Turns[len(state.Turns)-1].Action != "lesson" {
+		t.Fatalf("a topic should resume at its lesson, not its quiz feedback, and leave other quizzes: %+v", state)
 	}
 }
 
@@ -122,5 +122,43 @@ func TestTopicsAndQuizListsOpenOnTheCurrentItem(t *testing.T) {
 	opened, _ = model.openPicker("topics", "core")
 	if _, ok := opened.(interfaceModel).picker.SelectedItem().(browserItem); !ok {
 		t.Fatal("a filtered list should still select its first match")
+	}
+}
+
+func TestComingBackToATopicYouQuizzedResumesItsLessonNotTheQuizQuestion(t *testing.T) {
+	model := twoTopicFixture()
+	state := model.application.state
+	state.Turns[0].Reply.Question = ""
+	quizReply := tutor.Reply{Explanation: "Try this.", Question: "Which package owns the calculation?", Assessment: "none", Citations: state.Turns[0].Reply.Citations}
+	state.Turns = append([]session.Turn{state.Turns[0], {Topic: tutor.Overview, Action: "quiz", Reply: quizReply}}, state.Turns[1:]...)
+	state.Topic, state.Question, state.Review = "core", "", false
+	state.Quiz = nil
+	resumed, found := resumeTopic(state, tutor.Overview)
+	if !found {
+		t.Fatal("the overview was studied, so it should resume")
+	}
+	last := resumed.Turns[len(resumed.Turns)-1]
+	if last.Action != "lesson" || !last.Resumed || resumed.Question != "" || resumed.Review || resumed.Quiz != nil {
+		t.Fatalf("a quiz question must not come back without its quiz: %+v question=%q", last, resumed.Question)
+	}
+}
+
+func TestATopicWithOnlyQuizTurnsStartsItsLessonAgain(t *testing.T) {
+	model := twoTopicFixture()
+	state := model.application.state
+	state.Turns = []session.Turn{{Topic: "core", Action: "quiz", Reply: tutor.Reply{Question: "Q?"}}, state.Turns[0]}
+	if _, found := resumeTopic(state, "core"); found {
+		t.Fatal("quiz turns alone are not something to resume")
+	}
+}
+
+func TestAnAnsweredQuizTurnIsNotResumedEither(t *testing.T) {
+	model := twoTopicFixture()
+	state := model.application.state
+	state.Turns = append(state.Turns, session.Turn{Topic: tutor.Overview, Action: "answer", Reply: tutor.Reply{Assessment: "correct", Feedback: "Yes."}})
+	state.Topic = "core"
+	resumed, found := resumeTopic(state, tutor.Overview)
+	if !found || resumed.Turns[len(resumed.Turns)-1].Action != "lesson" || resumed.Review {
+		t.Fatalf("feedback from a quiz should not be what a topic resumes into: %+v", resumed.Turns[len(resumed.Turns)-1])
 	}
 }
