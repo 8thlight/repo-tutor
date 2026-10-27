@@ -27,13 +27,13 @@ In a terminal, the tutor opens a full-screen workspace with a lesson, the curren
 | `Ctrl+P` | Progress |
 | `Tab` / `Shift+Tab` | Switch views |
 | `PgUp` / `PgDown` | Scroll the lesson or source |
-| `Alt+Left` / `Alt+Right` | Read earlier or later saved turns |
-| `Esc` | Return to the lesson, or stop a running turn |
-| `Ctrl+R` | Retry a failed turn with your draft kept |
+| `Alt+Left` / `Alt+Right` | Read earlier or later saved steps |
+| `Esc` | Return to the lesson, or stop what is loading |
+| `Ctrl+R` | Retry a failed request with your draft kept |
 | `F1` / `F2` / `F3` | Help / About / Settings |
 | `Ctrl+Q` | Save and quit |
 
-Topic and source lists support arrow keys and `/` to filter. Press `Enter` to confirm a filter, then `Enter` again to open an item. You can browse while the tutor thinks. A failed turn keeps your draft and completed progress.
+Topic and source lists support arrow keys and `/` to filter. Press `Enter` to confirm a filter, then `Enter` again to open an item. You can browse while the tutor thinks. A failed request keeps your draft and completed progress.
 
 A lesson is reading and ends with no question, so the box under it is always for your own questions. An action line offers a quiz on the topic, more on the topic, or the next topic. In a quiz, the tutor stops at feedback after an answer. Press `Enter` with an empty answer box, use `Ctrl+F`, or type `/continue` when you are ready for the next question. You can ask about the feedback before moving on. Each quiz has a goal of 3, 5, or 10 questions, set on the `F3` page; `Ctrl+B` shows answered, current, and upcoming questions. Incorrect answers and skips still count toward completion, while correctness is tracked separately. After finishing, `/extend` adds five more questions. Future questions are generated as you continue, so their text is not available in advance.
 
