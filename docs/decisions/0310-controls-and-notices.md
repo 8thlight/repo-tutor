@@ -1,6 +1,6 @@
 # 0310. Controls and notices
 
-Status: accepted
+Status: accepted. The typing keys move from the divider to the input frame, and `Alt+Enter` is dropped, under [0330](0330-input-frame.md).
 
 ## Context
 
