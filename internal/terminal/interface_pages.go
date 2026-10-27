@@ -22,7 +22,7 @@ const interfaceHelp = `Start with one idea, then try explaining it back.
 Enter           Send an answer, question, or slash command
 Alt+Enter       Add a line to your answer
 Ctrl+N          Learn the next topic
-Ctrl+G          Start a five-question quiz
+Ctrl+G          Start a quiz on this topic (length is a setting)
 /probe           Check what you already know and skip those topics
 Ctrl+F          Continue after reviewing an answer
 Ctrl+B          Open the quiz question index and goal

@@ -176,7 +176,7 @@ func (application application) recordReply(action, message, topic, pending strin
 	if action == "question" && reviewing(application.state) && reply.Question == "" {
 		updated.Review = true
 	}
-	updated.Quiz = tutor.RecordQuiz(updated.Quiz, topic, action, pending, reply)
+	updated.Quiz = tutor.RecordQuiz(updated.Quiz, topic, action, pending, reply, application.settings.QuizLength)
 	updated.Progress = tutor.Record(updated.Progress, topic, action, reply)
 	updated.Probe, updated.Progress = tutor.RecordProbe(updated.Probe, application.course, updated.Progress, action, topic, reply)
 	updated.Turns = append(append([]session.Turn(nil), updated.Turns...), session.Turn{Topic: topic, Action: action, Message: message, Reply: reply})
@@ -323,10 +323,10 @@ func (application *application) command(ctx context.Context, text string) (bool,
 /topic NUMBER|PATH   Learn a chosen topic (number, directory, or import path)
 /next                Learn the next topic
 /probe               Ask three short questions and skip topics you already know
-/quiz                Start a five-question quiz on this topic
+/quiz                Start a quiz on this topic
 /continue            Continue after reviewing an answer
 /questions           Show the quiz question index and goal
-/extend              Add five questions after finishing a quiz
+/extend              Add more questions after finishing a quiz
 /review              Revisit a topic with missed or partial answers
 /progress            Show lessons and quiz outcomes
 /sources             List the excerpts available for this topic

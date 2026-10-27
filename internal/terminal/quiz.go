@@ -35,7 +35,7 @@ func continueIntent(state session.State, course []tutor.Topic, extend bool) (tur
 		if quiz == nil || quiz.Completed() < quiz.Goal {
 			return turnIntent{}, fmt.Errorf("finish the current quiz before extending it")
 		}
-		return turnIntent{"quiz-extend", "Extend this quiz with five more questions. Ask the next question without repeating earlier exercises.", state.Topic}, nil
+		return turnIntent{"quiz-extend", "Extend this quiz with more questions. Ask the next question without repeating earlier exercises.", state.Topic}, nil
 	}
 	if state.Question != "" && !reviewing(state) {
 		return turnIntent{}, fmt.Errorf("answer or skip the current question before continuing")
@@ -54,7 +54,7 @@ func continueIntent(state session.State, course []tutor.Topic, extend bool) (tur
 	}
 	if quiz != nil {
 		if quiz.Completed() >= quiz.Goal {
-			return turnIntent{}, fmt.Errorf("quiz complete: %d / %d answered. Use /extend for five more or choose another topic", quiz.Completed(), quiz.Goal)
+			return turnIntent{}, fmt.Errorf("quiz complete: %d / %d answered. Use /extend for more or choose another topic", quiz.Completed(), quiz.Goal)
 		}
 		return turnIntent{"quiz-next", fmt.Sprintf("Ask question %d of %d for this quiz. Choose a different exercise from previous questions.", len(quiz.Questions)+1, quiz.Goal), state.Topic}, nil
 	}
@@ -63,7 +63,7 @@ func continueIntent(state session.State, course []tutor.Topic, extend bool) (tur
 
 func quizText(quiz *tutor.Quiz) string {
 	if quiz == nil {
-		return "Start a five-question quiz with Ctrl+G or /quiz.\n\nEach answer is a step toward the goal. Use /extend after finishing for five more."
+		return "Start a quiz with Ctrl+G or /quiz.\n\nEach answer is a step toward the goal. Use /extend after finishing for more."
 	}
 	var text strings.Builder
 	fmt.Fprintf(&text, "QUIZ · %d / %d answered\n\n", quiz.Completed(), quiz.Goal)
@@ -79,7 +79,7 @@ func quizText(quiz *tutor.Quiz) string {
 		fmt.Fprintf(&text, "%d. [%s] %s\n\n", index+1, status, question)
 	}
 	if quiz.Completed() >= quiz.Goal {
-		text.WriteString("Goal reached. /extend adds five more questions; /quiz starts a new quiz.\n")
+		text.WriteString("Goal reached. /extend adds more questions; /quiz starts a new quiz.\n")
 	}
 	return text.String()
 }
@@ -96,7 +96,7 @@ func (model interfaceModel) continueQuiz(extend bool) (tea.Model, tea.Cmd) {
 func quizSlotItems(state session.State) []browserItem {
 	quiz := state.Quiz
 	if quiz == nil {
-		return []browserItem{{"No quiz yet", "Start a five-question quiz with Ctrl+G or /quiz.", "", -1}}
+		return []browserItem{{"No quiz yet", "Start a quiz with Ctrl+G or /quiz.", "", -1}}
 	}
 	items := make([]browserItem, 0, quiz.Goal)
 	for slot := 0; slot < max(quiz.Goal, len(quiz.Questions)); slot++ {
