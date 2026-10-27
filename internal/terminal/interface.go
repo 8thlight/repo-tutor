@@ -344,6 +344,10 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+k":
 			return model.toggled("topics", func() (tea.Model, tea.Cmd) { return model.openPicker("topics", "") })
 		case "ctrl+s":
+			if model.movingToAnotherTopic() && model.page != "sources" {
+				model.notice = sourcesWaitNotice
+				return model, nil
+			}
 			return model.toggled("sources", func() (tea.Model, tea.Cmd) { return model.openPicker("sources", "") })
 		case "ctrl+p":
 			return model.toggled("progress", func() (tea.Model, tea.Cmd) {
@@ -451,7 +455,7 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 func (model interfaceModel) begin(intent turnIntent) (tea.Model, tea.Cmd) {
 	if model.busy {
-		model.notice = "A turn is already running. Esc stops it; Topics (Ctrl+K) and the last lesson's sources (Ctrl+S) stay open."
+		model.notice = model.runningNotice()
 		return model, nil
 	}
 	if len(intent.message) > 16000 {
