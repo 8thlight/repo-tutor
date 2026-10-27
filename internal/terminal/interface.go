@@ -451,7 +451,7 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 func (model interfaceModel) begin(intent turnIntent) (tea.Model, tea.Cmd) {
 	if model.busy {
-		model.notice = "A turn is already running. Esc stops it; you can still browse topics and sources."
+		model.notice = "A turn is already running. Esc stops it; Topics (Ctrl+K) and the last lesson's sources (Ctrl+S) stay open."
 		return model, nil
 	}
 	if len(intent.message) > 16000 {

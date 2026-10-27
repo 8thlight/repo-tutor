@@ -1,6 +1,7 @@
 package terminal
 
 import (
+	tea "charm.land/bubbletea/v2"
 	"strings"
 	"testing"
 
@@ -146,5 +147,22 @@ func TestACompleteQuizOffersTheNextTopicAndExtend(t *testing.T) {
 	title, _ := model.nextTopicLabel()
 	if !strings.Contains(line, "Ctrl+N Next: "+title) || !strings.Contains(line, "/extend adds 5") {
 		t.Fatalf("got %q", line)
+	}
+}
+
+func TestWaitingTextPointsAtWhatCanActuallyBeOpened(t *testing.T) {
+	model := interfaceFixture()
+	started, _ := model.begin(turnIntent{"lesson", "go", tutor.Overview})
+	model = started.(interfaceModel)
+	defer model.cancel()
+	content := ansi.Strip(model.View().Content)
+	if !strings.Contains(content, "topics (Ctrl+K) or the last lesson's sources (Ctrl+S)") {
+		t.Fatalf("the wait should name the keys and say whose sources open:\n%s", content)
+	}
+	for _, key := range []rune{'k', 's'} {
+		opened, _ := press(model, key, tea.ModCtrl)
+		if opened.page == "lesson" {
+			t.Fatalf("Ctrl+%c should open a page while a turn runs", key)
+		}
 	}
 }
