@@ -24,9 +24,9 @@ func (model interfaceModel) palette() interfacePalette {
 		return interfacePalette{}
 	}
 	if model.dark {
-		return interfacePalette{lipgloss.Color("#5EEAD4"), lipgloss.Color("#E4E4E7"), lipgloss.Color("#A1A1AA"), lipgloss.Color("#3F3F46"), lipgloss.Color("#FBBF24"), model.cutoutColor("#09090B")}
+		return interfacePalette{model.highlight(model.application.settings.Highlight), lipgloss.Color("#E4E4E7"), lipgloss.Color("#A1A1AA"), lipgloss.Color("#3F3F46"), lipgloss.Color("#FBBF24"), model.cutoutColor("#09090B")}
 	}
-	return interfacePalette{lipgloss.Color("#0F766E"), lipgloss.Color("#18181B"), lipgloss.Color("#52525B"), lipgloss.Color("#D4D4D8"), lipgloss.Color("#92400E"), model.cutoutColor("#FAFAFA")}
+	return interfacePalette{model.highlight(model.application.settings.Highlight), lipgloss.Color("#18181B"), lipgloss.Color("#52525B"), lipgloss.Color("#D4D4D8"), lipgloss.Color("#92400E"), model.cutoutColor("#FAFAFA")}
 }
 
 func (model interfaceModel) bodyWidth() int {
