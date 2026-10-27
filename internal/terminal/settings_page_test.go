@@ -200,3 +200,13 @@ func TestTheFocusedRowStaysInViewOnAShortScreen(t *testing.T) {
 		t.Fatalf("focus line %d should sit inside the view %d..%d", focusLine, offset, offset+model.viewport.Height())
 	}
 }
+
+func TestThePageNamesItsKeysAndLeavesTheMarkdownViewKeyToTheFile(t *testing.T) {
+	content := ansi.Strip(settingsPageFixture(t).settingsContent())
+	if !strings.HasPrefix(content, settingsKeysNote) {
+		t.Fatalf("the page should open with its keys:\n%s", content)
+	}
+	if strings.Contains(content, "Press v") {
+		t.Fatal("the v key belongs to the file view and not to this page")
+	}
+}
