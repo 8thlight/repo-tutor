@@ -1,7 +1,6 @@
 package terminal
 
 import (
-	"bytes"
 	"fmt"
 	"path/filepath"
 	"sort"
@@ -20,12 +19,11 @@ import (
 
 const interfaceHelp = `Start with one idea, then try explaining it back.
 
-Enter           Send an answer, question, or slash command
+Enter           Send your question or answer
 Alt+Enter       Add a line to your answer
 Ctrl+N          Learn the next topic
 Ctrl+G          Start a quiz on this topic (length is a setting)
-/probe           Check what you already know and skip those topics
-Ctrl+F          Continue after reviewing an answer
+Ctrl+F          More on this topic, or the next quiz question
 Ctrl+B          Open the quiz question index and goal
 Ctrl+K          Browse and search topics
 Ctrl+S          Browse cited sources and open the code
@@ -45,12 +43,6 @@ Ctrl+Q          Save and quit (Ctrl+C also quits when idle)
 
 In lists: arrows move, / filters, Enter confirms a filter,
 then Enter opens the selected item. Esc goes back.
-
-Slash commands from the plain interface also work:
-/topics [filter]  /topic NUMBER|PATH  /next  /quiz  /review
-/continue  /questions  /extend  /refresh  /home
-/sources  /read PATH:LINE  /hotspots  /progress  /glossary
-/map  /help  /quit
 
 Completed replies save before display. A failed or stopped turn
 does not change your recorded outcomes. Answers are assessed by
@@ -241,7 +233,7 @@ func (model interfaceModel) showSource(file repository.File, location repository
 	model, command := model.document("source", fmt.Sprintf("%s:%d", location.Path, location.Line), content.String())
 	model.viewport.SetYOffset(max(0, rowsAbove-sourceContextRows))
 	model.sourcePath, model.sourceLine, model.sourceRendered = file.Path, location.Line, false
-	model.notice = "Source snapshot · /read PATH:LINE opens another location · Enter or Esc goes back"
+	model.notice = "Source snapshot · Enter or Esc goes back"
 	if isMarkdown(file.Path) {
 		model.notice = "Source snapshot · v shows the rendered page · Enter or Esc goes back"
 	}
@@ -404,91 +396,4 @@ func (model interfaceModel) cyclePage(backward bool) (tea.Model, tea.Cmd) {
 		return model.openPicker("quiz", "")
 	}
 	return model.openDocument("progress", "Progress", model.progressText())
-}
-
-func (model interfaceModel) slash(text string) (tea.Model, tea.Cmd) {
-	parts := strings.SplitN(text, " ", 2)
-	argument := ""
-	if len(parts) > 1 {
-		argument = strings.TrimSpace(parts[1])
-	}
-	switch parts[0] {
-	case "/continue", "/extend":
-		model.input.Reset()
-		return model.continueQuiz(parts[0] == "/extend")
-	case "/home":
-		model.input.Reset()
-		return model.openHome()
-	case "/refresh":
-		model.input.Reset()
-		return model.begin(turnIntent{"lesson", openingMessage, tutor.Overview})
-	case "/probe":
-		intent, err := probeIntent(model.application.state, model.application.course)
-		if err != nil {
-			model.notice = err.Error()
-			return model, nil
-		}
-		model.input.Reset()
-		return model.begin(intent)
-	case "/questions":
-		model.input.Reset()
-		return model.openPicker("quiz", "")
-	case "/quit", "/exit":
-		return model, tea.Quit
-	case "/topics", "/sources":
-		model.input.Reset()
-		return model.openPicker(strings.TrimPrefix(parts[0], "/"), argument)
-	case "/hotspots":
-		model.input.Reset()
-		for _, topic := range model.application.course {
-			if topic.ID == tutor.HotspotsTopic {
-				return model.openTopic(topic.ID)
-			}
-		}
-		model.notice = "This repository has no hotspots to teach."
-		return model, nil
-	case "/topic":
-		topic, err := model.application.findTopic(argument)
-		if err != nil {
-			model.notice = err.Error()
-			return model, nil
-		}
-		model.input.Reset()
-		return model.begin(turnIntent{"lesson", "Teach the next small idea in this topic.", topic.ID})
-	case "/next":
-		model.input.Reset()
-		return model.next()
-	case "/quiz":
-		model.input.Reset()
-		return model.begin(turnIntent{"quiz", "Ask one practical comprehension question about this topic.", model.application.state.Topic})
-	case "/review":
-		selected, highest := "", 0
-		for _, topic := range model.application.course {
-			progress := model.application.state.Progress[topic.ID]
-			if score := progress.Missed + progress.Partial - progress.Correct; score > highest {
-				selected, highest = topic.ID, score
-			}
-		}
-		if selected == "" {
-			model.notice = "No topic currently needs review. Try a quiz or continue with Ctrl+N."
-			return model, nil
-		}
-		model.input.Reset()
-		return model.begin(turnIntent{"lesson", "Review this topic with a different example, focusing on earlier confusion.", selected})
-	case "/help":
-		model.input.Reset()
-		return model.openDocument("help", "A few ways to keep learning", interfaceHelp)
-	case "/progress":
-		model.input.Reset()
-		return model.openDocument("progress", "Progress", model.progressText())
-	}
-	var output bytes.Buffer
-	local := model.application
-	local.output = &output
-	if _, err := local.command(model.ctx, text); err != nil {
-		model.notice = tutor.Plain(err.Error())
-		return model, nil
-	}
-	model.input.Reset()
-	return model.openDocument("document", strings.TrimPrefix(text, "/"), output.String())
 }
