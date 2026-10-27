@@ -215,7 +215,7 @@ func (model interfaceModel) topicTitle() string {
 func (model interfaceModel) composer() string {
 	palette := model.palette()
 	muted := lipgloss.NewStyle().Foreground(palette.muted)
-	if model.page != "lesson" {
+	if model.page != "lesson" && !model.askingGoal() {
 		content := muted.Render("Esc goes back")
 		if model.input.Value() != "" {
 			content += "\n" + muted.Render(ansi.Truncate("Draft kept: "+tutor.Plain(model.input.Value()), model.bodyWidth(), "…"))
@@ -240,6 +240,9 @@ func (model interfaceModel) composer() string {
 		if quiz := model.application.state.Quiz; quiz != nil && quiz.Completed() >= quiz.Goal {
 			label = fmt.Sprintf("QUIZ COMPLETE · %d / %d answered\n/extend adds 5 · Ctrl+B results", quiz.Completed(), quiz.Goal)
 		}
+	}
+	if model.askingGoal() {
+		label = goalComposerLabel
 	}
 	if model.busy {
 		label = "Preparing your next turn · Esc stops it"
@@ -350,6 +353,9 @@ func (model interfaceModel) View() tea.View {
 	keys := "Enter send   Ctrl+N next   Ctrl+G quiz   Ctrl+K topics   Ctrl+S sources   Ctrl+Q quit"
 	if reviewing(model.application.state) {
 		keys = "Ctrl+F continue   Ctrl+B quiz index   Ctrl+S sources   Ctrl+Q quit"
+	}
+	if model.askingGoal() {
+		keys = "Enter keeps the default   F1 help   Ctrl+Q quit"
 	}
 	if width < 80 {
 		keys = "Enter send · F1 help · Ctrl+Q quit"

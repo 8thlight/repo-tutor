@@ -34,7 +34,7 @@ The repository defaults to the current directory. Tutor sessions resume automati
 Tutor options:
   --agent auto|claude|codex  CLI to use (auto prefers Codex, then Claude)
   --model NAME              Model supported by your chosen CLI
-  --goal TEXT               What you want to learn
+  --goal TEXT               What you want to learn (skips the first-run question)
   --new                     Archive the previous session and start again
   --ask TEXT                Ask one question, save the reply, and exit
   --state-dir DIRECTORY     Store sessions in this directory

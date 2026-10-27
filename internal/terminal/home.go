@@ -68,6 +68,11 @@ func (model interfaceModel) homeContent() string {
 	width := model.bodyWidth()
 	var content strings.Builder
 	content.WriteString(accent.Render("A codebase, one idea at a time.") + "\n\n")
+	if model.goalPending {
+		content.WriteString(ansi.Wrap("repo-tutor teaches you this repository from its own files. It explains one small idea at a time, asks a question, and checks your answer against the code it cites.", width, "") + "\n\n")
+		content.WriteString(accent.Render(goalQuestion) + "\n" + muted.Render(ansi.Wrap(model.application.state.Goal+"  (default)", width, "")))
+		return content.String()
+	}
 	if tutor.Started(model.application.state.Progress) {
 		content.WriteString(muted.Render(ansi.Wrap(model.homeStatus(), width, "")) + "\n\n")
 	} else {
