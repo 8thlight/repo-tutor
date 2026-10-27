@@ -20,7 +20,7 @@ In a terminal, the tutor opens a full-screen workspace with a lesson, the curren
 | -- | -- |
 | `Enter` / `Alt+Enter` | Send your question or answer / add a line |
 | `Ctrl+N` / `Ctrl+G` | Next topic / quiz this topic |
-| `Ctrl+F` | More on this topic, or the next quiz question after feedback |
+| `Ctrl+F` | More on this topic, the next quiz question after feedback, or more questions when a quiz is done |
 | `Ctrl+B` | Quiz question index and goal |
 | `Ctrl+K` | Search topics |
 | `Ctrl+S` | Browse citations and open source at the cited line |
@@ -41,7 +41,7 @@ While an exercise loads, the lesson pane shows a loading view. Sources remain av
 
 Use `--plain` for line input, terminal scrollback, or a screen reader. Pipes, redirected output, `TERM=dumb`, and `--ask TEXT` use plain output automatically. The full-screen interface adapts to terminal width and light or dark backgrounds; `NO_COLOR=1` disables styling.
 
-Slash commands also work in the answer box and in plain mode:
+The full-screen interface has no slash commands: a line that starts with a slash is sent as a question, and every action has a key, a list, or a Home entry. Slash commands work in plain mode:
 
 | Command | What it does |
 | -- | -- |
@@ -53,7 +53,7 @@ Slash commands also work in the answer box and in plain mode:
 | `/continue` | Move on after reviewing an answer |
 | `/questions` or `/extend` | Show the quiz index or add more questions after finishing |
 | `/progress` or `/review` | See recorded outcomes or revisit a weak topic |
-| `/hotspots` | Open the "Where change happens" lesson (the plain interface lists the files) |
+| `/hotspots` | List files with churn and branching logic (the full-screen interface teaches them as the "Where change happens" topic) |
 | `/sources` or `/read README.md:1` | Inspect the source snapshot |
 | `/map` or `/glossary` | Show a dependency diagram or type index |
 | `/quit` | Save and exit |
