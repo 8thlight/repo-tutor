@@ -719,3 +719,45 @@ func TestOneHelperArmsEverySecondPressPrompt(t *testing.T) {
 		t.Fatal("the helper should arm a leave when asked")
 	}
 }
+
+func TestLeavingAQuizShowsTheLessonEvenAfterHintsAndClarifications(t *testing.T) {
+	model := quizWithLessonFixture()
+	clarification := tutor.Reply{Explanation: "A hint about the question.", Question: "First?", Assessment: "none", Citations: model.application.state.Turns[0].Reply.Citations}
+	model.application.state.Turns = append(model.application.state.Turns, session.Turn{Topic: tutor.Overview, Action: "question", Message: "hint?", Reply: clarification})
+	model.history = len(model.application.state.Turns) - 1
+	armed, _ := press(model, 'l', tea.ModCtrl)
+	left, _ := press(armed, 'l', tea.ModCtrl)
+	state := left.application.state
+	last := state.Turns[len(state.Turns)-1]
+	if last.Action != "lesson" || state.Question != "" || state.Quiz != nil || reviewing(state) {
+		t.Fatalf("leaving should land on the lesson, not on a hint that still carries the quiz question: %+v question=%q", last.Action, state.Question)
+	}
+	if left.activeTab() != "course" || left.actionLine() == "" || left.notice != "Left the quiz" {
+		t.Fatalf("the course view and its actions should be back: tab=%s notice=%q", left.activeTab(), left.notice)
+	}
+}
+
+func TestShowingATopicAgainNeverLeavesAQuestionPending(t *testing.T) {
+	model := quizWithLessonFixture()
+	model.application.state.Turns[0].Reply.Question = "A leftover lesson question?"
+	again := showAgain(model.application.state, 0)
+	if again.Question != "" || again.Review {
+		t.Fatalf("a lesson shown again should leave nothing pending: %q", again.Question)
+	}
+}
+
+func TestLeavingAProbeOnAnUnstudiedTopicReturnsToTheLastLesson(t *testing.T) {
+	model := readingFixture()
+	model.application.state.Quiz = nil
+	model.application.state.Probe = &tutor.Probe{Topics: []string{"core"}, Asked: 1}
+	model.application.state.Topic, model.application.state.Question = "core", "Do you know core?"
+	left, found := leaveQuestions(model.application.state)
+	if !found || left.Topic != tutor.Overview || left.Probe != nil || left.Question != "" {
+		t.Fatalf("with no lesson on the probed topic, leaving should land on the last lesson read: found=%v topic=%s", found, left.Topic)
+	}
+	empty := model.application.state
+	empty.Turns = nil
+	if _, found := leaveQuestions(empty); found {
+		t.Fatal("with no lesson anywhere there is nowhere to return to")
+	}
+}

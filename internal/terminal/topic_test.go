@@ -32,8 +32,8 @@ func TestPickingAStudiedTopicResumesItWithoutARequest(t *testing.T) {
 	if command != nil && model.busy || calls != 0 || model.busy {
 		t.Fatal("resuming a studied topic must not call the agent")
 	}
-	if state.Topic != tutor.Overview || state.Question != "Which package would you inspect to change a calculation?" || len(state.Turns) != 3 || model.history != 2 || model.page != "lesson" {
-		t.Fatalf("overview should be current with its question restored: %+v", state)
+	if state.Topic != tutor.Overview || state.Question != "" || len(state.Turns) != 3 || model.history != 2 || model.page != "lesson" {
+		t.Fatalf("overview should be current with nothing pending: %+v", state)
 	}
 	if state.Progress[tutor.Overview] != before[tutor.Overview] || state.Progress["core"] != before["core"] {
 		t.Fatal("a resume must not change progress")
@@ -43,8 +43,8 @@ func TestPickingAStudiedTopicResumesItWithoutARequest(t *testing.T) {
 	}
 	again, _ := model.openTopic("core")
 	state = again.(interfaceModel).application.state
-	if state.Topic != "core" || state.Question != "Where is the calculation?" || len(state.Turns) != 4 {
-		t.Fatalf("returning to core should restore its question: %+v", state)
+	if state.Topic != "core" || state.Question != "" || len(state.Turns) != 4 {
+		t.Fatalf("returning to core should leave nothing pending: %+v", state)
 	}
 	same, _ := again.(interfaceModel).openTopic("core")
 	if len(same.(interfaceModel).application.state.Turns) != 4 {

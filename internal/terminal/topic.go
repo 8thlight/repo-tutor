@@ -8,7 +8,7 @@ import (
 )
 
 func readingAction(action string) bool {
-	return action == "lesson" || action == "question"
+	return action == "lesson"
 }
 
 func latestReading(state session.State, topic string) (int, bool) {
@@ -24,7 +24,7 @@ func showAgain(state session.State, source int) session.State {
 	copied := state.Turns[source]
 	copied.Resumed = true
 	state.Topic = copied.Topic
-	state.Question = copied.Reply.Question
+	state.Question = ""
 	state.Review = false
 	state.Turns = append(append([]session.Turn(nil), state.Turns...), copied)
 	if trimmed := len(state.Turns) - 200; trimmed > 0 {
@@ -51,6 +51,11 @@ func resumeTopic(state session.State, topic string) (session.State, bool) {
 
 func leaveQuestions(state session.State) (session.State, bool) {
 	source, found := latestReading(state, state.Topic)
+	if !found {
+		for index := len(state.Turns) - 1; index >= 0 && !found; index-- {
+			source, found = index, readingAction(state.Turns[index].Action)
+		}
+	}
 	if !found {
 		return state, false
 	}
