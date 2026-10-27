@@ -385,20 +385,12 @@ Each lesson is saved before it is displayed. Ctrl-C exits; completed turns remai
 		}
 		return false, application.turn(ctx, "lesson", "Teach this topic and connect it to its foundations.", topic.ID)
 	case "/review":
-		var selected tutor.Topic
-		highest := 0
-		for _, topic := range application.course {
-			progress := application.state.Progress[topic.ID]
-			score := progress.Missed + progress.Partial - progress.Correct
-			if score > highest {
-				selected, highest = topic, score
-			}
-		}
-		if highest == 0 {
+		selected, found := tutor.WeakTopic(application.course, application.state.Progress)
+		if !found {
 			fmt.Fprintln(application.output, "No topic currently needs review from recorded answers. Try /quiz or /next.")
 			return false, nil
 		}
-		return false, application.turn(ctx, "lesson", "Review this topic with a different example, focusing on earlier confusion.", selected.ID)
+		return false, application.turn(ctx, "lesson", tutor.ReviewMessage, selected.ID)
 	default:
 		return false, fmt.Errorf("unknown command %q; type /help", parts[0])
 	}

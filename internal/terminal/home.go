@@ -17,6 +17,7 @@ const (
 	placeAbout    = "about"
 	placeSettings = "settings"
 	placeProbe    = "probe"
+	placeReview   = "review"
 	placeRefresh  = "refresh"
 )
 
@@ -43,6 +44,9 @@ func (model interfaceModel) homeEntries() []homeEntry {
 	}
 	entries = append(entries,
 		homeEntry{placeTopics, "Topics", "Pick any topic to study or revisit.", ""})
+	if weak, found := tutor.WeakTopic(model.application.course, state.Progress); found {
+		entries = append(entries, homeEntry{placeReview, "Review a weak topic", "Revisit " + tutor.Plain(weak.Title) + " with a different example.", ""})
+	}
 	if model.overviewStale {
 		entries = append(entries, homeEntry{placeRefresh, "Refresh the overview", "The repository changed since the overview was written. Generate a new one.", ""})
 	}
@@ -164,6 +168,13 @@ func (model interfaceModel) openHomeEntry(entry homeEntry) (tea.Model, tea.Cmd) 
 		return model.openAbout()
 	case placeSettings:
 		return model.openSettings()
+	case placeReview:
+		weak, found := tutor.WeakTopic(model.application.course, model.application.state.Progress)
+		if !found {
+			model.notice = "No topic currently needs review."
+			return model, nil
+		}
+		return model.begin(turnIntent{"lesson", tutor.ReviewMessage, weak.ID})
 	case placeProbe:
 		intent, err := probeIntent(model.application.state, model.application.course)
 		if err != nil {
