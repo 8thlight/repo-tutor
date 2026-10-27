@@ -88,6 +88,8 @@ In explanation and feedback use path:line references for factual code claims. Th
 array must include the supporting locations. Never cite an unprovided line.
 For action lesson, explain the current topic. Do not ask the learner a question; leave
 question empty. The learner can ask their own questions and start a quiz afterward.
+A topic that begins with :file: names one source file. Explain that file: its purpose, its main
+declarations, and how the rest of the repository uses it, citing its own lines.
 For topic hotspots, explain what the reading hints show about where change concentrates in this
 repository, trace what the highest-ranked file is responsible for in the sources, and say that
 the hints are reading priorities and not defects.
@@ -217,6 +219,11 @@ func selectExcerpts(snapshot repository.Snapshot, request Request) []Excerpt {
 			}
 		}
 		candidates = append(candidates, candidate{name, line})
+	}
+	if path, isFile := FilePath(request.Topic); isFile {
+		for _, start := range fileWindowStarts(snapshot, path) {
+			add(path, start)
+		}
 	}
 	if request.Topic == HotspotsTopic {
 		for _, hotspot := range snapshot.Hotspots[:min(5, len(snapshot.Hotspots))] {

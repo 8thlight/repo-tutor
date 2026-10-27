@@ -49,6 +49,14 @@ func NextUnheld(course []Topic, progress map[string]Progress, current string) (T
 		}
 		found = found || topic.ID == current
 	}
+	if found {
+		return Topic{}, false
+	}
+	for _, topic := range course {
+		if progress[topic.ID].Lessons == 0 && !progress[topic.ID].Held {
+			return topic, true
+		}
+	}
 	return Topic{}, false
 }
 
