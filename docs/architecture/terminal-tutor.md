@@ -80,6 +80,24 @@ A topic's understanding is its latest finished quiz: correct earns 1, partial ea
 
 `T` on an open source file opens the topic `:file:` plus its path, so a file can be taught like a package. The topic is outside the course list and outside the coverage and understanding figures, but it has its own cached first lesson, saved lesson to resume, quiz, and progress. Its excerpts start with the file in up to six consecutive windows of about 6 KB, and the prompt tells the tutor that such a topic names one file. From a file topic `Ctrl+N` opens the first course topic that is neither read nor known. See [0430](../decisions/0430-teach-a-file.md).
 
+## Where messages go
+
+Each kind of message has one purpose, and a new message starts by asking which kind it is. Help that stays true while a page is open belongs on a line that stays. A notice only says what just happened.
+
+| Message | Purpose | Lifetime |
+| -- | -- | -- |
+| Page title | Names the page and the learner's place in it, never a key | While the page is open |
+| Notice, footer left | Says what just happened, such as "Lesson ready" or "Saved" | Ten seconds, or until a failure is resolved |
+| Footer keys | The keys that work on this page, then the app-wide keys | While the page is open |
+| Input frame | What the box is for, on its top border, and the keys that act on it, on its bottom border | While the box shows |
+| Action line | The next-step choices after a lesson | While the lesson is current |
+| Sidebar | Course status and the navigation keys that apply now | While the course view shows |
+| Tab line | The tab hint | Always |
+| Loading view | What the tutor is doing, and what stays open meanwhile | While a request runs |
+| Second-press prompt | Confirms a skip or an exit, in the warning color | Five seconds |
+
+See [0310](../decisions/0310-controls-and-notices.md), [0400](../decisions/0400-housekeeping.md), and [0440](../decisions/0440-page-keys-in-the-footer.md).
+
 ## Prefetch
 
 A few seconds after a turn finishes, the workspace checks the topic that Ctrl+N would open. When that topic has no saved turn and no fresh cached lesson, it asks the agent for the topic's first lesson in a separate agent session and saves the result to the lesson cache, with a muted spinner and "Preparing next lesson" at the bottom right. The prefetch waits for the same lock as every turn. Starting a foreground turn for another topic, or quitting, cancels it, and a cancelled prefetch is not counted as a failure. A request for the topic being prefetched waits behind it and then uses the lesson it saved; Esc stops both. A first-lesson turn always checks the lesson cache before asking the agent. A failed prefetch is not retried in the same run. Prefetching records nothing in progress or history. `--no-prefetch` turns it off, and plain mode never prefetches. See [0150](../decisions/0150-prefetch-next-lesson.md).

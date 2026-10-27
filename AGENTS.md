@@ -25,6 +25,7 @@ Only ADRs are numbered, by tens.
 - The binary never calls a model API. It runs an agent CLI headless through a driver. See `docs/decisions/0010-agent-driver.md`.
 - Name a unit for what it acts on and what it does. Spell words out. Follow the linter.
 - A comment is a smell. Run `comments-review` before you commit.
+- Put each message where its purpose says, as listed in the "Where messages go" table of `docs/architecture/terminal-tutor.md`. Help that stays true while a page is open never goes in a notice.
 - Put throwaway notes in `.scratch/` and generated output in `output/`. Do not commit either.
 - Run `just check` before you commit, from the Nix dev shell.
 - Keep each commit as small as possible: one change with its test. Split unrelated edits into separate commits.

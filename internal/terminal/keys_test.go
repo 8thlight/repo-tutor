@@ -1,6 +1,7 @@
 package terminal
 
 import (
+	"repo-tutor/internal/repository"
 	"strings"
 	"testing"
 
@@ -188,5 +189,69 @@ func TestABlankRowAlsoSeparatesAQuizQuestionFromTheInput(t *testing.T) {
 	}
 	if strings.TrimSpace(lines[1]) != "" {
 		t.Fatalf("a blank row should also sit under the rule:\n%s", strings.Join(lines, "\n"))
+	}
+}
+
+func TestTheFooterLeadsWithTheKeysOfTheCurrentPage(t *testing.T) {
+	model := interfaceFixture()
+	model.width = 120
+	opened, _ := model.openPicker("topics", "")
+	list := ansi.Strip(opened.(interfaceModel).footerKeys(120))
+	if !strings.HasPrefix(list, "↑↓ move · / search · Enter open · F1 Help") {
+		t.Fatalf("a list should lead with its own keys: %q", list)
+	}
+	if strings.Contains(list, "A show answer") {
+		t.Fatal("only the question index offers A")
+	}
+	quiz := revealFixture()
+	quiz.width = 120
+	index, _ := quiz.openPicker("quiz", "")
+	if line := ansi.Strip(index.(interfaceModel).footerKeys(140)); !strings.Contains(line, "Enter open · A show answer · F1 Help") {
+		t.Fatalf("the question index should offer A: %q", line)
+	}
+	file, _ := model.openFile(repository.Location{Path: "main.go", Line: 1})
+	if line := ansi.Strip(file.(interfaceModel).footerKeys(120)); !strings.HasPrefix(line, "Enter or Esc back · T teach this file · F1 Help") || strings.Contains(line, "rendered or source") {
+		t.Fatalf("a code file should offer back and teach: %q", line)
+	}
+	markdown, _ := model.openFile(repository.Location{Path: "README.md", Line: 1})
+	if line := ansi.Strip(markdown.(interfaceModel).footerKeys(140)); !strings.Contains(line, "T teach this file · v rendered or source · F1 Help") {
+		t.Fatalf("a Markdown file should also offer v: %q", line)
+	}
+}
+
+func TestANarrowFooterDropsPageKeysBeforeItDropsQuit(t *testing.T) {
+	model := interfaceFixture()
+	file, _ := model.openFile(repository.Location{Path: "README.md", Line: 1})
+	opened := file.(interfaceModel)
+	for _, width := range []int{80, 50, 40, 30} {
+		line := ansi.Strip(opened.footerKeys(width))
+		if ansi.StringWidth(line) > width || !strings.Contains(line, "Ctrl+Q quit") && width >= 30 && !strings.Contains(line, "F1") {
+			t.Fatalf("width %d: %q", width, line)
+		}
+	}
+	if line := ansi.Strip(opened.footerKeys(40)); !strings.HasSuffix(line, "Ctrl+Q quit") {
+		t.Fatalf("at 40 columns the quit key should survive: %q", line)
+	}
+}
+
+func TestNavigationHelpNeverAppearsInTheNoticeLine(t *testing.T) {
+	model := interfaceFixture()
+	for name, open := range map[string]func() interfaceModel{
+		"a list": func() interfaceModel { next, _ := model.openPicker("sources", ""); return next.(interfaceModel) },
+		"a code file": func() interfaceModel {
+			next, _ := model.openFile(repository.Location{Path: "main.go", Line: 1})
+			return next.(interfaceModel)
+		},
+		"a Markdown file": func() interfaceModel {
+			next, _ := model.openFile(repository.Location{Path: "README.md", Line: 1})
+			return next.(interfaceModel)
+		},
+	} {
+		notice := open().notice
+		for _, forbidden := range []string{"Enter or Esc", "↑↓", "/ search", "T teaches", "Enter open"} {
+			if strings.Contains(notice, forbidden) {
+				t.Fatalf("%s: the notice should say what happened and not how to navigate: %q", name, notice)
+			}
+		}
 	}
 }
