@@ -490,9 +490,6 @@ func (model interfaceModel) submit() (tea.Model, tea.Cmd) {
 		}
 		return model, nil
 	}
-	if strings.HasPrefix(text, "/") {
-		return model.slash(text)
-	}
 	if model.history != len(model.application.state.Turns)-1 {
 		model.notice = "You are viewing an earlier step. Esc returns to the current question; your draft stays."
 		return model, nil

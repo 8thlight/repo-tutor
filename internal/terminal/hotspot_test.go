@@ -16,30 +16,27 @@ func hotspotFixture() interfaceModel {
 	return model
 }
 
-func TestSlashHotspotsOpensTheHotspotsLesson(t *testing.T) {
+func TestChoosingTheHotspotsTopicInTheListStartsItsLesson(t *testing.T) {
 	model := hotspotFixture()
-	model.input.SetValue("/hotspots")
-	next, command := model.submit()
-	opened := next.(interfaceModel)
-	if command == nil && opened.page != "lesson" {
-		t.Fatalf("/hotspots should open the lesson, got page %s", opened.page)
-	}
-	if opened.intent.topic != tutor.HotspotsTopic && opened.application.state.Topic != tutor.HotspotsTopic {
-		t.Fatalf("the lesson should be about the hotspots topic: %+v", opened.application.state.Topic)
-	}
-	if opened.cancel != nil {
-		opened.cancel()
+	started, _ := model.openTopic(tutor.HotspotsTopic)
+	opened := started.(interfaceModel)
+	defer opened.cancel()
+	if !opened.busy || opened.intent.topic != tutor.HotspotsTopic || opened.intent.action != "lesson" {
+		t.Fatalf("the topic should start its lesson: %+v", opened.intent)
 	}
 }
 
-func TestSlashHotspotsExplainsWhenThereAreNone(t *testing.T) {
-	model := interfaceFixture()
-	model.application.snapshot.Hotspots = nil
-	model.application.course = tutor.Course(model.application.snapshot)
-	model.input.SetValue("/hotspots")
-	next, _ := model.submit()
-	if next.(interfaceModel).notice != "This repository has no hotspots to teach." {
-		t.Fatalf("got %q", next.(interfaceModel).notice)
+func TestATextLineThatStartsWithASlashIsAnOrdinaryQuestion(t *testing.T) {
+	model := readingFixture()
+	model.input.SetValue("/topics what is this?")
+	started, _ := model.submit()
+	asked := started.(interfaceModel)
+	defer asked.cancel()
+	if !asked.busy || asked.intent.action != "question" || asked.intent.message != "/topics what is this?" {
+		t.Fatalf("slash text should be sent as a question: %+v", asked.intent)
+	}
+	if asked.page == "topics" {
+		t.Fatal("the interface no longer parses commands")
 	}
 }
 
