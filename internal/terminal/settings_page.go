@@ -22,7 +22,7 @@ const (
 	noColorHighlightNote  = "Color is off, so highlight color does not apply."
 	highlightShiftNote    = "Colors shift to stay readable on your terminal's background."
 	settingsLabelWidth    = 14
-	examLengthNote        = "At most; an exam has one question for each topic you have read."
+	examLengthNote        = "An exam has one question for each topic you have read, up to this many."
 )
 
 type settingChoice struct {
@@ -65,9 +65,16 @@ func quizLengthChoice(length int) settingChoice {
 	}
 }
 
+func examLengthLabel(length int) string {
+	if length == 0 {
+		return "Every topic read"
+	}
+	return fmt.Sprintf("%d questions", length)
+}
+
 func examLengthChoice(length int) settingChoice {
 	return settingChoice{
-		group: "EXAM LENGTH", label: fmt.Sprintf("%d questions", length),
+		group: "EXAM LENGTH", label: examLengthLabel(length),
 		selected: func(current settings.Settings) bool { return current.ExamLength == length },
 		apply: func(current settings.Settings) settings.Settings {
 			current.ExamLength = length

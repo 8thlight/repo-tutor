@@ -24,7 +24,7 @@ const (
 var (
 	TabStyles   = []string{TabStyleNone, TabStyleBlock, TabStyleSlanted, TabStyleRounded, TabStyleJoinedSlanted, TabStyleJoinedRounded, TabStyleJoinedArrows}
 	QuizLengths = []int{3, 5, 10}
-	ExamLengths = []int{10, 20, 30}
+	ExamLengths = []int{10, 20, 30, 0}
 	Highlights  = []string{"red", "orange", "yellow", HighlightGreen, "blue", "dark_blue", "purple"}
 )
 

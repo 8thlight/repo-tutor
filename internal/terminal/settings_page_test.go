@@ -164,7 +164,7 @@ func TestHighlightChoiceIsSavedAndChangesTheAccent(t *testing.T) {
 	model.noColor = false
 	model.dark = true
 	before := model.palette().accent
-	for range 15 {
+	for range 16 {
 		model, _ = press(model, tea.KeyDown, 0)
 	}
 	model, _ = press(model, tea.KeySpace, 0)
@@ -261,5 +261,23 @@ func TestExamLengthIsChosenSavedAndExplainedOnce(t *testing.T) {
 	content := ansi.Strip(model.settingsContent())
 	if strings.Count(content, examLengthNote) != 1 || !strings.Contains(content, "(•) 20 questions") {
 		t.Fatalf("the group should explain itself once and show the choice:\n%s", content)
+	}
+}
+
+func TestEveryTopicReadIsAnExamLengthChoice(t *testing.T) {
+	model := settingsPageFixture(t)
+	for range 15 {
+		model, _ = press(model, tea.KeyDown, 0)
+	}
+	model, _ = press(model, tea.KeySpace, 0)
+	if model.application.settings.ExamLength != 0 {
+		t.Fatalf("the last exam length means no cap: %+v", model.application.settings)
+	}
+	if !strings.Contains(ansi.Strip(model.settingsContent()), "(•) Every topic read") {
+		t.Fatalf("the choice should read Every topic read:\n%s", ansi.Strip(model.settingsContent()))
+	}
+	saved, _, _ := session.LoadSettings(model.application.settingsBase)
+	if saved.ExamLength != 0 {
+		t.Fatalf("the choice should be saved, got %d", saved.ExamLength)
 	}
 }

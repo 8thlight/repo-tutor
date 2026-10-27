@@ -230,3 +230,12 @@ func TestExamStateIsSavedWithTheSession(t *testing.T) {
 		t.Fatal("the exam and its plan live in the session state")
 	}
 }
+
+func TestHomeNamesTheRealCountForAnUncappedExam(t *testing.T) {
+	model := examFixture(t, 13)
+	model.application.settings.ExamLength = 0
+	entry, offered := homeHas(model, placeExam)
+	if !offered || !strings.Contains(entry.description, "13 questions") {
+		t.Fatalf("an uncapped exam on thirteen topics should say 13: %+v", entry)
+	}
+}
