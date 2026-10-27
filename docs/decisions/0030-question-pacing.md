@@ -1,6 +1,6 @@
 # 0030. Question pacing and quiz goals
 
-Status: accepted. The question index is replaced by [0060](0060-selectable-quiz-index.md).
+Status: accepted. The question index is replaced by [0060](0060-selectable-quiz-index.md). Lessons no longer end with a question under [0300](0300-course-flow.md), so the review and Continue rules apply only to quizzes and probes.
 
 ## Context
 
