@@ -32,6 +32,7 @@ type State struct {
 	Model       string                    `json:"model"`
 	SessionID   string                    `json:"session_id"`
 	Goal        string                    `json:"goal"`
+	GoalChosen  bool                      `json:"goal_chosen,omitempty"`
 	Topic       string                    `json:"topic"`
 	Question    string                    `json:"question"`
 	Review      bool                      `json:"review,omitempty"`

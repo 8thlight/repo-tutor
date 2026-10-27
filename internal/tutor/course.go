@@ -9,6 +9,8 @@ import (
 
 const Overview = "overview"
 
+const DefaultGoal = "Understand the architecture and become ready to make a small change."
+
 type Topic struct {
 	ID    string `json:"id"`
 	Title string `json:"title"`

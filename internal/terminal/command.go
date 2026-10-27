@@ -278,9 +278,9 @@ func study(ctx context.Context, arguments []string, input io.Reader, output, dia
 		}
 		learningGoal := *goal
 		if learningGoal == "" {
-			learningGoal = "Understand the architecture and become ready to make a small change."
+			learningGoal = tutor.DefaultGoal
 		}
-		state = session.State{Version: session.Version, Repository: snapshot.Root, Fingerprint: snapshot.Fingerprint, Agent: chosen, Model: *model, Goal: learningGoal, Topic: tutor.Overview, Progress: map[string]tutor.Progress{}}
+		state = session.State{Version: session.Version, Repository: snapshot.Root, Fingerprint: snapshot.Fingerprint, Agent: chosen, Model: *model, Goal: learningGoal, GoalChosen: *goal != "", Topic: tutor.Overview, Progress: map[string]tutor.Progress{}}
 		for topic, progress := range carriedProgress {
 			state.Progress[topic] = progress
 		}
