@@ -310,9 +310,10 @@ func TestTabsGroupPagesByActivity(t *testing.T) {
 			t.Fatalf("%s page should highlight %s, got %s", page, want, got)
 		}
 	}
+	model.noColor = false
 	opened, _ := model.openPicker("topics", "")
 	content := ansi.Strip(opened.(interfaceModel).View().Content)
-	if !strings.Contains(content, "Home    Course    Quiz    Progress") {
+	if !strings.Contains(content, "Home   Course   Quiz   Progress") {
 		t.Fatalf("the tab bar should show four tabs:\n%s", content)
 	}
 }

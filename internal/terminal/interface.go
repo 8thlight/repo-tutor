@@ -3,6 +3,7 @@ package terminal
 import (
 	"context"
 	"fmt"
+	"image/color"
 	"io"
 	"os"
 	"strings"
@@ -68,6 +69,7 @@ type interfaceModel struct {
 	dark              bool
 	richColor         bool
 	noColor           bool
+	background        color.Color
 	busy              bool
 	cancel            context.CancelFunc
 	intent            turnIntent
@@ -227,6 +229,7 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 		return model, nil
 	case tea.BackgroundColorMsg:
 		model.dark = message.IsDark()
+		model.background = message.Color
 		model.resize()
 		return model, nil
 	case beginFirstLesson:
