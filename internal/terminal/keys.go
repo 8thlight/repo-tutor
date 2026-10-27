@@ -78,7 +78,7 @@ func (model interfaceModel) typingHints() []keyHint {
 	case reviewing(state) && state.Quiz != nil && state.Quiz.Completed() >= state.Quiz.Goal:
 		return []keyHint{{"Ctrl+F", "more questions"}}
 	case reviewing(state):
-		return []keyHint{{"Enter or Ctrl+F", "continue"}}
+		return []keyHint{{"Enter or Ctrl+N", "continue"}}
 	}
 	return []keyHint{{"Enter", "send"}}
 }

@@ -20,9 +20,9 @@ import (
 const interfaceHelp = `Start with one idea, then try explaining it back.
 
 Enter           Send your question or answer
-Ctrl+N          Learn the next topic
+Ctrl+N          Next: the next topic, or the next question during a quiz
 Ctrl+G          Start a quiz on this topic (length is a setting)
-Ctrl+F          More on this topic, or the next quiz question
+Ctrl+F          More: more on this topic, or more questions after a quiz
 Ctrl+B          Open the quiz question index and goal
 Ctrl+K          Browse and search topics
 Ctrl+S          Browse cited sources and open the code

@@ -368,6 +368,10 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+b":
 			return model.toggled("quiz", func() (tea.Model, tea.Cmd) { return model.openPicker("quiz", "") })
 		case "ctrl+f":
+			if inQuestionFlow(model.application.state) {
+				model.notice = "Ctrl+N asks the next question."
+				return model, nil
+			}
 			return model.continueQuiz(false)
 		case "f3":
 			return model.toggled("about", model.openAbout)
@@ -384,6 +388,9 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+l":
 			return model.learn()
 		case "ctrl+n":
+			if inQuestionFlow(model.application.state) {
+				return model.continueQuiz(false)
+			}
 			return model.next()
 		case "ctrl+g":
 			return model.begin(turnIntent{"quiz", "Ask one practical comprehension question about this topic.", model.application.state.Topic})
