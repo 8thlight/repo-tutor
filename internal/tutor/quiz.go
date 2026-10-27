@@ -4,6 +4,7 @@ type QuizQuestion struct {
 	Text       string `json:"text"`
 	Assessment string `json:"assessment,omitempty"`
 	Turn       int    `json:"turn,omitempty"`
+	Topic      string `json:"topic,omitempty"`
 }
 
 type Quiz struct {
@@ -11,6 +12,19 @@ type Quiz struct {
 	Goal      int            `json:"goal"`
 	Active    int            `json:"active"`
 	Questions []QuizQuestion `json:"questions"`
+	Exam      bool           `json:"exam,omitempty"`
+	Plan      []string       `json:"plan,omitempty"`
+}
+
+func (quiz Quiz) Covers(topic string) bool {
+	return quiz.Exam || quiz.Topic == topic
+}
+
+func (quiz Quiz) NextTopic(fallback string) string {
+	if quiz.Exam && len(quiz.Questions) < len(quiz.Plan) {
+		return quiz.Plan[len(quiz.Questions)]
+	}
+	return fallback
 }
 
 func (quiz Quiz) Completed() int {
@@ -32,7 +46,7 @@ func RecordQuiz(previous *Quiz, topic, action, pending string, reply Reply, leng
 	if action == "quiz" {
 		return &Quiz{Topic: topic, Goal: length, Questions: []QuizQuestion{{Text: reply.Question}}}
 	}
-	if action == "lesson" || action == "probe" || (previous != nil && previous.Topic != topic) {
+	if action == "lesson" || action == "probe" || (previous != nil && !previous.Exam && previous.Topic != topic) {
 		return nil
 	}
 	if previous == nil {
@@ -44,7 +58,11 @@ func RecordQuiz(previous *Quiz, topic, action, pending string, reply Reply, leng
 		quiz.Goal += length
 	}
 	if action == "quiz-next" || action == "quiz-extend" {
-		quiz.Questions = append(quiz.Questions, QuizQuestion{Text: reply.Question})
+		next := QuizQuestion{Text: reply.Question}
+		if quiz.Exam {
+			next.Topic = topic
+		}
+		quiz.Questions = append(quiz.Questions, next)
 		quiz.Active = len(quiz.Questions) - 1
 	}
 	if action == "answer" && quiz.Active < len(quiz.Questions) {

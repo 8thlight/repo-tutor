@@ -4,7 +4,7 @@ const ReviewMessage = "Review this topic with a different example, focusing on e
 
 const weakBelow = 60
 
-func WeakTopic(course []Topic, progress map[string]Progress) (Topic, bool) {
+func WeakTopic(course []Topic, progress map[string]Progress, exam *ExamResult) (Topic, bool) {
 	var selected Topic
 	lowest, found := 100, false
 	for _, topic := range course {
@@ -16,5 +16,19 @@ func WeakTopic(course []Topic, progress map[string]Progress) (Topic, bool) {
 			selected, lowest, found = topic, percent, true
 		}
 	}
-	return selected, found
+	if found || exam == nil {
+		return selected, found
+	}
+	missed := map[string]bool{}
+	for _, result := range exam.Topics {
+		if result.Credit == 0 {
+			missed[result.Topic] = true
+		}
+	}
+	for _, topic := range course {
+		if missed[topic.ID] {
+			return topic, true
+		}
+	}
+	return Topic{}, false
 }

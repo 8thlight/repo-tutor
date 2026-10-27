@@ -44,7 +44,7 @@ func (model interfaceModel) homeEntries() []homeEntry {
 	}
 	entries = append(entries,
 		homeEntry{placeTopics, "Topics", "Pick any topic to study or revisit.", ""})
-	if weak, found := tutor.WeakTopic(model.application.course, state.Progress); found {
+	if weak, found := tutor.WeakTopic(model.application.course, state.Progress, state.LastExam); found {
 		entries = append(entries, homeEntry{placeReview, "Review a weak topic", "Revisit " + tutor.Plain(weak.Title) + " with a different example.", ""})
 	}
 	if model.overviewStale {
@@ -169,7 +169,7 @@ func (model interfaceModel) openHomeEntry(entry homeEntry) (tea.Model, tea.Cmd) 
 	case placeSettings:
 		return model.openSettings()
 	case placeReview:
-		weak, found := tutor.WeakTopic(model.application.course, model.application.state.Progress)
+		weak, found := tutor.WeakTopic(model.application.course, model.application.state.Progress, model.application.state.LastExam)
 		if !found {
 			model.notice = "No topic currently needs review."
 			return model, nil

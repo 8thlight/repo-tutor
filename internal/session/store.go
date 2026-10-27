@@ -14,7 +14,7 @@ import (
 	"repo-tutor/internal/tutor"
 )
 
-const Version = 6
+const Version = 7
 
 type Turn struct {
 	Topic   string      `json:"topic"`
@@ -37,6 +37,7 @@ type State struct {
 	Question    string                    `json:"question"`
 	Review      bool                      `json:"review,omitempty"`
 	Quiz        *tutor.Quiz               `json:"quiz,omitempty"`
+	LastExam    *tutor.ExamResult         `json:"last_exam,omitempty"`
 	Probe       *tutor.Probe              `json:"probe,omitempty"`
 	Progress    map[string]tutor.Progress `json:"progress"`
 	Turns       []Turn                    `json:"turns"`
