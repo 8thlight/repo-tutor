@@ -60,3 +60,17 @@ func TestOnlyReleaseTagsReplaceTheDevelopmentVersion(t *testing.T) {
 		}
 	}
 }
+
+func TestNoticesStartWithTheGoStandardLibraryLicense(t *testing.T) {
+	text := Notices()
+	library := strings.Index(text, "\nGo standard library go")
+	firstModule := strings.Index(text, "\ncharm.land/")
+	if library < 0 || firstModule < 0 || library > firstModule {
+		t.Fatalf("the Go standard library should be listed before the modules: %d %d", library, firstModule)
+	}
+	for _, expected := range []string{"The Go Authors", "Redistribution and use in source and binary forms"} {
+		if !strings.Contains(text[library:firstModule], expected) {
+			t.Fatalf("the standard library entry should carry its license text, missing %q", expected)
+		}
+	}
+}
