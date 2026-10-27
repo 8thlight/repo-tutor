@@ -22,7 +22,7 @@ func TestKnownValuesAreRead(t *testing.T) {
 
 func TestAnUnknownValueUsesThatFieldsDefault(t *testing.T) {
 	got, status := settings.Decode([]byte(`{"tab_style":"zigzag","highlight":"pink","markdown_opens_rendered":false}`))
-	if got.TabStyle != settings.TabStyleBlock || got.Highlight != "teal" || got.MarkdownOpensRendered || status.Unreadable {
+	if got.TabStyle != settings.TabStyleBlock || got.Highlight != "green" || got.MarkdownOpensRendered || status.Unreadable {
 		t.Fatalf("got %+v %+v", got, status)
 	}
 }
@@ -49,9 +49,25 @@ func TestANewerVersionIsReadButReadOnly(t *testing.T) {
 }
 
 func TestEncodedSettingsDecodeToThemselves(t *testing.T) {
-	want := settings.Settings{TabStyle: "slanted", MarkdownOpensRendered: false, Highlight: "teal"}
+	want := settings.Settings{TabStyle: "slanted", MarkdownOpensRendered: false, Highlight: "dark_blue"}
 	got, status := settings.Decode(settings.Encode(want))
 	if got != want || status != (settings.Status{}) {
 		t.Fatalf("got %+v %+v", got, status)
+	}
+}
+
+func TestAnEarlierTealValueFallsBackToGreen(t *testing.T) {
+	got, status := settings.Decode([]byte(`{"version":1,"highlight":"teal"}`))
+	if got.Highlight != "green" || status.Unreadable {
+		t.Fatalf("got %+v %+v", got, status)
+	}
+}
+
+func TestEveryJoinedStyleIsAKnownValue(t *testing.T) {
+	for _, style := range []string{"joined_slanted", "joined_rounded", "joined_arrows"} {
+		got, _ := settings.Decode([]byte(`{"tab_style":"` + style + `"}`))
+		if got.TabStyle != style {
+			t.Fatalf("%s should be accepted, got %s", style, got.TabStyle)
+		}
 	}
 }
