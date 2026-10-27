@@ -209,10 +209,17 @@ func (model interfaceModel) topicTitle() string {
 	if model.movingToAnotherTopic() {
 		identifier = model.intent.topic
 	}
+	return model.titleOf(identifier)
+}
+
+func (model interfaceModel) titleOf(identifier string) string {
 	for _, topic := range model.application.course {
 		if topic.ID == identifier {
 			return tutor.Plain(topic.Title)
 		}
+	}
+	if path, isFile := tutor.FilePath(identifier); isFile {
+		return tutor.FileTitlePrefix + tutor.Plain(path)
 	}
 	return identifier
 }
@@ -318,10 +325,8 @@ func (model interfaceModel) View() tea.View {
 	body := model.viewport.View()
 	if model.busy && model.page == "lesson" {
 		title = "Preparing " + turnLabel(model.intent.action)
-		for _, topic := range model.application.course {
-			if topic.ID == model.intent.topic {
-				title += " · " + tutor.Plain(topic.Title)
-			}
+		if named := model.titleOf(model.intent.topic); named != model.intent.topic {
+			title += " · " + named
 		}
 		body = accent.Render(model.spinner.View()+" "+waitingText(model.intent.action)) + "\n\n" + muted.Render(groundingText(model.intent.action)+"\n\n"+model.browsingHint()+"\nEsc stops this request; your progress is saved.")
 	}
