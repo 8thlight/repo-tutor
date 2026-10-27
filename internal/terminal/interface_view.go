@@ -76,6 +76,7 @@ func (model *interfaceModel) rebuildContent() {
 		model.viewport.SetContent(model.homeContent())
 	} else if model.page == "settings" {
 		model.viewport.SetContent(model.settingsContent())
+		model.followSettingsFocus()
 	} else {
 		model.viewport.SetContent(model.pageContent)
 	}
