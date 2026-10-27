@@ -32,6 +32,9 @@ func probeIntent(state session.State, course []tutor.Topic) (turnIntent, error) 
 func continueIntent(state session.State, course []tutor.Topic, extend bool) (turnIntent, error) {
 	quiz := state.Quiz
 	if extend {
+		if quiz != nil && quiz.Exam {
+			return turnIntent{}, fmt.Errorf("an exam cannot be extended")
+		}
 		if quiz == nil || quiz.Completed() < quiz.Goal {
 			return turnIntent{}, fmt.Errorf("finish the current quiz before extending it")
 		}
@@ -56,7 +59,7 @@ func continueIntent(state session.State, course []tutor.Topic, extend bool) (tur
 		if quiz.Completed() >= quiz.Goal {
 			return turnIntent{}, fmt.Errorf("quiz complete: %d / %d answered. Use /extend for more or choose another topic", quiz.Completed(), quiz.Goal)
 		}
-		return turnIntent{"quiz-next", nextQuestionMessage(quiz), state.Topic}, nil
+		return turnIntent{"quiz-next", nextQuestionMessage(quiz), quiz.NextTopic(state.Topic)}, nil
 	}
 	return turnIntent{"lesson", "Continue with the next small idea in this topic and one new question.", state.Topic}, nil
 }

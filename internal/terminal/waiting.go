@@ -22,6 +22,8 @@ func (model interfaceModel) runningNotice() string {
 
 func finishedNotice(action string) string {
 	switch action {
+	case "exam":
+		return "Exam started"
 	case "quiz", "quiz-next", "quiz-extend", "probe":
 		return "Question ready"
 	case "answer":

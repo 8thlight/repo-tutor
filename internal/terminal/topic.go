@@ -42,7 +42,7 @@ func resumeTopic(state session.State, topic string) (session.State, bool) {
 	if state.Topic == topic {
 		return state, true
 	}
-	if state.Quiz != nil && state.Quiz.Topic != topic {
+	if state.Quiz != nil && (state.Quiz.Exam || state.Quiz.Topic != topic) {
 		state.Quiz = nil
 	}
 	state.Probe = nil

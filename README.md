@@ -24,7 +24,7 @@ In a terminal, the tutor opens a full-screen workspace with a lesson, the curren
 | `Ctrl+B` | Quiz question index and goal |
 | `Ctrl+K` | Search topics |
 | `Ctrl+S` | Browse citations and every file, and open source at the cited line |
-| `Ctrl+P` | Progress: your goal, coverage, and understanding by topic |
+| `Ctrl+P` | Progress: your goal, coverage, understanding by topic, and your latest exam |
 | `T` (in a source file) | Teach this file: start a lesson on it |
 | `Tab` / `Shift+Tab` | Switch views |
 | `PgUp` / `PgDown` | Scroll the lesson or source |

@@ -56,6 +56,9 @@ func (model interfaceModel) flowName() string {
 	if model.application.state.Probe != nil {
 		return "probe"
 	}
+	if quiz := model.application.state.Quiz; quiz != nil && quiz.Exam {
+		return "exam"
+	}
 	return "quiz"
 }
 
@@ -63,7 +66,7 @@ func (model interfaceModel) leavePrompt() string {
 	if model.flowName() == "probe" {
 		return "Press Ctrl+L again to leave this probe."
 	}
-	return "Press Ctrl+L again to leave this quiz. It will not be scored."
+	return "Press Ctrl+L again to leave this " + model.flowName() + ". It will not be scored."
 }
 
 func (model interfaceModel) leaveQuiz() (tea.Model, tea.Cmd) {
@@ -88,9 +91,12 @@ func (model interfaceModel) leaveQuiz() (tea.Model, tea.Cmd) {
 
 func (application application) skipOpenQuestion() (session.State, bool) {
 	state := application.state
-	if quiz, skipped := tutor.SkipQuizQuestion(state.Quiz); skipped && state.Quiz != nil && state.Quiz.Topic == state.Topic {
+	if quiz, skipped := tutor.SkipQuizQuestion(state.Quiz); skipped && state.Quiz != nil && state.Quiz.Covers(state.Topic) {
 		state.Quiz = quiz
 		state.Progress = tutor.RecordQuizScore(state.Progress, state.Topic, quiz)
+		if result, finished := tutor.ResultOf(quiz); finished {
+			state.LastExam = &result
+		}
 	} else if probe, progress, skipped := tutor.SkipProbeQuestion(state.Probe, state.Progress, state.Topic); skipped {
 		state.Probe, state.Progress = probe, progress
 	} else {

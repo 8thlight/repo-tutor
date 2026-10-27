@@ -22,10 +22,10 @@ func isQuestionKey(key string) bool {
 
 func nextQuestionKey(state session.State) (string, bool) {
 	quiz := state.Quiz
-	if quiz == nil || quiz.Topic != state.Topic || quiz.Finished() || len(quiz.Questions) >= quiz.Goal {
+	if quiz == nil || !quiz.Covers(state.Topic) || quiz.Finished() || len(quiz.Questions) >= quiz.Goal {
 		return "", false
 	}
-	return questionKey(state.Topic, len(quiz.Questions)), true
+	return questionKey(quiz.NextTopic(state.Topic), len(quiz.Questions)), true
 }
 
 type questionStash struct {
@@ -76,6 +76,9 @@ func (stash *questionStash) clear() {
 }
 
 func nextQuestionMessage(quiz *tutor.Quiz) string {
+	if quiz.Exam {
+		return fmt.Sprintf("Ask question %d of %d for a course exam, about this topic only. Choose an exercise unlike the earlier ones.", len(quiz.Questions)+1, quiz.Goal)
+	}
 	return fmt.Sprintf("Ask question %d of %d for this quiz. Choose a different exercise from previous questions.", len(quiz.Questions)+1, quiz.Goal)
 }
 
@@ -93,8 +96,9 @@ func (application application) prefetchQuestion(ctx context.Context) error {
 	if !wanted {
 		return fmt.Errorf("the quiz has no next question")
 	}
-	request := tutor.Request{Topic: state.Topic, Action: "quiz", Message: prefetchQuestionMessage(state.Quiz), Goal: state.Goal, Lesson: lastLesson(state.Turns, state.Topic)}
-	if len(state.Turns) > 0 {
+	topic := state.Quiz.NextTopic(state.Topic)
+	request := tutor.Request{Topic: topic, Action: "quiz", Message: prefetchQuestionMessage(state.Quiz), Goal: state.Goal, Lesson: lastLesson(state.Turns, topic)}
+	if len(state.Turns) > 0 && topic == state.Topic {
 		previous := state.Turns[len(state.Turns)-1].Reply
 		request.Previous = &previous
 	}

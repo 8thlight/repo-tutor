@@ -41,7 +41,7 @@ func (model interfaceModel) readingActions() bool {
 	if model.history != len(state.Turns)-1 {
 		return false
 	}
-	return state.Question == "" && !reviewing(state) && (state.Quiz == nil || state.Quiz.Topic != state.Topic)
+	return state.Question == "" && !reviewing(state) && (state.Quiz == nil || !state.Quiz.Covers(state.Topic))
 }
 
 const (
@@ -58,7 +58,9 @@ func (model interfaceModel) courseActions(titled bool) [][2]string {
 		return [][2]string{{"Ctrl+N", "Next question"}}
 	}
 	var actions [][2]string
-	if state.Quiz != nil && state.Quiz.Finished() {
+	if state.Quiz != nil && state.Quiz.Exam && state.Quiz.Finished() {
+		actions = [][2]string{{"Ctrl+P", "Exam results"}}
+	} else if state.Quiz != nil && state.Quiz.Finished() {
 		actions = [][2]string{{"Ctrl+F", fmt.Sprintf("More questions (%d)", model.quizLength())}}
 	} else {
 		actions = [][2]string{

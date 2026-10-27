@@ -71,7 +71,7 @@ func RecordProbe(previous *Probe, course []Topic, progress map[string]Progress, 
 			}
 		}
 		return &Probe{Topics: ProbeTopics(course, progress), Asked: 1}, progress
-	case previous == nil || action == "lesson" || action == "quiz" || action == "quiz-next" || action == "quiz-extend":
+	case previous == nil || action == "lesson" || action == "quiz" || action == "exam" || action == "quiz-next" || action == "quiz-extend":
 		return nil, progress
 	}
 	current, asking := previous.Current()

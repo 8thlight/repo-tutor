@@ -351,7 +351,11 @@ func (model interfaceModel) progressText() string {
 	state := model.application.state
 	score := tutor.ScoreCourse(model.application.course, state.Progress)
 	fmt.Fprintf(&text, "Goal\n%s\n\n", ansi.Wrap(tutor.Plain(state.Goal), model.bodyWidth(), ""))
-	fmt.Fprintf(&text, "Coverage        %d of %d topics read\nUnderstanding   %d%% across the topics you have read\n\n", score.Read, score.Total, score.Percent)
+	fmt.Fprintf(&text, "Coverage        %d of %d topics read\nUnderstanding   %d%% across the topics you have read\n", score.Read, score.Total, score.Percent)
+	if exam := state.LastExam; exam != nil {
+		fmt.Fprintf(&text, "Latest exam     %d%% · %s (%d questions)\n", exam.Percent(), tutor.Band(exam.Percent()), exam.Goal)
+	}
+	text.WriteString("\n")
 	listed := false
 	for _, topic := range model.application.course {
 		progress := state.Progress[topic.ID]
@@ -378,6 +382,17 @@ func (model interfaceModel) progressText() string {
 	}
 	if !listed {
 		text.WriteString("Your first lesson is a good place to start.\n\n")
+	}
+	if exam := state.LastExam; exam != nil {
+		text.WriteString("Latest exam, by topic\n")
+		for _, result := range exam.Topics {
+			outcome := map[int]string{2: "correct", 1: "partial", 0: "missed"}[result.Credit]
+			fmt.Fprintf(&text, "  %s · %s\n", model.titleOf(result.Topic), outcome)
+		}
+		text.WriteString("\n")
+	}
+	if tutor.ExamAvailable(model.application.course, state.Progress) {
+		fmt.Fprintf(&text, "Take an exam from Home: %d questions from the topics you have read.\n\n", model.examPlanLength())
 	}
 	text.WriteString("Reading is not graded. The latest finished quiz on a topic sets its score, so a retake can raise it.\nA topic under 60% shows up on Home as one to review.\n")
 	return text.String()

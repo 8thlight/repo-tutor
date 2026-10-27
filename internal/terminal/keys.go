@@ -135,6 +135,8 @@ func (model interfaceModel) typingHints() []keyHint {
 		return []keyHint{{"Esc", "stops it", false}}
 	case model.page == "lesson" && model.history < len(state.Turns)-1:
 		return nil
+	case reviewing(state) && state.Quiz != nil && state.Quiz.Exam && state.Quiz.Completed() >= state.Quiz.Goal:
+		return []keyHint{{"Ctrl+P", "see results", false}}
 	case reviewing(state) && state.Quiz != nil && state.Quiz.Completed() >= state.Quiz.Goal:
 		return []keyHint{{"Ctrl+F", "more questions", false}}
 	case reviewing(state):
