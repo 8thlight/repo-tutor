@@ -151,3 +151,52 @@ func TestFollowUpRetainsEvidenceAndFindsNamedSymbols(t *testing.T) {
 		}
 	}
 }
+
+func hotspotSnapshot() repository.Snapshot {
+	var files []repository.File
+	var hotspots []repository.Hotspot
+	for index := range 7 {
+		path := "core/busy" + strings.Repeat("x", index) + ".go"
+		files = append(files, repository.File{Path: path, Content: "package core\n" + strings.Repeat("var value = 1\n", 80)})
+		hotspots = append(hotspots, repository.Hotspot{Path: path, Line: 50, Language: "go", Commits: 9 - index, Branches: 12, Lines: 81, Score: 100 - index})
+	}
+	snapshot := repository.Analyze(append(files, repository.File{Path: "go.mod", Content: "module course\n"}))
+	snapshot.Hotspots = hotspots
+	return snapshot
+}
+
+func TestTheCourseEndsWithWhereChangeHappensOnlyWhenThereAreHotspots(t *testing.T) {
+	course := tutor.Course(hotspotSnapshot())
+	last := course[len(course)-1]
+	if last.ID != tutor.HotspotsTopic || last.Title != "Where change happens" {
+		t.Fatalf("the hotspot topic should come last: %+v", course)
+	}
+	plain := hotspotSnapshot()
+	plain.Hotspots = nil
+	for _, topic := range tutor.Course(plain) {
+		if topic.ID == tutor.HotspotsTopic {
+			t.Fatal("a repository with no hotspots should not offer the topic")
+		}
+	}
+}
+
+func TestTheHotspotsTopicQuotesTheTopFivePlacesFirst(t *testing.T) {
+	snapshot := hotspotSnapshot()
+	prepared := tutor.Prepare(snapshot, tutor.Request{Action: "lesson", Topic: tutor.HotspotsTopic})
+	if len(prepared.Excerpts) < 5 {
+		t.Fatalf("expected at least five excerpts, got %d", len(prepared.Excerpts))
+	}
+	for index := range 5 {
+		excerpt := prepared.Excerpts[index]
+		if excerpt.Path != snapshot.Hotspots[index].Path || excerpt.StartLine != 38 {
+			t.Fatalf("excerpt %d should open at the line before hotspot %d: %+v", index, index, excerpt)
+		}
+	}
+	if !strings.Contains(prepared.Prompt, "For topic hotspots") {
+		t.Fatal("the prompt should explain how to teach the hotspots topic")
+	}
+	other := tutor.Prepare(snapshot, tutor.Request{Action: "lesson", Topic: tutor.Overview})
+	if len(other.Excerpts) > 0 && other.Excerpts[0].Path == snapshot.Hotspots[0].Path && other.Excerpts[0].StartLine == 38 {
+		t.Fatal("other topics should not lead with the hotspots")
+	}
+}

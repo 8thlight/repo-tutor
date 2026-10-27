@@ -86,6 +86,9 @@ Cite at least one provided source using its exact relative path and a line in it
 In explanation and feedback use path:line references for factual code claims. The citations
 array must include the supporting locations. Never cite an unprovided line.
 For action lesson, explain the current topic and end with one comprehension question.
+For topic hotspots, explain what the reading hints show about where change concentrates in this
+repository, trace what the highest-ranked file is responsible for in the sources, and say that
+the hints are reading priorities and not defects.
 For action probe, ask one short question that tests whether the learner already knows what this
 topic does, without teaching it; use explanation for one framing sentence and assessment none.
 For action quiz, ask one practical question about this topic without giving away its answer;
@@ -209,6 +212,11 @@ func selectExcerpts(snapshot repository.Snapshot, request Request) []Excerpt {
 			}
 		}
 		candidates = append(candidates, candidate{name, line})
+	}
+	if request.Topic == HotspotsTopic {
+		for _, hotspot := range snapshot.Hotspots[:min(5, len(snapshot.Hotspots))] {
+			add(hotspot.Path, max(1, hotspot.Line-12))
+		}
 	}
 	add("README.md", 1)
 	for _, name := range []string{"go.mod", "pyproject.toml", "package.json"} {
