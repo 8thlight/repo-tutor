@@ -13,11 +13,17 @@ const (
 	TabStyleBlock   = "block"
 	TabStyleSlanted = "slanted"
 	TabStyleRounded = "rounded"
+
+	TabStyleJoinedSlanted = "joined_slanted"
+	TabStyleJoinedRounded = "joined_rounded"
+	TabStyleJoinedArrows  = "joined_arrows"
+
+	HighlightGreen = "green"
 )
 
 var (
-	TabStyles  = []string{TabStyleNone, TabStyleBlock, TabStyleSlanted, TabStyleRounded}
-	Highlights = []string{"teal"}
+	TabStyles  = []string{TabStyleNone, TabStyleBlock, TabStyleSlanted, TabStyleRounded, TabStyleJoinedSlanted, TabStyleJoinedRounded, TabStyleJoinedArrows}
+	Highlights = []string{"red", "orange", "yellow", HighlightGreen, "blue", "dark_blue", "purple"}
 )
 
 type Settings struct {
@@ -39,7 +45,7 @@ type file struct {
 }
 
 func Defaults() Settings {
-	return Settings{TabStyle: TabStyleBlock, MarkdownOpensRendered: true, Highlight: Highlights[0]}
+	return Settings{TabStyle: TabStyleBlock, MarkdownOpensRendered: true, Highlight: HighlightGreen}
 }
 
 func Decode(data []byte) (Settings, Status) {
