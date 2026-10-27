@@ -7,10 +7,14 @@ import (
 	"repo-tutor/internal/tutor"
 )
 
+func readingAction(action string) bool {
+	return action == "lesson" || action == "question"
+}
+
 func resumeTopic(state session.State, topic string) (session.State, bool) {
 	source := -1
 	for index := len(state.Turns) - 1; index >= 0; index-- {
-		if state.Turns[index].Topic == topic {
+		if state.Turns[index].Topic == topic && readingAction(state.Turns[index].Action) {
 			source = index
 			break
 		}
