@@ -379,6 +379,9 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				return model.selectItem()
 			}
+			if model.page == "source" {
+				return model.back()
+			}
 			if model.page == "lesson" && !model.busy {
 				return model.submit()
 			}
