@@ -36,7 +36,7 @@ func homeNumber(model interfaceModel, place string) rune {
 func TestHomeRecommendsLearnFirstAndStartsTheOverviewInTheBackground(t *testing.T) {
 	model := newLearnerFixture()
 	content := ansi.Strip(model.View().Content)
-	for _, expected := range []string{"Recommended: You have not started.", "› 1  Learn", "Hotspots", "Home"} {
+	for _, expected := range []string{"Recommended: You have not started.", "› 1  Course", "Topics", "Home"} {
 		if !strings.Contains(content, expected) {
 			t.Fatalf("home is missing %q:\n%s", expected, content)
 		}
@@ -45,7 +45,7 @@ func TestHomeRecommendsLearnFirstAndStartsTheOverviewInTheBackground(t *testing.
 	for _, entry := range model.homeEntries() {
 		places = append(places, entry.place)
 	}
-	if strings.Join(places, ",") != "learn,topics,hotspots,about" {
+	if strings.Join(places, ",") != "learn,topics,about" {
 		t.Fatalf("a new learner should see only places with something to show: %v", places)
 	}
 	started, command := model.Update(beginFirstLesson{})
@@ -304,7 +304,7 @@ func TestHomeOffersProbeAndRefreshOnlyWhenTheyApply(t *testing.T) {
 
 func TestTabsGroupPagesByActivity(t *testing.T) {
 	model := interfaceFixture()
-	for page, want := range map[string]string{"home": "home", "lesson": "learn", "topics": "learn", "quiz": "learn", "sources": "learn", "source": "learn", "hotspots": "hotspots", "progress": "progress", "help": "help", "about": "about"} {
+	for page, want := range map[string]string{"home": "home", "lesson": "course", "topics": "course", "quiz": "quiz", "sources": "course", "source": "course", "hotspots": "course", "progress": "progress", "help": "help", "about": "about"} {
 		model.page = page
 		if got := model.activeTab(); got != want {
 			t.Fatalf("%s page should highlight %s, got %s", page, want, got)
@@ -312,7 +312,7 @@ func TestTabsGroupPagesByActivity(t *testing.T) {
 	}
 	opened, _ := model.openPicker("topics", "")
 	content := ansi.Strip(opened.(interfaceModel).View().Content)
-	if !strings.Contains(content, "Home    Learn    Hotspots    Progress") {
+	if !strings.Contains(content, "Home    Course    Quiz    Progress") {
 		t.Fatalf("the tab bar should show four tabs:\n%s", content)
 	}
 }
@@ -324,8 +324,8 @@ func TestTabKeyStepsThroughTheFourTabs(t *testing.T) {
 		model, _ = press(model, tea.KeyTab, 0)
 		visited = append(visited, model.activeTab())
 	}
-	if strings.Join(visited, ",") != "learn,hotspots,progress,home" {
-		t.Fatalf("Tab should step Home, Learn, Hotspots, Progress and wrap: %v", visited)
+	if strings.Join(visited, ",") != "course,quiz,progress,home" {
+		t.Fatalf("Tab should step Home, Course, Quiz, Progress and wrap: %v", visited)
 	}
 	if model.page != "home" {
 		t.Fatalf("wrapping should land on Home, got %s", model.page)
@@ -336,8 +336,8 @@ func TestTabKeyStepsThroughTheFourTabs(t *testing.T) {
 	}
 	sources, _ := press(newLearnerFixture(), 's', tea.ModCtrl)
 	next, _ := press(sources, tea.KeyTab, 0)
-	if next.activeTab() != "hotspots" || next.page != "hotspots" {
-		t.Fatalf("Tab from Sources should reach Hotspots, got %s", next.page)
+	if next.activeTab() != "quiz" || next.page != "quiz" {
+		t.Fatalf("Tab from Sources should reach Quiz, got %s", next.page)
 	}
 }
 
