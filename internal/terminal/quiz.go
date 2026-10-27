@@ -84,7 +84,13 @@ func quizText(quiz *tutor.Quiz) string {
 	return text.String()
 }
 
+func quizFinished(state session.State) bool {
+	quiz := state.Quiz
+	return quiz != nil && reviewing(state) && quiz.Completed() >= quiz.Goal
+}
+
 func (model interfaceModel) continueQuiz(extend bool) (tea.Model, tea.Cmd) {
+	extend = extend || quizFinished(model.application.state)
 	intent, err := continueIntent(model.application.state, model.application.course, extend)
 	if err != nil {
 		model.notice = err.Error()

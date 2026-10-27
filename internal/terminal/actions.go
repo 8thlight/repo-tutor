@@ -91,9 +91,9 @@ func (model interfaceModel) sidebarShortcuts() string {
 }
 
 func (model interfaceModel) quizCompleteLine() string {
-	line := fmt.Sprintf("/extend adds %d · Ctrl+B results", model.quizLength())
+	line := fmt.Sprintf("Ctrl+F More questions (%d)", model.quizLength())
 	if title, found := model.nextTopicLabel(); found {
-		line = "Ctrl+N Next: " + title + " · " + line
+		line += " · Ctrl+N Next: " + title
 	}
-	return line
+	return line + " · Ctrl+B results"
 }
