@@ -15,7 +15,7 @@ func TestTheFooterCarriesTheAppWideKeysOnAWideTerminal(t *testing.T) {
 	model := interfaceFixture()
 	model.width = 120
 	line := ansi.Strip(model.footerKeys(100))
-	if line != "F1 Help · F2 About · F3 Settings · Esc back or stop · Ctrl+Q quit" {
+	if line != "F1 Help · F2 Settings · F3 About · Esc back or stop · Ctrl+Q quit" {
 		t.Fatalf("got %q", line)
 	}
 	if strings.Contains(line, "Ctrl+K") || strings.Contains(line, "Enter") {
@@ -27,8 +27,8 @@ func TestANarrowFooterAddsTopicsAndSourcesAndShortensFromTheRight(t *testing.T) 
 	model := interfaceFixture()
 	model.width = 90
 	for width, want := range map[int]string{
-		90: "Ctrl+K topics · Ctrl+S sources · F1 Help · F2 About · F3 Settings · Esc back or stop · Ctrl+Q quit",
-		80: "Ctrl+K topics · Ctrl+S sources · F1 Help · F2 About · F3 Settings · Ctrl+Q quit",
+		90: "Ctrl+K topics · Ctrl+S sources · F1 Help · F2 Settings · F3 About · Esc back or stop · Ctrl+Q quit",
+		80: "Ctrl+K topics · Ctrl+S sources · F1 Help · F2 Settings · F3 About · Ctrl+Q quit",
 		60: "Ctrl+K topics · Ctrl+S sources · F1 Help · Ctrl+Q quit",
 		40: "F1 Help · Ctrl+Q quit",
 	} {

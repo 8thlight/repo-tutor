@@ -369,9 +369,9 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 			return model.toggled("quiz", func() (tea.Model, tea.Cmd) { return model.openPicker("quiz", "") })
 		case "ctrl+f":
 			return model.continueQuiz(false)
-		case "f2":
-			return model.toggled("about", model.openAbout)
 		case "f3":
+			return model.toggled("about", model.openAbout)
+		case "f2":
 			return model.toggled("settings", model.openSettings)
 		case "space":
 			if model.page == "settings" {

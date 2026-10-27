@@ -17,7 +17,7 @@ const (
 	settingsSavedNotice   = "Saved"
 	settingsUnsavedNotice = "Could not save. This change lasts until you quit."
 	powerlineNote         = "Needs a Powerline or Nerd Font in your terminal."
-	settingsKeysNote      = "↑↓ move · Space chooses · F3 or Esc closes"
+	settingsKeysNote      = "↑↓ move · Space chooses · F2 or Esc closes"
 	noColorNote           = "Color is off, so tab style does not apply."
 	noColorHighlightNote  = "Color is off, so highlight color does not apply."
 	highlightShiftNote    = "Colors shift to stay readable on your terminal's background."

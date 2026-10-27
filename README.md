@@ -30,7 +30,7 @@ In a terminal, the tutor opens a full-screen workspace with a lesson, the curren
 | `Alt+Left` / `Alt+Right` | Read earlier or later saved steps |
 | `Esc` | Return to the lesson, or stop what is loading |
 | `Ctrl+R` | Retry a failed request with your draft kept |
-| `F1` / `F2` / `F3` | Help / About / Settings |
+| `F1` / `F2` / `F3` | Help / Settings / About |
 | `Ctrl+Q` | Save and quit |
 
 Topic and source lists support arrow keys and `/` to filter. Press `Enter` to confirm a filter, then `Enter` again to open an item. You can browse while the tutor thinks. A failed request keeps your draft and completed progress.
@@ -49,7 +49,7 @@ The full-screen interface has no slash commands: a line that starts with a slash
 | `/topic 3` or `/topic internal/tutor` | Study a topic |
 | `/next` | Move to the next topic |
 | `/probe` | Answer three short questions; topics you know are marked known and skipped by `/next` |
-| `/quiz` | Start a quiz on this topic (3, 5, or 10 questions, set with `F3`) |
+| `/quiz` | Start a quiz on this topic (3, 5, or 10 questions, set with `F2`) |
 | `/continue` | Move on after reviewing an answer |
 | `/questions` or `/extend` | Show the quiz index or add more questions after finishing |
 | `/progress` or `/review` | See recorded outcomes or revisit a weak topic |

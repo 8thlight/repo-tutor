@@ -16,19 +16,19 @@ import (
 func settingsPageFixture(t *testing.T) interfaceModel {
 	model := interfaceFixture()
 	model.application.settingsBase = t.TempDir()
-	opened, _ := press(model, tea.KeyF3, 0)
+	opened, _ := press(model, tea.KeyF2, 0)
 	return opened
 }
 
-func TestF3OpensSettingsAndPressingItAgainReturns(t *testing.T) {
+func TestF2OpensSettingsAndPressingItAgainReturns(t *testing.T) {
 	model := interfaceFixture()
-	opened, _ := press(model, tea.KeyF3, 0)
+	opened, _ := press(model, tea.KeyF2, 0)
 	if opened.page != "settings" || opened.activeTab() == "course" {
-		t.Fatalf("F3 should open Settings with no tab highlighted, got %s on %s", opened.page, opened.activeTab())
+		t.Fatalf("F2 should open Settings with no tab highlighted, got %s on %s", opened.page, opened.activeTab())
 	}
-	closed, _ := press(opened, tea.KeyF3, 0)
+	closed, _ := press(opened, tea.KeyF2, 0)
 	if closed.page != "lesson" {
-		t.Fatalf("F3 again should return to the origin, got %s", closed.page)
+		t.Fatalf("F2 again should return to the origin, got %s", closed.page)
 	}
 }
 

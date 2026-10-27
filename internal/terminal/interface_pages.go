@@ -34,8 +34,8 @@ Alt+Left/Right  Step through this topic; at its ends, press again for the neighb
 PgUp / PgDown   Scroll the lesson or source
 Tab / Shift+Tab Switch between Home, Course, Quiz, and Progress
 F1              Show this help
-F2              Show the version, copyright, and credits
-F3              Change the tab style, highlight color, and how Markdown files open
+F2              Change the tab style, highlight color, quiz length, and Markdown view
+F3              Show the version, copyright, and credits
 Ctrl+R          Retry a failed request, keeping your draft
 Esc / Ctrl+C    Stop what is loading
 Ctrl+Q          Save and quit (Ctrl+C also quits when idle)

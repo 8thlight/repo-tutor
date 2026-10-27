@@ -105,7 +105,7 @@ func TestResumedSessionOpensOnLearnNotHome(t *testing.T) {
 
 func TestAboutPageShowsBuildCopyrightAndSessionAgent(t *testing.T) {
 	model := interfaceFixture()
-	opened, _ := model.Update(tea.KeyPressMsg{Code: tea.KeyF2})
+	opened, _ := model.Update(tea.KeyPressMsg{Code: tea.KeyF3})
 	model = opened.(interfaceModel)
 	content := ansi.Strip(model.View().Content)
 	for _, expected := range []string{"About repo-tutor", "Copyright © 2026 Eighth Light LLC.", "https://8thlight.com", "This session uses codex (default model)."} {
@@ -133,7 +133,7 @@ func TestAboutShowsThePaintingOnlyOnWideTerminalsWithRichColor(t *testing.T) {
 		colored, _ := model.Update(tea.ColorProfileMsg{Profile: test.profile})
 		model = colored.(interfaceModel)
 		model.noColor = test.noColor
-		next, _ := model.Update(tea.KeyPressMsg{Code: tea.KeyF2})
+		next, _ := model.Update(tea.KeyPressMsg{Code: tea.KeyF3})
 		model = next.(interfaceModel)
 		if shown := strings.Contains(model.pageContent, "Jan Lievens, 1631"); shown != test.shown {
 			t.Fatalf("%s: painting shown=%v, want %v", name, shown, test.shown)
@@ -148,7 +148,7 @@ func TestAboutShowsThePaintingOnlyOnWideTerminalsWithRichColor(t *testing.T) {
 	}
 }
 
-func TestAboutOpensFromHomeAndFromAnyPageWithF2(t *testing.T) {
+func TestAboutOpensFromHomeAndFromAnyPageWithF3(t *testing.T) {
 	model := newLearnerFixture()
 	entries := model.homeEntries()
 	if last := entries[len(entries)-1]; last.place != placeAbout {
@@ -167,9 +167,9 @@ func TestAboutOpensFromHomeAndFromAnyPageWithF2(t *testing.T) {
 		default:
 			model.page = page
 		}
-		pressed, _ := model.Update(tea.KeyPressMsg{Code: tea.KeyF2})
+		pressed, _ := model.Update(tea.KeyPressMsg{Code: tea.KeyF3})
 		if pressed.(interfaceModel).page != "about" {
-			t.Fatalf("F2 should open About from %s", page)
+			t.Fatalf("F3 should open About from %s", page)
 		}
 	}
 }
@@ -181,7 +181,7 @@ func TestPressingAPageKeyAgainReturnsToTheLesson(t *testing.T) {
 		"progress": {Code: 'p', Mod: tea.ModCtrl},
 		"quiz":     {Code: 'b', Mod: tea.ModCtrl},
 		"help":     {Code: tea.KeyF1},
-		"about":    {Code: tea.KeyF2},
+		"about":    {Code: tea.KeyF3},
 	} {
 		model := interfaceFixture()
 		model.history = 0
@@ -215,8 +215,8 @@ func TestEscAndPageKeysReturnToWhereThePageWasOpened(t *testing.T) {
 	if closed, _ := press(opened, tea.KeyEscape, 0); closed.page != "home" {
 		t.Fatalf("Esc should return to Home, got %s", closed.page)
 	}
-	if closed, _ := opened.Update(tea.KeyPressMsg{Code: tea.KeyF2}); closed.(interfaceModel).page != "home" {
-		t.Fatal("F2 again should return to Home")
+	if closed, _ := opened.Update(tea.KeyPressMsg{Code: tea.KeyF3}); closed.(interfaceModel).page != "home" {
+		t.Fatal("F3 again should return to Home")
 	}
 	if lesson, _ := press(opened, 'l', tea.ModCtrl); lesson.page != "lesson" {
 		t.Fatal("Ctrl+L should always go to the lesson")
@@ -232,7 +232,7 @@ func TestEscAndPageKeysReturnToWhereThePageWasOpened(t *testing.T) {
 	}
 
 	lesson := interfaceFixture()
-	fromLesson, _ := lesson.Update(tea.KeyPressMsg{Code: tea.KeyF2})
+	fromLesson, _ := lesson.Update(tea.KeyPressMsg{Code: tea.KeyF3})
 	if fromLesson.(interfaceModel).origin != "lesson" {
 		t.Fatal("About opened from the lesson should remember the lesson")
 	}

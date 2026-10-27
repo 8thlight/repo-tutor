@@ -1,6 +1,6 @@
 # 0100. About page and version output
 
-Status: accepted
+Status: accepted. About moves to `F3` under [0350](0350-settings-on-f2.md).
 
 ## Context
 
