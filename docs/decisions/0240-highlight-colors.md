@@ -1,6 +1,6 @@
 # 0240. Highlight colors
 
-Status: proposed
+Status: accepted
 
 ## Context
 
