@@ -11,7 +11,7 @@ import (
 	"repo-tutor/internal/settings"
 )
 
-var tabHintSets = [][]keyHint{{{"Tab", "Next"}}}
+var tabHintSets = [][]keyHint{{{"Tab", "Next", false}}}
 
 func (model interfaceModel) cutoutColor(fallback string) color.Color {
 	if model.background != nil {

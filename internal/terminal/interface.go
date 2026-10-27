@@ -50,6 +50,8 @@ type interfaceModel struct {
 	origin            string
 	sourceList        string
 	goalPending       bool
+	skipArmed         bool
+	skipGeneration    int
 	settingsFocus     int
 	prefetcher        lessonPrefetcher
 	prefetching       bool
@@ -318,7 +320,15 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 			commands = append(commands, command)
 		}
 		return model, tea.Batch(commands...)
+	case skipExpired:
+		if message.generation == model.skipGeneration {
+			model = model.disarmSkip()
+		}
+		return model, nil
 	case tea.KeyPressMsg:
+		if model.skipArmed && message.String() != "ctrl+n" {
+			model = model.disarmSkip()
+		}
 		if model.askingGoal() {
 			if next, command, handled := model.goalKey(message); handled {
 				return next, command
@@ -390,8 +400,7 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+n":
 			if inQuestionFlow(model.application.state) {
 				if questionOpen(model.application.state) {
-					model.notice = "Answer or skip this question first. Ctrl+N asks the next one afterward."
-					return model, nil
+					return model.skipOrArm()
 				}
 				return model.continueQuiz(false)
 			}

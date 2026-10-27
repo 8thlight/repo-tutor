@@ -19,7 +19,7 @@ In a terminal, the tutor opens a full-screen workspace with a lesson, the curren
 | Shortcut | What it does |
 | -- | -- |
 | `Enter` | Send your question or answer |
-| `Ctrl+N` / `Ctrl+G` | Next (the next question in a quiz, otherwise the next topic) / quiz this topic |
+| `Ctrl+N` / `Ctrl+G` | Next (the next question in a quiz, otherwise the next topic; on an open question, press it twice to skip) / quiz this topic |
 | `Ctrl+F` | More: more on this topic, or more questions when a quiz is done |
 | `Ctrl+B` | Quiz question index and goal |
 | `Ctrl+K` | Search topics |
