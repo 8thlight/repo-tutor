@@ -169,3 +169,60 @@ func TestAnUncappedExamAsksOneQuestionForEveryTopicRead(t *testing.T) {
 		t.Fatal("even uncapped, an exam still needs ten topics read")
 	}
 }
+
+func examWith(completed, goal int) *tutor.Quiz {
+	plan := make([]string, goal)
+	for index := range plan {
+		plan[index] = fmt.Sprintf("t%02d", index)
+	}
+	exam := tutor.StartExam(plan, tutor.Reply{Question: "Q?"})
+	for index := 0; index < completed; index++ {
+		if index >= len(exam.Questions) {
+			exam.Questions = append(exam.Questions, tutor.QuizQuestion{Text: "Q?", Topic: plan[index]})
+		}
+		exam.Questions[index].Assessment = []string{"correct", "partial", "incorrect", "skipped"}[index%4]
+	}
+	if completed < goal && completed >= len(exam.Questions) {
+		exam.Questions = append(exam.Questions, tutor.QuizQuestion{Text: "Open?", Topic: plan[completed]})
+	}
+	return exam
+}
+
+func TestAnExamLeftAfterTenQuestionsKeepsAPartialResultScoredOverThoseQuestions(t *testing.T) {
+	exam := examWith(12, 30)
+	result, saved := tutor.PartialResult(exam)
+	if !saved || result.Goal != 12 || result.Planned != 30 || len(result.Topics) != 12 {
+		t.Fatalf("a twelve-question partial should be kept: %+v %v", result, saved)
+	}
+	if result.Credit != 3*(2+1) || result.Percent() != 38 {
+		t.Fatalf("three of each of correct and partial earn 9 half points over 12 questions: %+v %d", result, result.Percent())
+	}
+	for _, topic := range result.Topics {
+		if topic.Topic == "t12" {
+			t.Fatal("the open, unanswered question is not part of the result")
+		}
+	}
+}
+
+func TestAnExamLeftBeforeTenQuestionsKeepsNothing(t *testing.T) {
+	if _, saved := tutor.PartialResult(examWith(9, 30)); saved {
+		t.Fatal("nine questions is under the threshold")
+	}
+	if _, saved := tutor.PartialResult(examWith(10, 30)); !saved {
+		t.Fatal("exactly ten questions meets it")
+	}
+}
+
+func TestAFinishedExamIsNotMarkedPartialAndAPartialIsNotAFinishedOne(t *testing.T) {
+	full := examWith(10, 10)
+	result, finished := tutor.ResultOf(full)
+	if !finished || result.Planned != 0 || result.Goal != 10 {
+		t.Fatalf("a finished exam has no planned count: %+v", result)
+	}
+	if _, saved := tutor.PartialResult(full); saved {
+		t.Fatal("a finished exam is a result, not a partial one")
+	}
+	if _, finished := tutor.ResultOf(examWith(12, 30)); finished {
+		t.Fatal("an unfinished exam has no finished result")
+	}
+}

@@ -43,6 +43,9 @@ func resumeTopic(state session.State, topic string) (session.State, bool) {
 		return state, true
 	}
 	if state.Quiz != nil && (state.Quiz.Exam || state.Quiz.Topic != topic) {
+		if result, saved := tutor.PartialResult(state.Quiz); saved {
+			state.LastExam = &result
+		}
 		state.Quiz = nil
 	}
 	state.Probe = nil
@@ -58,6 +61,9 @@ func leaveQuestions(state session.State) (session.State, bool) {
 	}
 	if !found {
 		return state, false
+	}
+	if result, saved := tutor.PartialResult(state.Quiz); saved {
+		state.LastExam = &result
 	}
 	state.Quiz, state.Probe = nil, nil
 	return showAgain(state, source), true

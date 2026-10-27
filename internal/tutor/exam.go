@@ -13,9 +13,10 @@ type ExamTopicResult struct {
 }
 
 type ExamResult struct {
-	Credit int               `json:"credit"`
-	Goal   int               `json:"goal"`
-	Topics []ExamTopicResult `json:"topics"`
+	Credit  int               `json:"credit"`
+	Goal    int               `json:"goal"`
+	Planned int               `json:"planned,omitempty"`
+	Topics  []ExamTopicResult `json:"topics"`
 }
 
 func (result ExamResult) Percent() int {
@@ -83,8 +84,25 @@ func ResultOf(quiz *Quiz) (ExamResult, bool) {
 	if quiz == nil || !quiz.Exam || !quiz.Finished() {
 		return ExamResult{}, false
 	}
-	result := ExamResult{Credit: quiz.Credit(), Goal: quiz.Goal}
+	return resultFrom(quiz, quiz.Goal), true
+}
+
+func PartialResult(quiz *Quiz) (ExamResult, bool) {
+	if quiz == nil || !quiz.Exam || quiz.Finished() || quiz.Completed() < ExamMinimum {
+		return ExamResult{}, false
+	}
+	return resultFrom(quiz, quiz.Goal), true
+}
+
+func resultFrom(quiz *Quiz, planned int) ExamResult {
+	result := ExamResult{Credit: quiz.Credit(), Goal: quiz.Completed()}
+	if planned > result.Goal {
+		result.Planned = planned
+	}
 	for _, question := range quiz.Questions {
+		if question.Assessment == "" {
+			continue
+		}
 		earned := 0
 		switch question.Assessment {
 		case "correct":
@@ -94,5 +112,5 @@ func ResultOf(quiz *Quiz) (ExamResult, bool) {
 		}
 		result.Topics = append(result.Topics, ExamTopicResult{question.Topic, earned})
 	}
-	return result, true
+	return result
 }
