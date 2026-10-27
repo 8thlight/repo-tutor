@@ -58,8 +58,12 @@ func TestTOutsideTheFileViewIsJustTyping(t *testing.T) {
 }
 
 func TestTheFileViewNamesTheTeachKey(t *testing.T) {
-	if notice := openFileFixture(t).notice; !strings.Contains(notice, "T teaches this file") {
-		t.Fatalf("the notice should name the key: %q", notice)
+	model := openFileFixture(t)
+	if model.notice != "" {
+		t.Fatalf("navigation help does not belong in a notice: %q", model.notice)
+	}
+	if footer := ansi.Strip(model.footerKeys(120)); !strings.Contains(footer, "T teach this file") || !strings.Contains(footer, "Enter or Esc back") {
+		t.Fatalf("the footer should name the file view's keys: %q", footer)
 	}
 	if !strings.Contains(interfaceHelp, "Teach the open source file") {
 		t.Fatal("the Help page should list the key")

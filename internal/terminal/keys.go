@@ -62,9 +62,34 @@ func (model interfaceModel) footerHintSets() [][]keyHint {
 	}
 }
 
+func (model interfaceModel) pageHints() []keyHint {
+	switch {
+	case model.page == "source":
+		hints := []keyHint{{"Enter or Esc", "back", false}, {"T", "teach this file", false}}
+		if isMarkdown(model.sourcePath) {
+			hints = append(hints, keyHint{"v", "rendered or source", false})
+		}
+		return hints
+	case model.isPicker():
+		hints := []keyHint{{"↑↓", "move", false}, {"/", "search", false}, {"Enter", "open", false}}
+		if model.page == "quiz" {
+			hints = append(hints, keyHint{"A", "show answer", false})
+		}
+		return hints
+	}
+	return nil
+}
+
 func (model interfaceModel) footerKeys(width int) string {
+	page := model.pageHints()
 	for _, set := range model.footerHintSets() {
-		if line := model.renderKeyHints(set, " · "); ansi.StringWidth(line) <= width {
+		if line := model.renderKeyHints(append(append([]keyHint(nil), page...), set...), " · "); ansi.StringWidth(line) <= width {
+			return line
+		}
+	}
+	for count := len(page); count > 0; count-- {
+		shortened := append(append([]keyHint(nil), page[:count]...), quitHint)
+		if line := model.renderKeyHints(shortened, " · "); ansi.StringWidth(line) <= width {
 			return line
 		}
 	}

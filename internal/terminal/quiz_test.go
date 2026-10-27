@@ -291,7 +291,7 @@ func TestMarkdownAlwaysOpensRenderedAndTogglesToSourceAtTheCitedLine(t *testing.
 	location := repository.Location{Path: "README.md", Line: 2}
 	cited, _ := model.openSource(location)
 	model = cited.(interfaceModel)
-	if model.pageTitle != "README.md · rendered" || strings.Contains(model.pageContent, "    2  ") || !strings.Contains(model.notice, "Line 2 · ") || !strings.Contains(model.notice, "v shows the source at that line") {
+	if model.pageTitle != "README.md · rendered" || strings.Contains(model.pageContent, "    2  ") || !strings.Contains(model.notice, "Line 2 · ") || !strings.Contains(model.notice, "marked with ›") {
 		t.Fatalf("a citation should open the rendered page and name its line: %q %q", model.pageTitle, model.notice)
 	}
 	model, _ = press(model, 'v', 0)
@@ -413,7 +413,7 @@ func TestTheIndexNamesTheShowAnswerKeyOnSkippedRowsAndInItsFooter(t *testing.T) 
 		t.Fatalf("only the skipped row should offer the key: %q / %q", items[0].description, items[1].description)
 	}
 	index := selectIndexRow(t, revealFixture(), 0)
-	if !strings.Contains(ansi.Strip(index.View().Content), "A shows a skipped answer") {
+	if !strings.Contains(ansi.Strip(index.View().Content), "A show answer") {
 		t.Fatal("the index footer should name the key")
 	}
 }
