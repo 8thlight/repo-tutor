@@ -22,6 +22,8 @@ import (
 	"repo-tutor/internal/tutor"
 )
 
+const lessonRetention = 60 * 24 * time.Hour
+
 const usage = `repo-tutor: learn a code repository with a terminal tutor
 
 Usage:
@@ -288,6 +290,7 @@ func study(ctx context.Context, arguments []string, input io.Reader, output, dia
 			return err
 		}
 	}
+	store.PruneLessons(tutor.GoalKey(state.Goal), lessonRetention, time.Now())
 	loaded, loadedStatus, err := session.LoadSettings(*stateDirectory)
 	if err != nil {
 		return err
