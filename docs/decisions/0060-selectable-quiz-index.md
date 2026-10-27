@@ -1,6 +1,6 @@
 # 0060. Selectable quiz index
 
-Status: accepted
+Status: accepted. `A` on a skipped row shows its answer under [0420](0420-show-a-skipped-answer.md).
 
 ## Context
 
