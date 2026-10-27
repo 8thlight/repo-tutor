@@ -429,7 +429,7 @@ func TestControlNWaitsForAnAnswerBeforeAskingTheNextQuestion(t *testing.T) {
 	model.application.state.Turns = model.application.state.Turns[:1]
 	model.application.state.Question = "First?"
 	next, _ := press(model, 'n', tea.ModCtrl)
-	if next.busy || !strings.Contains(next.notice, "answer or skip") {
+	if next.busy || !strings.Contains(next.notice, "Answer or skip this question first") {
 		t.Fatalf("an open question should hold Ctrl+N: %q", next.notice)
 	}
 }
@@ -453,5 +453,30 @@ func TestAfterAFinishedQuizControlFAddsQuestionsAndTheSidebarOffersNext(t *testi
 	shortcuts := ansi.Strip(finished.sidebarShortcuts())
 	if !strings.Contains(shortcuts, "Ctrl+F  More questions (5)") || !strings.Contains(shortcuts, "Ctrl+N  Next topic") {
 		t.Fatalf("a finished quiz offers more questions and the next topic:\n%s", shortcuts)
+	}
+}
+
+func TestTheSidebarOffersNextQuestionOnlyOnceTheOpenQuestionIsAnswered(t *testing.T) {
+	open := quizFeedbackFixture()
+	open.application.state.Review = false
+	open.application.state.Turns = open.application.state.Turns[:1]
+	open.application.state.Question = "First?"
+	shortcuts := ansi.Strip(open.sidebarShortcuts())
+	if strings.Contains(shortcuts, "Ctrl+N") || !strings.Contains(shortcuts, "Ctrl+B  Question index") {
+		t.Fatalf("an open question cannot be skipped past with a key, so the sidebar should not offer one:\n%s", shortcuts)
+	}
+	answered := quizFeedbackFixture()
+	if !strings.Contains(ansi.Strip(answered.sidebarShortcuts()), "Ctrl+N  Next question") {
+		t.Fatal("after feedback the sidebar should offer Ctrl+N")
+	}
+}
+
+func TestControlNWorksFromTheQuizIndexToo(t *testing.T) {
+	model := quizFeedbackFixture()
+	opened, _ := model.openPicker("quiz", "")
+	next, _ := press(opened.(interfaceModel), 'n', tea.ModCtrl)
+	defer next.cancel()
+	if !next.busy || next.intent.action != "quiz-next" {
+		t.Fatalf("Ctrl+N should work on the index as it does on the lesson: %+v page=%s notice=%q", next.intent, next.page, next.notice)
 	}
 }

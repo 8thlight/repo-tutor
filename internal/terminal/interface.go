@@ -389,6 +389,10 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 			return model.learn()
 		case "ctrl+n":
 			if inQuestionFlow(model.application.state) {
+				if questionOpen(model.application.state) {
+					model.notice = "Answer or skip this question first. Ctrl+N asks the next one afterward."
+					return model, nil
+				}
 				return model.continueQuiz(false)
 			}
 			return model.next()
