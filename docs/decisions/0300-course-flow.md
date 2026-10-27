@@ -1,6 +1,6 @@
 # 0300. Course flow
 
-Status: accepted. `Ctrl+N` asks the next quiz question under [0360](0360-next-and-more.md).
+Status: accepted. `Ctrl+N` asks the next quiz question under [0360](0360-next-and-more.md). `/extend` is `Ctrl+F` in the full-screen interface under [0320](0320-no-slash-commands-in-the-interface.md).
 
 ## Context
 
