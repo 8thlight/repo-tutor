@@ -12,7 +12,7 @@ The answer box carries its own words on its frame.
 
 - **Title on the top border.** The box title sits in the top border, like a fieldset caption. A question box reads "Ask about this topic". A quiz answer box reads "Your answer", and the question itself stays above the box as a muted block, since it can run to several lines. After feedback the title reads "Ask about this answer, or continue". The goal prompt reads "What do you want to learn?". While a request runs, the title is the waiting phrase from 0300.
 - **Hint on the bottom border.** The typing keys sit in the bottom border, right-aligned, with a bold key and a muted label: `Enter send` for a question or answer, `Enter or Ctrl+F continue` after feedback, `Ctrl+F more questions` after a finished quiz, `Esc stops it` while a request runs, and `Enter keeps the default` on the goal prompt. A narrow box drops the hint before it would overlap the corner.
-- **Divider.** The row above the box is a plain divider with no words.
+- **Divider.** The row above the box is a plain divider with no words, and one blank row sits between the divider and the box, or between the divider and a quiz question when one is shown.
 
 `Enter` always sends. The box has no manual new line and no send-key setting, so `Alt+Enter` and the send-key swap from the earlier proposal are dropped. Text wraps softly, and the box grows with the text from one row up to six rows, then scrolls. Pasted line breaks become spaces, so a paste never sends early or leaves a stray break.
 

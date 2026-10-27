@@ -156,3 +156,19 @@ func TestNoticesNameWhatHappenedWithoutTheWordTurn(t *testing.T) {
 		t.Fatal("the running notice should not say turn")
 	}
 }
+
+func TestABlankRowSeparatesTheRuleFromTheInput(t *testing.T) {
+	for name, model := range map[string]interfaceModel{"a question box": readingFixture(), "the goal prompt": pendingGoalFixture(t)} {
+		lines := strings.Split(ansi.Strip(model.composer()), "\n")
+		rule := -1
+		for index, line := range lines {
+			if strings.HasPrefix(line, "────") {
+				rule = index
+				break
+			}
+		}
+		if rule < 0 || rule+2 >= len(lines) || strings.TrimSpace(lines[rule+1]) != "" || strings.TrimSpace(lines[rule+2]) == "" {
+			t.Fatalf("%s: one blank row should sit under the rule:\n%s", name, strings.Join(lines, "\n"))
+		}
+	}
+}
