@@ -38,7 +38,7 @@ PgUp / PgDown   Scroll the lesson or source
 Tab / Shift+Tab Switch between Home, Course, Quiz, and Progress
 F1              Show this help
 F2              Show the version, copyright, and credits
-F3              Change the tab style and how Markdown files open
+F3              Change the tab style, highlight color, and how Markdown files open
 Ctrl+R          Retry a failed turn, keeping your draft
 Esc / Ctrl+C    Stop a running turn
 Ctrl+Q          Save and quit (Ctrl+C also quits when idle)

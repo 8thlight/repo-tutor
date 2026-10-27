@@ -59,7 +59,7 @@ func TestEnterDoesNotChangeASetting(t *testing.T) {
 
 func TestMarkdownChoiceIsSavedAndUsed(t *testing.T) {
 	model := settingsPageFixture(t)
-	for range 4 {
+	for range 7 {
 		model, _ = press(model, tea.KeyDown, 0)
 	}
 	model, _ = press(model, tea.KeySpace, 0)
@@ -99,8 +99,8 @@ func TestAFailedSaveKeepsTheChangeForTheSession(t *testing.T) {
 
 func TestPowerlineRowsAlwaysCarryTheFontNote(t *testing.T) {
 	content := ansi.Strip(settingsPageFixture(t).settingsContent())
-	if strings.Count(content, powerlineNote) != 2 {
-		t.Fatalf("Slanted and Rounded should each say a Powerline font is needed:\n%s", content)
+	if strings.Count(content, powerlineNote) != 5 {
+		t.Fatalf("every Powerline style should say a Powerline font is needed:\n%s", content)
 	}
 }
 
@@ -108,7 +108,7 @@ func TestSamplesMatchTheRealBarAndMoveUnderLabelsWhenNarrow(t *testing.T) {
 	model := settingsPageFixture(t)
 	model.noColor = false
 	wide := ansi.Strip(model.settingsContent())
-	if !strings.Contains(wide, "Rounded   "+ansi.Strip(model.tabs("rounded", "course"))) {
+	if !strings.Contains(wide, "Rounded"+strings.Repeat(" ", 7)+ansi.Strip(model.tabs("rounded", "course"))) {
 		t.Fatalf("a sample should come from the same function as the bar:\n%s", wide)
 	}
 	model.width = 70
@@ -153,5 +153,50 @@ func TestNoColorSaysTabStyleDoesNotApply(t *testing.T) {
 	model.noColor = false
 	if strings.Contains(ansi.Strip(model.settingsContent()), noColorNote) {
 		t.Fatal("with color on the note should not appear")
+	}
+}
+
+func TestHighlightChoiceIsSavedAndChangesTheAccent(t *testing.T) {
+	model := settingsPageFixture(t)
+	model.noColor = false
+	model.dark = true
+	before := model.palette().accent
+	for range 8 {
+		model, _ = press(model, tea.KeyDown, 0)
+	}
+	model, _ = press(model, tea.KeySpace, 0)
+	if model.application.settings.Highlight != "red" || model.palette().accent == before {
+		t.Fatalf("choosing Red should change the highlight: %+v", model.application.settings)
+	}
+	saved, _, _ := session.LoadSettings(model.application.settingsBase)
+	if saved.Highlight != "red" {
+		t.Fatalf("the highlight should be saved: %+v", saved)
+	}
+}
+
+func TestHighlightRowsShowASwatchAndTheShiftNote(t *testing.T) {
+	model := settingsPageFixture(t)
+	model.noColor = false
+	content := ansi.Strip(model.settingsContent())
+	if strings.Count(content, "██") != 7 || !strings.Contains(content, highlightShiftNote) {
+		t.Fatalf("each brand color should show a swatch under the shift note:\n%s", content)
+	}
+	model.noColor = true
+	if !strings.Contains(ansi.Strip(model.settingsContent()), noColorHighlightNote) {
+		t.Fatal("with color off the page should say highlight color does not apply")
+	}
+}
+
+func TestTheFocusedRowStaysInViewOnAShortScreen(t *testing.T) {
+	model := settingsPageFixture(t)
+	model.width, model.height = 100, 20
+	model.resize()
+	for range len(settingChoices()) - 2 {
+		model, _ = press(model, tea.KeyDown, 0)
+	}
+	_, focusLine := model.settingsLayout()
+	offset := model.viewport.YOffset()
+	if focusLine < offset || focusLine >= offset+model.viewport.Height() {
+		t.Fatalf("focus line %d should sit inside the view %d..%d", focusLine, offset, offset+model.viewport.Height())
 	}
 }

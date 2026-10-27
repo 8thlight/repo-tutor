@@ -18,13 +18,16 @@ const (
 	powerlineNote         = "Needs a Powerline or Nerd Font in your terminal."
 	markdownNote          = "Press v on any file to switch just that file."
 	noColorNote           = "Color is off, so tab style does not apply."
+	noColorHighlightNote  = "Color is off, so highlight color does not apply."
+	highlightShiftNote    = "Colors shift to stay readable on your terminal's background."
+	settingsLabelWidth    = 14
 )
 
 type settingChoice struct {
 	group, label, note string
 	selected           func(settings.Settings) bool
 	apply              func(settings.Settings) settings.Settings
-	style              string
+	style, highlight   string
 }
 
 func tabStyleChoice(style, label, note string) settingChoice {
@@ -49,15 +52,33 @@ func markdownChoice(rendered bool, label string) settingChoice {
 	}
 }
 
+func highlightChoice(brand highlightColor) settingChoice {
+	return settingChoice{
+		group: "HIGHLIGHT COLOR", label: brand.label, highlight: brand.id,
+		selected: func(current settings.Settings) bool { return current.Highlight == brand.id },
+		apply: func(current settings.Settings) settings.Settings {
+			current.Highlight = brand.id
+			return current
+		},
+	}
+}
+
 func settingChoices() []settingChoice {
-	return []settingChoice{
+	choices := []settingChoice{
 		tabStyleChoice(settings.TabStyleNone, "None", ""),
 		tabStyleChoice(settings.TabStyleBlock, "Block", ""),
 		tabStyleChoice(settings.TabStyleSlanted, "Slanted", powerlineNote),
 		tabStyleChoice(settings.TabStyleRounded, "Rounded", powerlineNote),
+		tabStyleChoice(settings.TabStyleJoinedSlanted, "Joined slants", powerlineNote),
+		tabStyleChoice(settings.TabStyleJoinedRounded, "Joined rounds", powerlineNote),
+		tabStyleChoice(settings.TabStyleJoinedArrows, "Joined arrows", powerlineNote),
 		markdownChoice(true, "Rendered"),
 		markdownChoice(false, "Source"),
 	}
+	for _, brand := range highlightColors {
+		choices = append(choices, highlightChoice(brand))
+	}
+	return choices
 }
 
 func (model interfaceModel) openSettings() (tea.Model, tea.Cmd) {
@@ -102,6 +123,11 @@ func (model interfaceModel) chooseSetting() (tea.Model, tea.Cmd) {
 }
 
 func (model interfaceModel) settingsContent() string {
+	content, _ := model.settingsLayout()
+	return content
+}
+
+func (model interfaceModel) settingsLayout() (string, int) {
 	palette := model.palette()
 	muted := lipgloss.NewStyle().Foreground(palette.muted)
 	heading := lipgloss.NewStyle().Foreground(palette.accent).Bold(true)
@@ -113,40 +139,65 @@ func (model interfaceModel) settingsContent() string {
 	case model.application.settingsStatus.Unreadable:
 		lines = append(lines, lipgloss.NewStyle().Foreground(palette.warning).Render(settingsUnreadableNotice), "")
 	}
+	choices := settingChoices()
+	focusLine := 0
 	group := ""
-	for index, choice := range settingChoices() {
+	for index, choice := range choices {
 		if choice.group != group {
 			if group != "" {
 				lines = append(lines, "")
 			}
 			group = choice.group
 			lines = append(lines, heading.Render(group))
-			if model.noColor && group == "TAB STYLE" {
+			switch {
+			case model.noColor && group == "TAB STYLE":
 				lines = append(lines, muted.Render(noColorNote))
+			case model.noColor && group == "HIGHLIGHT COLOR":
+				lines = append(lines, muted.Render(noColorHighlightNote))
+			case group == "HIGHLIGHT COLOR":
+				lines = append(lines, muted.Render(highlightShiftNote))
 			}
 		}
 		marker, radio := "  ", "( )"
 		if index == model.settingsFocus {
 			marker = lipgloss.NewStyle().Foreground(palette.accent).Bold(true).Render("› ")
+			focusLine = len(lines)
 		}
 		if choice.selected(model.application.settings) {
 			radio = "(•)"
 		}
-		row := marker + radio + " " + choice.label
+		row := marker + radio + " "
+		if choice.highlight != "" {
+			row += lipgloss.NewStyle().Foreground(model.highlight(choice.highlight)).Render("██") + " "
+		}
+		row += choice.label
 		switch {
 		case choice.style != "" && narrow:
 			lines = append(lines, row, "      "+model.tabs(choice.style, "course"))
 		case choice.style != "":
-			lines = append(lines, row+strings.Repeat(" ", max(1, 10-lipgloss.Width(choice.label)))+model.tabs(choice.style, "course"))
+			lines = append(lines, row+strings.Repeat(" ", max(1, settingsLabelWidth-lipgloss.Width(choice.label)))+model.tabs(choice.style, "course"))
 		default:
 			lines = append(lines, row)
 		}
 		if choice.note != "" {
 			lines = append(lines, "      "+muted.Render(choice.note))
 		}
-		if next := index + 1; choice.group == "MARKDOWN FILES OPEN" && next == len(settingChoices()) {
-			lines = append(lines, "", muted.Render(markdownNote))
+		if index+1 < len(choices) && choices[index+1].group != group || index+1 == len(choices) {
+			if group == "MARKDOWN FILES OPEN" {
+				lines = append(lines, "", muted.Render(markdownNote))
+			}
 		}
 	}
-	return strings.Join(lines, "\n")
+	return strings.Join(lines, "\n"), focusLine
+}
+
+func (model *interfaceModel) followSettingsFocus() {
+	_, focusLine := model.settingsLayout()
+	offset, height := model.viewport.YOffset(), model.viewport.Height()
+	switch {
+	case focusLine <= offset:
+		model.viewport.SetYOffset(max(0, focusLine-1))
+	case focusLine >= offset+height:
+		model.viewport.SetYOffset(focusLine - height + 1)
+	}
 }
