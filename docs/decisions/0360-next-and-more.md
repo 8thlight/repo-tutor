@@ -1,6 +1,6 @@
 # 0360. Next and more
 
-Status: accepted
+Status: accepted. `Ctrl+N` on an open question skips it after a second press under [0370](0370-skip-with-confirmation.md).
 
 ## Context
 
