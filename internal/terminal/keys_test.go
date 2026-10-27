@@ -192,30 +192,63 @@ func TestABlankRowAlsoSeparatesAQuizQuestionFromTheInput(t *testing.T) {
 	}
 }
 
-func TestTheFooterLeadsWithTheKeysOfTheCurrentPage(t *testing.T) {
+func TestTheFooterStaysGlobalAndThePageKeysLiveInTheSidebar(t *testing.T) {
 	model := interfaceFixture()
-	model.width = 120
+	model.width, model.height = 120, 36
+	model.resize()
 	opened, _ := model.openPicker("topics", "")
-	list := ansi.Strip(opened.(interfaceModel).footerKeys(120))
-	if !strings.HasPrefix(list, "↑↓ move · / search · Enter open · F1 Help") {
-		t.Fatalf("a list should lead with its own keys: %q", list)
+	list := opened.(interfaceModel)
+	if footer := ansi.Strip(list.footerKeys(120)); footer != "F1 Help · F2 Settings · F3 About · Esc back or stop · Ctrl+Q quit" {
+		t.Fatalf("with a sidebar the footer is global only: %q", footer)
 	}
-	if strings.Contains(list, "A show answer") {
-		t.Fatal("only the question index offers A")
+	rows := ansi.Strip(list.sidebarShortcuts())
+	for _, expected := range []string{"↑↓  Move", "/  Search", "Enter  Open"} {
+		if !strings.Contains(rows, expected) || strings.Contains(rows, "A  Show answer") {
+			t.Fatalf("a list's sidebar should list its keys and not A:\n%s", rows)
+		}
+	}
+	if list.sidebarShortcutsTitle() != "ON THIS PAGE" {
+		t.Fatal("page keys sit under their own heading")
 	}
 	quiz := revealFixture()
-	quiz.width = 120
+	quiz.width, quiz.height = 120, 36
+	quiz.resize()
 	index, _ := quiz.openPicker("quiz", "")
-	if line := ansi.Strip(index.(interfaceModel).footerKeys(140)); !strings.Contains(line, "Enter open · A show answer · F1 Help") {
-		t.Fatalf("the question index should offer A: %q", line)
+	if !strings.Contains(ansi.Strip(index.(interfaceModel).sidebarShortcuts()), "A  Show answer") {
+		t.Fatal("the question index sidebar should offer A")
 	}
 	file, _ := model.openFile(repository.Location{Path: "main.go", Line: 1})
-	if line := ansi.Strip(file.(interfaceModel).footerKeys(120)); !strings.HasPrefix(line, "Enter or Esc back · T teach this file · F1 Help") || strings.Contains(line, "rendered or source") {
-		t.Fatalf("a code file should offer back and teach: %q", line)
+	code := ansi.Strip(file.(interfaceModel).sidebarShortcuts())
+	if !strings.Contains(code, "Enter or Esc  Back") || !strings.Contains(code, "T  Teach this file") || strings.Contains(code, "Rendered or source") || strings.Contains(code, "Ctrl+G") {
+		t.Fatalf("a code file lists back and teach, with no lesson keys:\n%s", code)
 	}
 	markdown, _ := model.openFile(repository.Location{Path: "README.md", Line: 1})
-	if line := ansi.Strip(markdown.(interfaceModel).footerKeys(140)); !strings.Contains(line, "T teach this file · v rendered or source · F1 Help") {
-		t.Fatalf("a Markdown file should also offer v: %q", line)
+	if !strings.Contains(ansi.Strip(markdown.(interfaceModel).sidebarShortcuts()), "v  Rendered or source") {
+		t.Fatal("a Markdown file also offers v")
+	}
+	lesson := readingFixture()
+	lesson.width, lesson.height = 120, 36
+	lesson.resize()
+	if lesson.sidebarShortcutsTitle() != "KEEP GOING" {
+		t.Fatal("the lesson keeps its heading")
+	}
+}
+
+func TestWithoutASidebarThePageKeysMoveToTheFooterWithoutAnEscapeTwice(t *testing.T) {
+	model := interfaceFixture()
+	model.width = 90
+	file, _ := model.openFile(repository.Location{Path: "README.md", Line: 1})
+	line := ansi.Strip(file.(interfaceModel).footerKeys(140))
+	if !strings.HasPrefix(line, "Enter or Esc back · T teach this file · v rendered or source") {
+		t.Fatalf("with no sidebar the file's keys lead the footer: %q", line)
+	}
+	if strings.Count(line, "Esc") != 1 {
+		t.Fatalf("Esc should appear once, not as both back and back or stop: %q", line)
+	}
+	opened, _ := model.openPicker("topics", "")
+	list := ansi.Strip(opened.(interfaceModel).footerKeys(140))
+	if !strings.HasPrefix(list, "↑↓ move · / search · Enter open") || strings.Count(list, "Esc") != 1 {
+		t.Fatalf("a list's keys lead a sidebarless footer and Esc stays global: %q", list)
 	}
 }
 
