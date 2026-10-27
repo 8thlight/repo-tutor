@@ -79,7 +79,7 @@ func TestTheInputFrameCarriesItsTitleAndItsKeys(t *testing.T) {
 	}
 	reviewed := readingFixture()
 	reviewed.application.state.Review = true
-	if lines := frameLines(reviewed); !strings.Contains(lines[0], "Ask about this answer, or continue") || !strings.Contains(lines[len(lines)-1], "Enter or Ctrl+F continue") {
+	if lines := frameLines(reviewed); !strings.Contains(lines[0], "Ask about this answer, or continue") || !strings.Contains(lines[len(lines)-1], "Enter or Ctrl+N continue") {
 		t.Fatalf("feedback should offer Continue in its frame:\n%s", strings.Join(lines, "\n"))
 	}
 	answering := readingFixture()

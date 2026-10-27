@@ -149,7 +149,7 @@ func TestGradedAnswerStaysWithItsQuestionAndFeedback(t *testing.T) {
 		position += next + 1
 	}
 	composer := ansi.Strip(model.composer())
-	if !strings.HasPrefix(composer, "────") || !strings.Contains(composer, "Enter or Ctrl+F continue") || strings.Contains(composer, reply.Question) || strings.Contains(content, reply.Explanation) {
+	if !strings.HasPrefix(composer, "────") || !strings.Contains(composer, "Enter or Ctrl+N continue") || strings.Contains(composer, reply.Question) || strings.Contains(content, reply.Explanation) {
 		t.Fatalf("review must stop before the next idea or question:\n%s\n%s", content, composer)
 	}
 	model.application.state.Turns = append(model.application.state.Turns, session.Turn{Topic: "another", Action: "lesson", Reply: tutor.Reply{Assessment: "none"}})

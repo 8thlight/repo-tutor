@@ -262,11 +262,12 @@ func TestTheSidebarCarriesTheSameChoicesAsTheActionLine(t *testing.T) {
 	}
 }
 
-func TestTheSidebarNamesMoreAsTheNextQuestionDuringAQuiz(t *testing.T) {
+func TestTheSidebarOffersOnlyNextQuestionDuringAQuiz(t *testing.T) {
 	model := readingFixture()
 	model.application.state.Quiz = &tutor.Quiz{Topic: tutor.Overview, Goal: 5, Questions: []tutor.QuizQuestion{{Text: "First?", Assessment: "partial"}}}
-	if !strings.Contains(ansi.Strip(model.sidebarShortcuts()), "Ctrl+F  Next question") {
-		t.Fatalf("Ctrl+F continues a quiz, and the sidebar should say so:\n%s", model.sidebarShortcuts())
+	shortcuts := ansi.Strip(model.sidebarShortcuts())
+	if !strings.Contains(shortcuts, "Ctrl+N  Next question") || strings.Contains(shortcuts, "Ctrl+F") || strings.Contains(shortcuts, "Ctrl+G") {
+		t.Fatalf("during a quiz Ctrl+N asks the next question and nothing offers more:\n%s", shortcuts)
 	}
 }
 
@@ -402,5 +403,55 @@ func TestTheQuestionIndexKeyLivesInTheSidebarAndNotInTheTitle(t *testing.T) {
 	}
 	if strings.Contains(ansi.Strip(readingFixture().sidebarShortcuts()), "Ctrl+B") {
 		t.Fatal("with no quiz there is no index to open")
+	}
+}
+
+func quizFeedbackFixture() interfaceModel {
+	model := readingFixture()
+	model.application.state.Quiz = &tutor.Quiz{Topic: tutor.Overview, Goal: 5, Questions: []tutor.QuizQuestion{{Text: "First?", Assessment: "partial"}}}
+	model.application.state.Turns = append(model.application.state.Turns, session.Turn{Topic: tutor.Overview, Action: "answer", Reply: tutor.Reply{Assessment: "partial", Feedback: "Close."}})
+	model.application.state.Review = true
+	return model
+}
+
+func TestControlNAsksTheNextQuestionWhileAQuizHasQuestionsLeft(t *testing.T) {
+	model := quizFeedbackFixture()
+	started, _ := press(model, 'n', tea.ModCtrl)
+	defer started.cancel()
+	if !started.busy || started.intent.action != "quiz-next" || started.intent.topic != tutor.Overview {
+		t.Fatalf("Ctrl+N after feedback should ask the next question: %+v", started.intent)
+	}
+}
+
+func TestControlNWaitsForAnAnswerBeforeAskingTheNextQuestion(t *testing.T) {
+	model := quizFeedbackFixture()
+	model.application.state.Review = false
+	model.application.state.Turns = model.application.state.Turns[:1]
+	model.application.state.Question = "First?"
+	next, _ := press(model, 'n', tea.ModCtrl)
+	if next.busy || !strings.Contains(next.notice, "answer or skip") {
+		t.Fatalf("an open question should hold Ctrl+N: %q", next.notice)
+	}
+}
+
+func TestControlFPointsAtControlNDuringAQuiz(t *testing.T) {
+	model := quizFeedbackFixture()
+	next, _ := press(model, 'f', tea.ModCtrl)
+	if next.busy || next.notice != "Ctrl+N asks the next question." {
+		t.Fatalf("Ctrl+F is not used while a quiz has questions left: busy=%v %q", next.busy, next.notice)
+	}
+}
+
+func TestAfterAFinishedQuizControlFAddsQuestionsAndTheSidebarOffersNext(t *testing.T) {
+	finished := quizFeedbackFixture()
+	finished.application.state.Quiz = &tutor.Quiz{Topic: tutor.Overview, Goal: 2, Questions: []tutor.QuizQuestion{{Text: "A?", Assessment: "correct"}, {Text: "B?", Assessment: "partial"}}}
+	more, _ := press(finished, 'f', tea.ModCtrl)
+	defer more.cancel()
+	if more.intent.action != "quiz-extend" {
+		t.Fatalf("Ctrl+F on a finished quiz should add questions: %+v", more.intent)
+	}
+	shortcuts := ansi.Strip(finished.sidebarShortcuts())
+	if !strings.Contains(shortcuts, "Ctrl+F  More questions (5)") || !strings.Contains(shortcuts, "Ctrl+N  Next topic") {
+		t.Fatalf("a finished quiz offers more questions and the next topic:\n%s", shortcuts)
 	}
 }

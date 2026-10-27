@@ -19,8 +19,8 @@ In a terminal, the tutor opens a full-screen workspace with a lesson, the curren
 | Shortcut | What it does |
 | -- | -- |
 | `Enter` | Send your question or answer |
-| `Ctrl+N` / `Ctrl+G` | Next topic / quiz this topic |
-| `Ctrl+F` | More on this topic, the next quiz question after feedback, or more questions when a quiz is done |
+| `Ctrl+N` / `Ctrl+G` | Next (the next question in a quiz, otherwise the next topic) / quiz this topic |
+| `Ctrl+F` | More: more on this topic, or more questions when a quiz is done |
 | `Ctrl+B` | Quiz question index and goal |
 | `Ctrl+K` | Search topics |
 | `Ctrl+S` | Browse citations and open source at the cited line |
@@ -35,7 +35,7 @@ In a terminal, the tutor opens a full-screen workspace with a lesson, the curren
 
 Topic and source lists support arrow keys and `/` to filter. Press `Enter` to confirm a filter, then `Enter` again to open an item. You can browse while the tutor thinks. A failed request keeps your draft and completed progress.
 
-A lesson is reading and ends with no question, so the box under it is always for your own questions. An action line offers a quiz on the topic, more on the topic, or the next topic. In a quiz, the tutor stops at feedback after an answer. Press `Enter` with an empty answer box, use `Ctrl+F`, or type `/continue` when you are ready for the next question. You can ask about the feedback before moving on. Each quiz has a goal of 3, 5, or 10 questions, set on the `F3` page; `Ctrl+B` shows answered, current, and upcoming questions. Incorrect answers and skips still count toward completion, while correctness is tracked separately. After finishing, `/extend` adds five more questions. Future questions are generated as you continue, so their text is not available in advance.
+A lesson is reading and ends with no question, so the box under it is always for your own questions. An action line offers a quiz on the topic, more on the topic, or the next topic. In a quiz, the tutor stops at feedback after an answer. Press `Enter` with an empty answer box or `Ctrl+N` when you are ready for the next question. You can ask about the feedback before moving on. Each quiz has a goal of 3, 5, or 10 questions, set on the `F3` page; `Ctrl+B` shows answered, current, and upcoming questions. Incorrect answers and skips still count toward completion, while correctness is tracked separately. After finishing, `/extend` adds five more questions. Future questions are generated as you continue, so their text is not available in advance.
 
 While an exercise loads, the lesson pane shows a loading view. Sources remain available and use syntax highlighting with a marker at the cited line. Highlighting needs no language server or extra installation.
 

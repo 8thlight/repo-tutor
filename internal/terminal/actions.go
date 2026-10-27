@@ -50,9 +50,18 @@ const (
 )
 
 func (model interfaceModel) courseActions(titled bool) [][2]string {
-	actions := [][2]string{
-		{"Ctrl+G", fmt.Sprintf("Quiz this topic (%d)", model.quizLength())},
-		{"Ctrl+F", "More on this topic"},
+	state := model.application.state
+	if inQuestionFlow(state) {
+		return [][2]string{{"Ctrl+N", "Next question"}}
+	}
+	var actions [][2]string
+	if state.Quiz != nil && state.Quiz.Finished() {
+		actions = [][2]string{{"Ctrl+F", fmt.Sprintf("More questions (%d)", model.quizLength())}}
+	} else {
+		actions = [][2]string{
+			{"Ctrl+G", fmt.Sprintf("Quiz this topic (%d)", model.quizLength())},
+			{"Ctrl+F", "More on this topic"},
+		}
 	}
 	if title, found := model.nextTopicLabel(); found {
 		next := "Next topic"
@@ -76,9 +85,6 @@ func (model interfaceModel) sidebarShortcuts() string {
 		return lipgloss.NewStyle().Foreground(model.palette().foreground).Bold(true).Render("Ctrl+K") + "  " + lipgloss.NewStyle().Foreground(model.palette().muted).Render("Choose a topic")
 	}
 	actions := model.courseActions(false)
-	if quiz := model.application.state.Quiz; quiz != nil && quiz.Completed() < quiz.Goal {
-		actions[1][1] = "Next question"
-	}
 	if model.application.state.Quiz != nil {
 		actions = append(actions, [2]string{"Ctrl+B", "Question index"})
 	}

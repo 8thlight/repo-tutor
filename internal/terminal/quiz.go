@@ -84,6 +84,10 @@ func quizText(quiz *tutor.Quiz) string {
 	return text.String()
 }
 
+func inQuestionFlow(state session.State) bool {
+	return (state.Quiz != nil && !state.Quiz.Finished()) || state.Probe != nil
+}
+
 func quizFinished(state session.State) bool {
 	quiz := state.Quiz
 	return quiz != nil && reviewing(state) && quiz.Completed() >= quiz.Goal
