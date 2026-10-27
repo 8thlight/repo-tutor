@@ -240,9 +240,9 @@ func (model interfaceModel) showSource(file repository.File, location repository
 	model, command := model.document("source", fmt.Sprintf("%s:%d", location.Path, location.Line), content.String())
 	model.viewport.SetYOffset(max(0, rowsAbove-sourceContextRows))
 	model.sourcePath, model.sourceLine, model.sourceRendered = file.Path, location.Line, false
-	model.notice = "Source snapshot · /read PATH:LINE opens another location · Esc goes back"
+	model.notice = "Source snapshot · /read PATH:LINE opens another location · Enter or Esc goes back"
 	if isMarkdown(file.Path) {
-		model.notice = "Source snapshot · v shows the rendered page · Esc goes back"
+		model.notice = "Source snapshot · v shows the rendered page · Enter or Esc goes back"
 	}
 	return model, command
 }
@@ -300,10 +300,10 @@ func (model interfaceModel) showRendered(file repository.File, line int) (tea.Mo
 	page, row, found := model.markdownPage(file, line)
 	model, command := model.document("source", file.Path+" · rendered", page)
 	model.sourcePath, model.sourceLine, model.sourceRendered = file.Path, line, true
-	model.notice = fmt.Sprintf("Line %d · could not place it, so the top is marked with › · v shows the source · Esc goes back", line)
+	model.notice = fmt.Sprintf("Line %d · could not place it, so the top is marked with › · v shows the source · Enter or Esc goes back", line)
 	if found {
 		model.viewport.SetYOffset(max(0, row-sourceContextRows/4))
-		model.notice = fmt.Sprintf("Line %d · marked with › · v shows the source at that line · Esc goes back", line)
+		model.notice = fmt.Sprintf("Line %d · marked with › · v shows the source at that line · Enter or Esc goes back", line)
 	}
 	return model, command
 }

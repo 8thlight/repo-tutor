@@ -356,3 +356,19 @@ func TestEscLeavesASourceFileForTheListItCameFrom(t *testing.T) {
 		}
 	}
 }
+
+func TestEnterClosesASourceFileTheWayItOpenedIt(t *testing.T) {
+	for _, list := range []string{"sources", "hotspots"} {
+		opened, _ := newLearnerFixture().openPicker(list, "")
+		file, _ := opened.(interfaceModel).openFile(repository.Location{Path: "main.go", Line: 1})
+		back, _ := press(file.(interfaceModel), tea.KeyEnter, 0)
+		if back.page != list {
+			t.Fatalf("Enter on a file opened from %s should return to it, got %s", list, back.page)
+		}
+	}
+	read, _ := newLearnerFixture().openFile(repository.Location{Path: "main.go", Line: 1})
+	back, _ := press(read.(interfaceModel), tea.KeyEnter, 0)
+	if back.page != "lesson" {
+		t.Fatalf("Enter on a file opened with /read should return to the lesson, got %s", back.page)
+	}
+}
