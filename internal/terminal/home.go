@@ -18,6 +18,7 @@ const (
 	placeSettings = "settings"
 	placeProbe    = "probe"
 	placeReview   = "review"
+	placeExam     = "exam"
 	placeRefresh  = "refresh"
 )
 
@@ -44,6 +45,9 @@ func (model interfaceModel) homeEntries() []homeEntry {
 	}
 	entries = append(entries,
 		homeEntry{placeTopics, "Topics", "Pick any topic to study or revisit.", ""})
+	if quiz := state.Quiz; (quiz == nil || !quiz.Exam || quiz.Finished()) && tutor.ExamAvailable(model.application.course, state.Progress) {
+		entries = append(entries, homeEntry{placeExam, "Take an exam", fmt.Sprintf("%d questions from the topics you have read. Set the length on F2.", model.examPlanLength()), ""})
+	}
 	if weak, found := tutor.WeakTopic(model.application.course, state.Progress, state.LastExam); found {
 		entries = append(entries, homeEntry{placeReview, "Review a weak topic", "Revisit " + tutor.Plain(weak.Title) + " with a different example.", ""})
 	}
@@ -168,6 +172,12 @@ func (model interfaceModel) openHomeEntry(entry homeEntry) (tea.Model, tea.Cmd) 
 		return model.openAbout()
 	case placeSettings:
 		return model.openSettings()
+	case placeExam:
+		if !tutor.ExamAvailable(model.application.course, model.application.state.Progress) {
+			model.notice = fmt.Sprintf("An exam needs at least %d topics read.", tutor.ExamMinimum)
+			return model, nil
+		}
+		return model.begin(turnIntent{"exam", examMessage, ""})
 	case placeReview:
 		weak, found := tutor.WeakTopic(model.application.course, model.application.state.Progress, model.application.state.LastExam)
 		if !found {

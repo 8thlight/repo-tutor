@@ -251,6 +251,9 @@ func (model interfaceModel) composer() string {
 		above, title = "", "Ask about this answer, or continue"
 		if quiz := state.Quiz; quiz != nil && quiz.Completed() >= quiz.Goal {
 			above, title = fmt.Sprintf("QUIZ COMPLETE · %d / %d answered\n%s", quiz.Completed(), quiz.Goal, model.quizCompleteLine()), "Ask about this answer"
+			if quiz.Exam {
+				above = model.examCompleteText()
+			}
 		}
 	}
 	if model.askingGoal() {
@@ -281,7 +284,7 @@ func (model interfaceModel) sidebar() string {
 	}
 	content := title.Render("YOUR COURSE") + "\n\n" + fmt.Sprintf("%d / %d topics read", visited, total) + "\n" + title.Render(strings.Repeat("━", filled)) + muted.Render(strings.Repeat("─", 20-filled)) + "\n\n" + fmt.Sprintf("Understanding %d%%", score.Percent) + "\n\n" + muted.Render("CURRENT TOPIC") + "\n" + lipgloss.NewStyle().Width(sidebarWidth-3).Render(model.topicTitle())
 	if quiz := model.application.state.Quiz; quiz != nil && !model.movingToAnotherTopic() {
-		content += "\n\n" + title.Render("QUIZ GOAL") + fmt.Sprintf("\n%d / %d answered", quiz.Completed(), quiz.Goal)
+		content += "\n\n" + title.Render(model.quizBlockTitle()) + fmt.Sprintf("\n%d / %d answered", quiz.Completed(), quiz.Goal)
 	}
 	if model.bodyHeight() >= 19 {
 		content += "\n\n" + muted.Render(model.sidebarShortcutsTitle()) + "\n" + model.sidebarShortcuts()
@@ -321,6 +324,9 @@ func (model interfaceModel) View() tea.View {
 	}
 	if quiz := model.application.state.Quiz; model.inQuiz() && quiz != nil {
 		title = fmt.Sprintf("Question %d / %d · %s", quiz.Active+1, quiz.Goal, model.topicTitle())
+		if quiz.Exam {
+			title = "Exam · " + title
+		}
 	}
 	body := model.viewport.View()
 	if model.busy && model.page == "lesson" {
@@ -376,7 +382,7 @@ func (model interfaceModel) View() tea.View {
 
 func waitingPhrase(action string) string {
 	switch action {
-	case "quiz", "quiz-next", "quiz-extend", "probe":
+	case "quiz", "quiz-next", "quiz-extend", "probe", "exam":
 		return "Preparing your question"
 	case "answer":
 		return "Reviewing your answer"
@@ -393,7 +399,7 @@ func waitingText(action string) string {
 
 func groundingText(action string) string {
 	switch action {
-	case "quiz", "quiz-next", "quiz-extend", "probe":
+	case "quiz", "quiz-next", "quiz-extend", "probe", "exam":
 		return "Writing a question from this repository's files."
 	case "answer":
 		return "Checking your answer against this repository's files."
@@ -406,6 +412,8 @@ func groundingText(action string) string {
 
 func turnLabel(action string) string {
 	switch action {
+	case "exam":
+		return "exam question"
 	case "quiz", "quiz-next", "quiz-extend":
 		return "quiz question"
 	case "probe":

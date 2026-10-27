@@ -102,7 +102,14 @@ func (application application) completeTurn(ctx context.Context, action, message
 			return application.openWithLesson(lesson, message)
 		}
 	}
-	if action == "quiz" || action == "lesson" || action == "probe" {
+	if action == "exam" {
+		plan := tutor.ExamPlan(application.course, application.state.Progress, application.settings.ExamLength)
+		if len(plan) == 0 {
+			return session.State{}, fmt.Errorf("an exam needs at least %d topics read", tutor.ExamMinimum)
+		}
+		topic = plan[0]
+	}
+	if action == "quiz" || action == "lesson" || action == "probe" || action == "exam" {
 		application.questionStash.clear()
 	}
 	if action == "quiz-next" {
@@ -118,7 +125,7 @@ func (application application) completeTurn(ctx context.Context, action, message
 		}
 	}
 	request := tutor.Request{Topic: topic, Action: action, Message: message, Goal: application.state.Goal}
-	if action == "quiz-next" || action == "quiz-extend" {
+	if action == "quiz-next" || action == "quiz-extend" || action == "exam" {
 		request.Action = "quiz"
 	}
 	request.Lesson = lastLesson(application.state.Turns, topic)
@@ -193,7 +200,11 @@ func (application application) recordReply(action, message, topic, pending strin
 	if action == "question" && reviewing(application.state) && reply.Question == "" {
 		updated.Review = true
 	}
-	updated.Quiz = tutor.RecordQuiz(updated.Quiz, topic, action, pending, reply, application.settings.QuizLength)
+	if action == "exam" {
+		updated.Quiz = tutor.StartExam(tutor.ExamPlan(application.course, application.state.Progress, application.settings.ExamLength), reply)
+	} else {
+		updated.Quiz = tutor.RecordQuiz(updated.Quiz, topic, action, pending, reply, application.settings.QuizLength)
+	}
 	updated.Progress = tutor.Record(updated.Progress, topic, action, reply)
 	if action == "answer" {
 		updated.Progress = tutor.RecordQuizScore(updated.Progress, topic, updated.Quiz)
@@ -201,6 +212,9 @@ func (application application) recordReply(action, message, topic, pending strin
 	updated.Probe, updated.Progress = tutor.RecordProbe(updated.Probe, application.course, updated.Progress, action, topic, reply)
 	updated.Turns = append(append([]session.Turn(nil), updated.Turns...), session.Turn{Topic: topic, Action: action, Message: message, Reply: reply})
 	updated.Quiz = tutor.RecordAnswerTurn(application.state.Quiz, updated.Quiz, len(updated.Turns)-1)
+	if result, finished := tutor.ResultOf(updated.Quiz); finished {
+		updated.LastExam = &result
+	}
 	if trimmed := len(updated.Turns) - 200; trimmed > 0 {
 		updated.Turns = updated.Turns[trimmed:]
 		updated.Quiz = tutor.ShiftQuizTurns(updated.Quiz, trimmed)
