@@ -145,7 +145,7 @@ func TestACompleteQuizOffersTheNextTopicAndExtend(t *testing.T) {
 	model := readingFixture()
 	line := model.quizCompleteLine()
 	title, _ := model.nextTopicLabel()
-	if !strings.Contains(line, "Ctrl+N Next: "+title) || !strings.Contains(line, "/extend adds 5") {
+	if !strings.Contains(line, "Ctrl+N Next: "+title) || !strings.Contains(line, "Ctrl+F More questions (5)") || strings.Contains(line, "/extend") {
 		t.Fatalf("got %q", line)
 	}
 }
@@ -266,5 +266,25 @@ func TestTheSidebarNamesMoreAsTheNextQuestionDuringAQuiz(t *testing.T) {
 	model.application.state.Quiz = &tutor.Quiz{Topic: tutor.Overview, Goal: 5, Questions: []tutor.QuizQuestion{{Text: "First?", Assessment: "partial"}}}
 	if !strings.Contains(ansi.Strip(model.sidebarShortcuts()), "Ctrl+F  Next question") {
 		t.Fatalf("Ctrl+F continues a quiz, and the sidebar should say so:\n%s", model.sidebarShortcuts())
+	}
+}
+
+func TestControlFExtendsAFinishedQuiz(t *testing.T) {
+	model := readingFixture()
+	model.application.state.Quiz = &tutor.Quiz{Topic: tutor.Overview, Goal: 3, Questions: []tutor.QuizQuestion{{Text: "A?", Assessment: "correct"}, {Text: "B?", Assessment: "partial"}, {Text: "C?", Assessment: "correct"}}}
+	model.application.state.Turns = append(model.application.state.Turns, session.Turn{Topic: tutor.Overview, Action: "answer", Reply: tutor.Reply{Assessment: "correct", Feedback: "Right."}})
+	model.application.state.Review = true
+	if !quizFinished(model.application.state) {
+		t.Fatal("every question is answered and reviewed, so the quiz is finished")
+	}
+	started, _ := press(model, 'f', tea.ModCtrl)
+	defer started.cancel()
+	if !started.busy || started.intent.action != "quiz-extend" {
+		t.Fatalf("Ctrl+F on a finished quiz should ask for more questions: %+v", started.intent)
+	}
+	unfinished := model
+	unfinished.application.state.Quiz = &tutor.Quiz{Topic: tutor.Overview, Goal: 5, Questions: []tutor.QuizQuestion{{Text: "A?", Assessment: "correct"}}}
+	if quizFinished(unfinished.application.state) {
+		t.Fatal("an unfinished quiz should not extend")
 	}
 }
