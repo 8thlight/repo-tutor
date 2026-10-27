@@ -257,7 +257,7 @@ func (model interfaceModel) composer() string {
 		actions = line + "\n"
 	}
 	if above != "" {
-		above = muted.Render(ansi.Wrap(above, model.bodyWidth(), "")) + "\n"
+		above = muted.Render(ansi.Wrap(above, model.bodyWidth(), "")) + "\n\n"
 	}
 	return actions + model.sectionDivider("") + "\n\n" + above + model.framedInput(title, model.typingHints(), tint)
 }

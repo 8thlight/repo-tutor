@@ -172,3 +172,21 @@ func TestABlankRowSeparatesTheRuleFromTheInput(t *testing.T) {
 		}
 	}
 }
+
+func TestABlankRowAlsoSeparatesAQuizQuestionFromTheInput(t *testing.T) {
+	model := readingFixture()
+	model.application.state.Question = "Which package owns the calculation?"
+	lines := strings.Split(ansi.Strip(model.composer()), "\n")
+	question := -1
+	for index, line := range lines {
+		if strings.Contains(line, "Which package owns the calculation?") {
+			question = index
+		}
+	}
+	if question < 0 || strings.TrimSpace(lines[question+1]) != "" || !strings.HasPrefix(lines[question+2], "╭") {
+		t.Fatalf("a blank row should sit between the question and the box:\n%s", strings.Join(lines, "\n"))
+	}
+	if strings.TrimSpace(lines[1]) != "" {
+		t.Fatalf("a blank row should also sit under the rule:\n%s", strings.Join(lines, "\n"))
+	}
+}
