@@ -323,3 +323,21 @@ func TestSourcesEndsWithEveryOtherFileInPathOrder(t *testing.T) {
 		}
 	}
 }
+
+func TestFinishingAQuizScoresTheTopicAndARetakeReplacesIt(t *testing.T) {
+	model := readingFixture()
+	quiz := &tutor.Quiz{Topic: tutor.Overview, Goal: 2, Active: 1, Questions: []tutor.QuizQuestion{{Text: "A?", Assessment: "correct"}, {Text: "B?"}}}
+	model.application.state.Quiz, model.application.state.Question = quiz, "B?"
+	updated := model.application.recordReply("answer", "my answer", tutor.Overview, "B?", tutor.Reply{Assessment: "partial", Feedback: "Close.", Explanation: "Close."})
+	got := updated.Progress[tutor.Overview]
+	if got.QuizGoal != 2 || got.QuizCredit != 3 {
+		t.Fatalf("a correct and a partial answer on a two-question quiz earn 3 half points: %+v", got)
+	}
+	unfinished := readingFixture()
+	unfinished.application.state.Quiz = &tutor.Quiz{Topic: tutor.Overview, Goal: 3, Active: 0, Questions: []tutor.QuizQuestion{{Text: "A?"}}}
+	unfinished.application.state.Question = "A?"
+	again := unfinished.application.recordReply("answer", "x", tutor.Overview, "A?", tutor.Reply{Assessment: "correct", Feedback: "Yes.", Explanation: "Yes."})
+	if again.Progress[tutor.Overview].QuizGoal != 0 {
+		t.Fatalf("a quiz with questions left must not be scored yet: %+v", again.Progress[tutor.Overview])
+	}
+}

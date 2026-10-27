@@ -2,14 +2,19 @@ package tutor
 
 const ReviewMessage = "Review this topic with a different example, focusing on earlier confusion."
 
+const weakBelow = 60
+
 func WeakTopic(course []Topic, progress map[string]Progress) (Topic, bool) {
 	var selected Topic
-	highest := 0
+	lowest, found := 100, false
 	for _, topic := range course {
 		current := progress[topic.ID]
-		if score := current.Missed + current.Partial - current.Correct; score > highest {
-			selected, highest = topic, score
+		if current.QuizGoal == 0 {
+			continue
+		}
+		if percent, _ := Understanding(current); percent < weakBelow && percent < lowest {
+			selected, lowest, found = topic, percent, true
 		}
 	}
-	return selected, highest > 0
+	return selected, found
 }

@@ -178,6 +178,9 @@ func (application application) recordReply(action, message, topic, pending strin
 	}
 	updated.Quiz = tutor.RecordQuiz(updated.Quiz, topic, action, pending, reply, application.settings.QuizLength)
 	updated.Progress = tutor.Record(updated.Progress, topic, action, reply)
+	if action == "answer" {
+		updated.Progress = tutor.RecordQuizScore(updated.Progress, topic, updated.Quiz)
+	}
 	updated.Probe, updated.Progress = tutor.RecordProbe(updated.Probe, application.course, updated.Progress, action, topic, reply)
 	updated.Turns = append(append([]session.Turn(nil), updated.Turns...), session.Turn{Topic: topic, Action: action, Message: message, Reply: reply})
 	updated.Quiz = tutor.RecordAnswerTurn(application.state.Quiz, updated.Quiz, len(updated.Turns)-1)
