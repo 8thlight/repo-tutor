@@ -292,7 +292,7 @@ func study(ctx context.Context, arguments []string, input io.Reader, output, dia
 	if err != nil {
 		return err
 	}
-	application := application{snapshot: snapshot, course: tutor.Course(snapshot), state: state, store: store, output: output, diagnostics: diagnostics, timeout: *timeout, prefetch: !*noPrefetch, settings: loaded, settingsStatus: loadedStatus, settingsBase: *stateDirectory}
+	application := application{snapshot: snapshot, course: tutor.Course(snapshot), state: state, store: store, output: output, diagnostics: diagnostics, timeout: *timeout, prefetch: !*noPrefetch, settings: loaded, settingsStatus: loadedStatus, settingsBase: *stateDirectory, questionStash: &questionStash{}}
 	if !*plain && *ask == "" && interactiveStreams(input, output) {
 		return runInterface(ctx, application, input, output)
 	}

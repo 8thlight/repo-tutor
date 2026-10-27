@@ -30,6 +30,8 @@ type application struct {
 	settings       settings.Settings
 	settingsStatus settings.Status
 	settingsBase   string
+
+	questionStash *questionStash
 }
 
 const openingMessage = "Start with the repository's purpose and a map of how it works."
@@ -98,6 +100,21 @@ func (application application) completeTurn(ctx context.Context, action, message
 	if action == "lesson" && message == firstLessonMessage {
 		if lesson, cached := application.cachedLesson(topic); cached && lesson.Fresh(application.snapshot.Fingerprint) {
 			return application.openWithLesson(lesson, message)
+		}
+	}
+	if action == "quiz" || action == "lesson" || action == "probe" {
+		application.questionStash.clear()
+	}
+	if action == "quiz-next" {
+		if key, wanted := nextQuestionKey(application.state); wanted {
+			if reply, stashed := application.questionStash.take(key); stashed {
+				updated := application.recordReply(action, message, topic, "", reply)
+				updated.SessionID = application.state.SessionID
+				if err := application.store.Save(updated); err != nil {
+					return session.State{}, fmt.Errorf("save tutor turn: %w", err)
+				}
+				return updated, nil
+			}
 		}
 	}
 	request := tutor.Request{Topic: topic, Action: action, Message: message, Goal: application.state.Goal}

@@ -349,7 +349,7 @@ func (model interfaceModel) View() tea.View {
 	}
 	indicator := ""
 	if model.prefetching && !model.busy {
-		indicator = model.prefetchSpinner.View() + " Preparing next lesson"
+		indicator = model.prefetchSpinner.View() + " " + model.prefetchLabel()
 	}
 	noticeStyle := muted
 	if model.skipArmed {
