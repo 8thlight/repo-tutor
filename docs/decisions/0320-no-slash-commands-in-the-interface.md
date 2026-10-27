@@ -1,6 +1,6 @@
 # 0320. No slash commands in the interface
 
-Status: accepted
+Status: accepted. `Ctrl+N` asks the next quiz question under [0360](0360-next-and-more.md).
 
 ## Context
 
