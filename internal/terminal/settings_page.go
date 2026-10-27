@@ -16,7 +16,7 @@ const (
 	settingsSavedNotice   = "Saved"
 	settingsUnsavedNotice = "Could not save. This change lasts until you quit."
 	powerlineNote         = "Needs a Powerline or Nerd Font in your terminal."
-	markdownNote          = "Press v on any file to switch just that file."
+	settingsKeysNote      = "↑↓ move · Space chooses · F3 or Esc closes"
 	noColorNote           = "Color is off, so tab style does not apply."
 	noColorHighlightNote  = "Color is off, so highlight color does not apply."
 	highlightShiftNote    = "Colors shift to stay readable on your terminal's background."
@@ -132,7 +132,7 @@ func (model interfaceModel) settingsLayout() (string, int) {
 	muted := lipgloss.NewStyle().Foreground(palette.muted)
 	heading := lipgloss.NewStyle().Foreground(palette.accent).Bold(true)
 	narrow := model.bodyWidth() < settingsNarrowWidth
-	var lines []string
+	lines := []string{muted.Render(settingsKeysNote), ""}
 	switch {
 	case model.application.settingsStatus.ReadOnly:
 		lines = append(lines, lipgloss.NewStyle().Foreground(palette.warning).Render(settingsReadOnlyNotice), "")
@@ -181,11 +181,6 @@ func (model interfaceModel) settingsLayout() (string, int) {
 		}
 		if choice.note != "" {
 			lines = append(lines, "      "+muted.Render(choice.note))
-		}
-		if index+1 < len(choices) && choices[index+1].group != group || index+1 == len(choices) {
-			if group == "MARKDOWN FILES OPEN" {
-				lines = append(lines, "", muted.Render(markdownNote))
-			}
 		}
 	}
 	return strings.Join(lines, "\n"), focusLine
