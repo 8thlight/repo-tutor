@@ -108,7 +108,7 @@ func (model interfaceModel) tabCells(style, active string) ([]string, string) {
 		case model.noColor:
 			rendered[index] = label
 		case style == settings.TabStyleNone && current:
-			rendered[index] = lipgloss.NewStyle().Foreground(palette.accent).Bold(true).Underline(true).Render(label)
+			rendered[index] = lipgloss.NewStyle().Foreground(palette.accent).Bold(true).Render(label)
 		case style == settings.TabStyleNone:
 			rendered[index] = lipgloss.NewStyle().Foreground(palette.muted).Render(label)
 		default:
@@ -123,18 +123,44 @@ func (model interfaceModel) tabCells(style, active string) ([]string, string) {
 	return rendered, " "
 }
 
+type ruleReach int
+
+const (
+	ruleLabel ruleReach = iota
+	ruleWholeCell
+	ruleLeftSeparatorAndLabel
+	ruleNone
+)
+
+var ruleReaches = map[string]ruleReach{
+	settings.TabStyleSlanted:       ruleWholeCell,
+	settings.TabStyleRounded:       ruleNone,
+	settings.TabStyleJoinedSlanted: ruleLeftSeparatorAndLabel,
+	settings.TabStyleJoinedRounded: ruleLeftSeparatorAndLabel,
+	settings.TabStyleJoinedArrows:  ruleLeftSeparatorAndLabel,
+}
+
+func (model interfaceModel) ruleReach() ruleReach {
+	if model.noColor {
+		return ruleLabel
+	}
+	return ruleReaches[model.application.settings.TabStyle]
+}
+
 func (model interfaceModel) activeTabSpan(style, active string) (int, int, bool) {
 	cells, joiner := model.tabCells(style, active)
-	_, drawsEdges := tabEdges[style]
 	start := 0
 	for index, cell := range cells {
 		end := start + lipgloss.Width(cell)
 		if tabPages[index].page == active {
-			labelStart := start
-			if drawsEdges && !model.noColor {
-				labelStart++
+			labelEnd := start + lipgloss.Width(" "+tabPages[index].label+" ")
+			switch model.ruleReach() {
+			case ruleWholeCell:
+				return start, end, true
+			case ruleLeftSeparatorAndLabel:
+				return max(0, start-1), labelEnd, true
 			}
-			return labelStart, labelStart + lipgloss.Width(" "+tabPages[index].label+" "), true
+			return start, labelEnd, true
 		}
 		start = end + lipgloss.Width(joiner)
 	}
@@ -142,6 +168,9 @@ func (model interfaceModel) activeTabSpan(style, active string) (int, int, bool)
 }
 
 func (model interfaceModel) tabRule(width int) string {
+	if model.ruleReach() == ruleNone {
+		return strings.Repeat(" ", width)
+	}
 	palette := model.palette()
 	start, end, found := model.activeTabSpan(model.application.settings.TabStyle, model.activeTab())
 	base := func(count int) string {

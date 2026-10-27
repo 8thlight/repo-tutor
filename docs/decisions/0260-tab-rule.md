@@ -10,11 +10,21 @@ A blank row separates the tab bar from the page. The row does no work. The four 
 
 A thin rule fills the row under the tab bar and replaces the blank row, so the page keeps its height. The rule is drawn with the upper one-eighth block, `▔`, which sits at the very top of its cell, so it touches the bottom of the tabs above. A box-drawing line would sit in the middle of the cell and leave a gap under the tabs. The rule runs the width of the bar and its hints.
 
-The rule is a dim grey everywhere, so it connects the tabs without adding color. Under the active tab it is the accent color, over the label only. The stretch stops before any Powerline edge or separator glyph, so a rounded or slanted end is never underlined.
+The rule is a dim grey everywhere, so it connects the tabs without adding color. Under the active tab it is the accent color. How far the accent stretch reaches depends on the shape of the tab.
+
+| Tab style | Accent stretch |
+| -- | -- |
+| None, Block | The label |
+| Slanted | The whole cell, from the left glyph to the right glyph, because both triangles reach the bottom of the cell |
+| Rounded | None. The row stays blank, because a half circle does not reach the bottom edge and a rule under a closed shape contradicts it |
+| Joined slants, rounds, and arrows | The separator before the label and the label, and not the separator after it, because the left separator is the active tab's own edge. The first tab is flat and has none |
+| No color | The label |
 
 - The dim grey is dark enough from the accent that the two differ by a contrast ratio of at least 3 to 1, so the active stretch shows by lightness and not by hue alone.
 - When no tab is active, as on Settings, Help, About, and command output, the whole rule is the dim grey.
 - With no color, the base rule is left blank and the active label alone is underlined with the same character, so position carries the signal.
+
+The rule marks the active tab, so the None style does not also underline its label.
 
 A rule under a joined bar starts at the first column of the terminal, like the bar. Under every other style it keeps the two-column margin. The samples on the Settings page show tabs only and draw no rule.
 

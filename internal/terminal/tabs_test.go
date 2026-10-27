@@ -181,15 +181,32 @@ func TestWithoutColorOnlyTheActiveLabelIsUnderlined(t *testing.T) {
 	}
 }
 
-func TestTheStretchStopsBeforeTheEdgeAndSeparatorGlyphs(t *testing.T) {
+func TestTheStretchReachFollowsTheShapeOfTheTab(t *testing.T) {
 	model := interfaceFixture()
 	model.noColor = false
-	for style, want := range map[string][2]int{"block": {7, 15}, "rounded": {10, 18}, "joined_arrows": {7, 15}} {
+	for style, want := range map[string][2]int{"block": {7, 15}, "none": {7, 15}, "slanted": {9, 19}, "joined_arrows": {6, 15}, "joined_rounded": {6, 15}, "joined_slanted": {6, 15}} {
 		model.application.settings.TabStyle = style
 		start, end, found := model.activeTabSpan(style, "course")
 		if !found || start != want[0] || end != want[1] {
-			t.Fatalf("%s: the stretch should cover only the label, got %d..%d", style, start, end)
+			t.Fatalf("%s: got %d..%d, want %d..%d", style, start, end, want[0], want[1])
 		}
+	}
+	start, _, _ := model.activeTabSpan("joined_arrows", "home")
+	if start != 0 {
+		t.Fatalf("the flat first tab has no left separator to include, got %d", start)
+	}
+}
+
+func TestRoundedTabsDrawNoRule(t *testing.T) {
+	model := interfaceFixture()
+	model.noColor = false
+	model.application.settings.TabStyle = "rounded"
+	if _, rule := tabRows(model); strings.Contains(rule, "▔") {
+		t.Fatalf("rounded tabs are closed shapes and should have no rule under them: %q", rule)
+	}
+	model.noColor = true
+	if _, rule := tabRows(model); !strings.Contains(rule, "▔") {
+		t.Fatal("with no color the bar is bracketed and keeps its underline")
 	}
 }
 
@@ -224,5 +241,15 @@ func TestTheRuleReplacesTheBlankRowSoThePageKeepsItsHeight(t *testing.T) {
 	model.noColor = false
 	if rows := strings.Count(model.View().Content, "\n") + 1; rows > model.height {
 		t.Fatalf("the view is %d rows and the terminal has %d", rows, model.height)
+	}
+}
+
+func TestTheNoneStyleLeavesUnderliningToTheRule(t *testing.T) {
+	model := interfaceFixture()
+	model.noColor = false
+	underline := lipgloss.NewStyle().Underline(true).Render("x")
+	underline = underline[:strings.Index(underline, "x")]
+	if strings.Contains(model.tabs("none", "course"), underline) {
+		t.Fatal("the rule underlines the active tab, so its label should not also be underlined")
 	}
 }
