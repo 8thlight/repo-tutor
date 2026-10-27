@@ -357,3 +357,63 @@ func TestQuizTitleShowsPositionAndTopicNotAnsweredCount(t *testing.T) {
 		t.Fatalf("the title should give the question's position and topic:\n%s", content)
 	}
 }
+
+func revealFixture() interfaceModel {
+	model := interfaceFixture()
+	model.application.state.Quiz = &tutor.Quiz{Topic: tutor.Overview, Goal: 5, Questions: []tutor.QuizQuestion{{Text: "Where does it start?", Assessment: "skipped"}, {Text: "Which package owns it?", Assessment: "correct", Turn: 1}, {Text: "Open one?"}}}
+	model.application.state.Question = "Open one?"
+	return model
+}
+
+func selectIndexRow(t *testing.T, model interfaceModel, row int) interfaceModel {
+	t.Helper()
+	opened, _ := model.openPicker("quiz", "")
+	indexed := opened.(interfaceModel)
+	for range row {
+		indexed, _ = press(indexed, tea.KeyDown, 0)
+	}
+	return indexed
+}
+
+func TestAOnASkippedRowAsksForItsAnswerAsAFreeQuestion(t *testing.T) {
+	model := selectIndexRow(t, revealFixture(), 0)
+	asked, _ := press(model, 'a', 0)
+	defer asked.cancel()
+	if !asked.busy || asked.intent.action != "question" || !strings.Contains(asked.intent.message, "Where does it start?") || !strings.Contains(asked.intent.message, "worked solution") {
+		t.Fatalf("A on a skipped row should ask the tutor to explain it: %+v", asked.intent)
+	}
+	quiz := asked.application.state.Quiz
+	if quiz.Questions[0].Assessment != "skipped" || quiz.Completed() != 2 {
+		t.Fatalf("reading an answer changes nothing in the quiz: %+v", quiz)
+	}
+}
+
+func TestAOnAnyOtherRowOnlyExplainsWhyNot(t *testing.T) {
+	for row, name := range map[int]string{1: "an answered row", 2: "an open row", 3: "an upcoming row"} {
+		model := selectIndexRow(t, revealFixture(), row)
+		next, _ := press(model, 'a', 0)
+		if next.busy || !strings.Contains(next.notice, "Only a skipped question") {
+			t.Fatalf("%s should show a notice and ask nothing: busy=%v %q", name, next.busy, next.notice)
+		}
+	}
+}
+
+func TestATypedWhileSearchingGoesIntoTheSearch(t *testing.T) {
+	model := selectIndexRow(t, revealFixture(), 0)
+	searching, _ := press(model, '/', 0)
+	typed, _ := searching.Update(tea.KeyPressMsg{Code: 'a', Text: "a"})
+	if typed.(interfaceModel).busy {
+		t.Fatal("while the list's search is open, A belongs to the search")
+	}
+}
+
+func TestTheIndexNamesTheShowAnswerKeyOnSkippedRowsAndInItsFooter(t *testing.T) {
+	items := quizSlotItems(revealFixture().application.state)
+	if !strings.Contains(items[0].description, "A shows the answer") || strings.Contains(items[1].description, "A shows") {
+		t.Fatalf("only the skipped row should offer the key: %q / %q", items[0].description, items[1].description)
+	}
+	index := selectIndexRow(t, revealFixture(), 0)
+	if !strings.Contains(ansi.Strip(index.View().Content), "A shows a skipped answer") {
+		t.Fatal("the index footer should name the key")
+	}
+}

@@ -343,6 +343,9 @@ func (model interfaceModel) View() tea.View {
 	}
 	if model.isPicker() {
 		notice += " · / search · ↑↓ move · Enter open"
+		if model.page == "quiz" {
+			notice += " · A shows a skipped answer"
+		}
 	}
 	if model.page == "lesson" && model.history < len(model.application.state.Turns)-1 {
 		notice = "Earlier step · Esc returns to the current question · Alt+←/→ steps through this topic"

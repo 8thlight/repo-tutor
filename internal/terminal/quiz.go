@@ -24,7 +24,7 @@ func reviewing(state session.State) bool {
 func probeIntent(state session.State, course []tutor.Topic) (turnIntent, error) {
 	topics := tutor.ProbeTopics(course, state.Progress)
 	if len(topics) == 0 {
-		return turnIntent{}, fmt.Errorf("every topic is already marked as known; use /topic or /quiz")
+		return turnIntent{}, fmt.Errorf("every topic is already marked as known; choose a topic or start a quiz")
 	}
 	return turnIntent{"probe", "Ask one short question that tests whether I already know this topic.", topics[0]}, nil
 }
@@ -50,7 +50,7 @@ func continueIntent(state session.State, course []tutor.Topic, extend bool) (tur
 		if topic, found := tutor.FirstUnheld(course, state.Progress); found {
 			return turnIntent{"lesson", "Teach this topic and connect it to its foundations.", topic.ID}, nil
 		}
-		return turnIntent{}, fmt.Errorf("every topic is marked as known; use /topic or /quiz")
+		return turnIntent{}, fmt.Errorf("every topic is marked as known; choose a topic or start a quiz")
 	}
 	if quiz != nil {
 		if quiz.Completed() >= quiz.Goal {
@@ -110,7 +110,7 @@ func (model interfaceModel) continueQuiz(extend bool) (tea.Model, tea.Cmd) {
 func quizSlotItems(state session.State) []browserItem {
 	quiz := state.Quiz
 	if quiz == nil {
-		return []browserItem{{"No quiz yet", "Start a quiz with Ctrl+G or /quiz.", "", -1}}
+		return []browserItem{{"No quiz yet", "Start a quiz with Ctrl+G.", "", -1}}
 	}
 	items := make([]browserItem, 0, quiz.Goal)
 	for slot := 0; slot < max(quiz.Goal, len(quiz.Questions)); slot++ {
@@ -122,7 +122,7 @@ func quizSlotItems(state session.State) []browserItem {
 			case "":
 				description = "Current · Enter returns to this question"
 			case "skipped":
-				description = "Skipped · Enter answers it again"
+				description = "Skipped · Enter answers it again · A shows the answer"
 			default:
 				description = "Answered " + question.Assessment + " · Enter shows the feedback"
 			}
@@ -151,7 +151,7 @@ func (model interfaceModel) selectQuizSlot(slot int) (tea.Model, tea.Cmd) {
 	quiz := state.Quiz
 	switch {
 	case quiz == nil || slot < 0:
-		model.notice = "Start a quiz with Ctrl+G or /quiz."
+		model.notice = "Start a quiz with Ctrl+G."
 		return model, nil
 	case slot == len(quiz.Questions) && reviewing(state):
 		return model.continueQuiz(false)
@@ -172,6 +172,22 @@ func (model interfaceModel) selectQuizSlot(slot int) (tea.Model, tea.Cmd) {
 	model.application.state = reopened
 	model.history = len(reopened.Turns) - 1
 	return model.learn()
+}
+
+func (model interfaceModel) revealSlot() (tea.Model, tea.Cmd) {
+	item, found := model.picker.SelectedItem().(browserItem)
+	quiz := model.application.state.Quiz
+	if !found || quiz == nil || item.line < 0 || item.line >= len(quiz.Questions) {
+		model.notice = "Only a skipped question has an answer to show here."
+		return model, nil
+	}
+	question := quiz.Questions[item.line]
+	if question.Assessment != "skipped" {
+		model.notice = "Only a skipped question has an answer to show here. Enter opens the others."
+		return model, nil
+	}
+	message := "I skipped this quiz question. Explain the answer and show a worked solution: " + tutor.Plain(question.Text)
+	return model.begin(turnIntent{"question", message, model.application.state.Topic})
 }
 
 func (model interfaceModel) viewAnswer(turn int) (tea.Model, tea.Cmd) {
