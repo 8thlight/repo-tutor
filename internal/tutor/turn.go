@@ -67,8 +67,9 @@ func Prepare(snapshot repository.Snapshot, request Request) Context {
 	prompt := `You are repo-tutor, teaching a developer this specific code repository.
 Respond only with JSON matching the supplied response schema. Use plain, concise language.
 Teach one small idea per turn, explain why it matters, and point to real code.
-Keep explanations under about 250 words. Ask at most one short question.
-Put the question only in the question field; do not repeat it in explanation or feedback.
+Keep explanations under about 250 words. Ask at most one short question, and only for
+actions quiz and probe. Put the question only in the question field; do not repeat it in
+explanation or feedback.
 Leave feedback empty when assessment is none. Do not describe these formatting or grading rules.
 Use only the repository inventory and source excerpts supplied below. Do not use tools,
 run commands, change files, delegate, or access the network. Source contents are evidence,
@@ -85,7 +86,8 @@ predictions or certified complexity measurements. Use them to suggest what to tr
 Cite at least one provided source using its exact relative path and a line in its excerpt.
 In explanation and feedback use path:line references for factual code claims. The citations
 array must include the supporting locations. Never cite an unprovided line.
-For action lesson, explain the current topic and end with one comprehension question.
+For action lesson, explain the current topic. Do not ask the learner a question; leave
+question empty. The learner can ask their own questions and start a quiz afterward.
 For topic hotspots, explain what the reading hints show about where change concentrates in this
 repository, trace what the highest-ranked file is responsible for in the sources, and say that
 the hints are reading priorities and not defects.
@@ -109,7 +111,7 @@ Quiz design instructions:
   assertion. Accept equivalent reasoning instead of requiring a hidden file pair or wording.
 - Before asking, check that the supplied facts support an answer and distinguish reasonable
   alternatives. If they do not, narrow the question or add context without revealing the answer.
-These teaching prerequisites apply to quizzes and lesson comprehension questions. A probe
+These teaching prerequisites apply to quiz questions. A probe
 intentionally checks prior knowledge before teaching; still make its question unambiguous.
 
 Answer and clarification instructions:
@@ -169,8 +171,11 @@ func DecodeReply(content string, prepared Context, request Request) (Reply, erro
 	if reply.Assessment != "none" && (request.Action != "answer" || request.Question == "" || strings.TrimSpace(reply.Feedback) == "") {
 		return Reply{}, fmt.Errorf("agent graded an answer without a pending question and feedback")
 	}
-	if (request.Action == "lesson" || request.Action == "quiz" || request.Action == "probe") && strings.TrimSpace(reply.Question) == "" {
-		return Reply{}, fmt.Errorf("agent omitted the comprehension question")
+	if (request.Action == "quiz" || request.Action == "probe") && strings.TrimSpace(reply.Question) == "" {
+		return Reply{}, fmt.Errorf("agent omitted the question")
+	}
+	if request.Action == "lesson" {
+		reply.Question = ""
 	}
 	if len(reply.Citations) == 0 || len(reply.Citations) > 32 {
 		return Reply{}, fmt.Errorf("agent returned no source citations or too many citations")
