@@ -37,7 +37,7 @@ func (model interfaceModel) bodyWidth() int {
 	return max(1, width)
 }
 func (model interfaceModel) bodyHeight() int {
-	return max(1, model.height-9-lipgloss.Height(model.composer()))
+	return max(1, model.height-8-lipgloss.Height(model.composer()))
 }
 
 func (model *interfaceModel) resize() {
@@ -293,7 +293,7 @@ func (model interfaceModel) View() tea.View {
 	}
 	brand = ansi.Truncate(brand, max(8, width-lipgloss.Width(status)-2), "…")
 	space := max(1, width-lipgloss.Width(brand)-lipgloss.Width(status))
-	header := ansi.Truncate(brand+strings.Repeat(" ", space)+muted.Render(status), width, "") + "\n" + muted.Render(ansi.Truncate("Goal  "+tutor.Plain(model.application.state.Goal), width, "…"))
+	header := ansi.Truncate(brand+strings.Repeat(" ", space)+muted.Render(status), width, "")
 	navigationWidth := width
 	if model.tabsBleed() {
 		navigationWidth += 2
