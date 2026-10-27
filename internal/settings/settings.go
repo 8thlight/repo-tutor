@@ -45,7 +45,7 @@ type file struct {
 }
 
 func Defaults() Settings {
-	return Settings{TabStyle: TabStyleBlock, MarkdownOpensRendered: true, Highlight: HighlightGreen}
+	return Settings{TabStyle: TabStyleNone, MarkdownOpensRendered: true, Highlight: HighlightGreen}
 }
 
 func Decode(data []byte) (Settings, Status) {

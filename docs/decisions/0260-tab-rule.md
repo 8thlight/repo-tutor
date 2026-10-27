@@ -24,7 +24,7 @@ The rule is a dim grey everywhere, so it connects the tabs without adding color.
 - When no tab is active, as on Settings, Help, About, and command output, the whole rule is the dim grey.
 - With no color, the base rule is left blank and the active label alone is underlined with the same character, so position carries the signal.
 
-The rule marks the active tab, so the None style does not also underline its label.
+The rule marks the active tab, so the None style does not also underline its label. The default tab style is None: plain labels, the accent on the active one, and this rule.
 
 A rule under a joined bar starts at the first column of the terminal, like the bar. Under every other style it keeps the two-column margin. The samples on the Settings page show tabs only and draw no rule.
 
