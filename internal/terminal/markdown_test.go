@@ -116,3 +116,23 @@ func TestRenderedRowMatchesATableRowThroughItsRules(t *testing.T) {
 		t.Fatalf("a table row should match its rendered cells: %d %v", row, found)
 	}
 }
+
+func TestMarkdownOpensInTheViewTheSettingChooses(t *testing.T) {
+	model := interfaceFixture()
+	model.application.settings.MarkdownOpensRendered = false
+	opened, _ := model.openFile(repository.Location{Path: "README.md", Line: 1})
+	if opened.(interfaceModel).sourceRendered {
+		t.Fatal("with the setting off, a Markdown file should open as source")
+	}
+	model.application.settings.MarkdownOpensRendered = true
+	opened, _ = model.openFile(repository.Location{Path: "README.md", Line: 1})
+	if !opened.(interfaceModel).sourceRendered {
+		t.Fatal("with the setting on, a Markdown file should open rendered")
+	}
+	model.application.settings.MarkdownOpensRendered = false
+	chosen := model.rememberMarkdownView("README.md", true)
+	opened, _ = chosen.openFile(repository.Location{Path: "README.md", Line: 1})
+	if !opened.(interfaceModel).sourceRendered {
+		t.Fatal("a view chosen with v should win over the setting")
+	}
+}
