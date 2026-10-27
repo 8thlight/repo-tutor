@@ -45,7 +45,7 @@ func TestHomeRecommendsLearnFirstAndStartsTheOverviewInTheBackground(t *testing.
 	for _, entry := range model.homeEntries() {
 		places = append(places, entry.place)
 	}
-	if strings.Join(places, ",") != "learn,topics,about" {
+	if strings.Join(places, ",") != "learn,topics,settings,about" {
 		t.Fatalf("a new learner should see only places with something to show: %v", places)
 	}
 	started, command := model.Update(beginFirstLesson{})
