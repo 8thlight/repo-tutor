@@ -129,34 +129,81 @@ func tabRows(model interfaceModel) (string, string) {
 	return "", ""
 }
 
-func TestTheRuleIsHeavyUnderTheActiveTabAndLightElsewhere(t *testing.T) {
+func rawTabRule(model interfaceModel) string {
+	_, rule := tabRows(model)
+	for _, line := range strings.Split(model.View().Content, "\n") {
+		if strings.Contains(ansi.Strip(line), "▔") && ansi.Strip(line) == rule {
+			return line
+		}
+	}
+	return ""
+}
+
+func TestTheAccentRuleSitsUnderTheActiveLabelOnly(t *testing.T) {
 	model := interfaceFixture()
 	model.noColor = false
-	bar, rule := tabRows(model)
-	start := strings.Index(bar, " Course ")
-	thick := strings.Index(rule, "▀")
-	if start < 0 || thick < 0 || len([]rune(rule[:thick])) != len([]rune(bar[:start])) {
-		t.Fatalf("the thick stretch should start under Course:\n%q\n%q", bar, rule)
+	palette := model.palette()
+	accentRun := lipgloss.NewStyle().Foreground(palette.accent).Render(strings.Repeat("▔", len([]rune(" Course "))))
+	raw := rawTabRule(model)
+	if !strings.Contains(raw, accentRun) {
+		t.Fatalf("the accent run should cover exactly the Course label:\n%q", raw)
 	}
-	if strings.Count(rule, "▀") != len([]rune(" Course ")) {
-		t.Fatalf("the thick stretch should cover exactly the Course tab:\n%q", rule)
+	if strings.Count(raw, accentRun[:strings.Index(accentRun, "▔")]) != 1 {
+		t.Fatalf("only one stretch should use the accent:\n%q", raw)
+	}
+	bar, rule := tabRows(model)
+	if len([]rune(rule[:strings.Index(rule, "▔")])) != 2 || strings.Index(bar, " Course ") < 0 {
+		t.Fatalf("the rule should start at the margin:\n%q\n%q", bar, rule)
 	}
 }
 
-func TestTheRuleIsAllLightWhenNoTabIsActive(t *testing.T) {
+func TestTheRuleHasNoAccentWhenNoTabIsActive(t *testing.T) {
 	model := settingsPageFixture(t)
 	model.noColor = false
-	_, rule := tabRows(model)
-	if strings.Contains(rule, "▀") || !strings.Contains(rule, "▔") {
-		t.Fatalf("with no active tab the rule should be thin all the way:\n%q", rule)
+	accent := lipgloss.NewStyle().Foreground(model.palette().accent).Render("▔")
+	if strings.Contains(rawTabRule(model), accent[:strings.Index(accent, "▔")]) {
+		t.Fatal("with no active tab the rule should use only the base grey")
+	}
+	if _, rule := tabRows(model); !strings.Contains(rule, "▔") {
+		t.Fatalf("the base rule should still be drawn:\n%q", rule)
 	}
 }
 
-func TestTheRuleStillMarksTheActiveTabWithoutColor(t *testing.T) {
+func TestWithoutColorOnlyTheActiveLabelIsUnderlined(t *testing.T) {
 	model := interfaceFixture()
-	_, rule := tabRows(model)
-	if !strings.Contains(rule, "▀") {
-		t.Fatalf("thickness should carry the signal when color is off:\n%q", rule)
+	bar, rule := tabRows(model)
+	start := strings.Index(bar, "[Course]")
+	if strings.Count(rule, "▔") != len([]rune(" Course ")) || start < 0 {
+		t.Fatalf("only the active label should carry the rule:\n%q\n%q", bar, rule)
+	}
+	if strings.Index(rule, "▔")+len("▔")*0 < 0 || len([]rune(rule[:strings.Index(rule, "▔")])) != len([]rune(bar[:start])) {
+		t.Fatalf("the stretch should start under the active tab:\n%q\n%q", bar, rule)
+	}
+}
+
+func TestTheStretchStopsBeforeTheEdgeAndSeparatorGlyphs(t *testing.T) {
+	model := interfaceFixture()
+	model.noColor = false
+	for style, want := range map[string][2]int{"block": {7, 15}, "rounded": {10, 18}, "joined_arrows": {7, 15}} {
+		model.application.settings.TabStyle = style
+		start, end, found := model.activeTabSpan(style, "course")
+		if !found || start != want[0] || end != want[1] {
+			t.Fatalf("%s: the stretch should cover only the label, got %d..%d", style, start, end)
+		}
+	}
+}
+
+func TestTheAccentStaysFarEnoughFromTheBaseRuleToTellApartByLightness(t *testing.T) {
+	for _, dark := range []bool{true, false} {
+		for _, brand := range highlightColors {
+			model := interfaceFixture()
+			model.noColor, model.dark = false, dark
+			model.application.settings.Highlight = brand.id
+			palette := model.palette()
+			if ratio := contrastBetween(palette.accent, palette.rule); ratio < 3 {
+				t.Fatalf("dark=%t %s: the accent and base rule differ by only %.2f, under 3", dark, brand.id, ratio)
+			}
+		}
 	}
 }
 
