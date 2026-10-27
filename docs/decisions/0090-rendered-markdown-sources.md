@@ -1,6 +1,6 @@
 # 0090. Rendered Markdown sources
 
-Status: accepted. The first-view rule is replaced by [0120](0120-markdown-first.md).
+Status: accepted. The first-view rule is replaced by [0120](0120-markdown-first.md). `T` teaches the open file under [0430](0430-teach-a-file.md).
 
 ## Context
 
