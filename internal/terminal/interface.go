@@ -168,6 +168,12 @@ func newInterface(ctx context.Context, application application, runner turnRunne
 		notice: "Completed turns save automatically",
 	}
 	model.viewport.SoftWrap = true
+	switch {
+	case application.settingsStatus.Unreadable:
+		model.notice = settingsUnreadableNotice
+	case application.settingsStatus.ReadOnly:
+		model.notice = settingsReadOnlyNotice
+	}
 	if len(application.state.Turns) == 0 {
 		model.page, model.pageTitle = "home", "Welcome"
 		model.input.Blur()

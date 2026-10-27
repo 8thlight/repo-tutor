@@ -13,6 +13,7 @@ import (
 	"repo-tutor/internal/agent"
 	"repo-tutor/internal/repository"
 	"repo-tutor/internal/session"
+	"repo-tutor/internal/settings"
 	"repo-tutor/internal/tutor"
 )
 
@@ -25,6 +26,10 @@ type application struct {
 	diagnostics io.Writer
 	timeout     time.Duration
 	prefetch    bool
+
+	settings       settings.Settings
+	settingsStatus settings.Status
+	settingsBase   string
 }
 
 const openingMessage = "Start with the repository's purpose and a map of how it works."
@@ -485,3 +490,8 @@ func (application *application) read(argument string) error {
 	}
 	return nil
 }
+
+const (
+	settingsUnreadableNotice = "Settings could not be read. Defaults are in use."
+	settingsReadOnlyNotice   = "These settings come from a newer repo-tutor and are read-only."
+)
