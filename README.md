@@ -146,3 +146,5 @@ Checks cover formatting, documentation, source analysis, agent event protocols, 
 ## License
 
 Copyright © 2026 Eighth Light LLC. Licensed under the GNU General Public License, version 3 or later. See [LICENSE](LICENSE).
+
+<a href="https://8thlight.com"><img src="images/8th-light-logo.svg" alt="8th Light" height="24"></a>
