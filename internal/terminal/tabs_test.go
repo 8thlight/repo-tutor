@@ -1,6 +1,7 @@
 package terminal
 
 import (
+	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 	"image/color"
 	"strings"
@@ -54,9 +55,14 @@ func TestTabBarMarksTheActiveTabWithoutColor(t *testing.T) {
 	}
 }
 
-func TestJoinedTabsTouchAndEndWithTheirSeparator(t *testing.T) {
-	model := interfaceFixture()
+func withTerminalColors(model interfaceModel, background, foreground string) interfaceModel {
 	model.noColor = false
+	model.background, model.foreground = lipgloss.Color(background), lipgloss.Color(foreground)
+	return model
+}
+
+func TestJoinedTabsTouchAndEndWithTheirSeparator(t *testing.T) {
+	model := withTerminalColors(interfaceFixture(), "#09090B", "#E4E4E7")
 	for style, glyph := range map[string]string{"joined_slanted": "", "joined_rounded": "", "joined_arrows": ""} {
 		want := " Home " + glyph + " Course " + glyph + " Quiz " + glyph + " Progress " + glyph
 		if got := ansi.Strip(model.tabs(style, "course")); got != want {
@@ -66,40 +72,64 @@ func TestJoinedTabsTouchAndEndWithTheirSeparator(t *testing.T) {
 }
 
 func TestEveryBoundaryInAJoinedBarShowsAColorChange(t *testing.T) {
-	for _, dark := range []bool{true, false} {
-		model := interfaceFixture()
-		model.noColor, model.dark = false, dark
+	for _, pair := range [][2]string{{"#09090B", "#E4E4E7"}, {"#FAFAFA", "#18181B"}} {
+		model := withTerminalColors(interfaceFixture(), pair[0], pair[1])
 		for _, page := range []string{"home", "course", "quiz", "progress", "settings"} {
 			fills := model.joinedFills(page)
 			for index := 1; index < len(fills); index++ {
 				if hexOf(fills[index-1]) == hexOf(fills[index]) {
-					t.Fatalf("dark=%t active=%s: tabs %d and %d share %s, so the separator would vanish", dark, page, index-1, index, hexOf(fills[index]))
+					t.Fatalf("%v active=%s: tabs %d and %d share %s, so the separator would vanish", pair, page, index-1, index, hexOf(fills[index]))
 				}
 			}
 		}
 	}
 }
 
-func TestEveryJoinedFillKeepsReadableTabText(t *testing.T) {
-	for _, background := range terminalBackgrounds {
-		model := interfaceFixture()
-		model.noColor = false
-		model.background = lipgloss.Color(background)
-		model.dark = relativeLuminance(model.background) <= 0.179
-		for _, page := range []string{"home", "course", "quiz", "progress"} {
-			for index, fill := range model.joinedFills(page) {
-				if ratio := contrastBetween(fill, model.background); ratio < 4.5 {
-					t.Fatalf("background %s active %s tab %d (%s) has contrast %.2f", background, page, index, hexOf(fill), ratio)
-				}
+func TestJoinedFillsStepFromTheFirstShareToTheStrongestAlongTheReportedColors(t *testing.T) {
+	model := withTerminalColors(interfaceFixture(), "#000000", "#FFFFFF")
+	fills := model.joinedFills("settings")
+	for index, want := range []string{"#262626", "#373737", "#484848", "#595959"} {
+		if got := hexOf(fills[index]); got != want {
+			t.Fatalf("tab %d is %s, want %s", index, got, want)
+		}
+	}
+}
+
+func TestEveryInactiveFillKeepsTheTerminalForegroundReadable(t *testing.T) {
+	for _, pair := range [][2]string{{"#000000", "#FFFFFF"}, {"#09090B", "#E4E4E7"}, {"#1E1E1E", "#FFFFFF"}, {"#282C34", "#FFFFFF"}, {"#FFFFFF", "#000000"}, {"#FAFAFA", "#18181B"}, {"#EEEEEE", "#000000"}} {
+		model := withTerminalColors(interfaceFixture(), pair[0], pair[1])
+		for index, fill := range model.joinedFills("settings") {
+			if ratio := contrastBetween(fill, model.foreground); ratio < 4.5 {
+				t.Fatalf("%v tab %d (%s) has contrast %.2f with the foreground", pair, index, hexOf(fill), ratio)
 			}
 		}
+	}
+}
+
+func TestPowerlineStylesDrawAsBlockUntilTheTerminalReportsItsColors(t *testing.T) {
+	model := interfaceFixture()
+	model.noColor = false
+	for _, style := range []string{"slanted", "rounded", "joined_slanted", "joined_rounded", "joined_arrows"} {
+		if got := ansi.Strip(model.tabs(style, "course")); got != "  Home   Course   Quiz   Progress " && got != " Home   Course   Quiz   Progress " {
+			t.Fatalf("%s should fall back to the block tabs, got %q", style, got)
+		}
+	}
+	if !strings.Contains(model.tabs("block", "course"), "\x1b[7m") {
+		t.Fatalf("the fallback should use reverse video: %q", model.tabs("block", "course"))
+	}
+}
+
+func TestInactiveBlockTabsUseTheReportedColorsBlended(t *testing.T) {
+	model := withTerminalColors(interfaceFixture(), "#000000", "#FFFFFF")
+	inactive := lipgloss.NewStyle().Background(model.mixed(inactiveTabShare)).Foreground(model.foreground).Render(" Home ")
+	if !strings.Contains(model.tabs("block", "course"), inactive) {
+		t.Fatalf("an inactive tab should be the background blended toward the foreground: %q", model.tabs("block", "course"))
 	}
 }
 
 func TestJoinedBarReachesTheTerminalEdgeAndOtherStylesKeepTheMargin(t *testing.T) {
 	row := func(style string) string {
-		model := interfaceFixture()
-		model.noColor = false
+		model := withTerminalColors(interfaceFixture(), "#09090B", "#E4E4E7")
 		model.application.settings.TabStyle = style
 		for _, line := range strings.Split(ansi.Strip(model.View().Content), "\n") {
 			if strings.Contains(line, "Home") && strings.Contains(line, "Course") {
@@ -179,8 +209,7 @@ func TestWithoutColorOnlyTheActiveLabelIsUnderlined(t *testing.T) {
 }
 
 func TestTheStretchReachFollowsTheShapeOfTheTab(t *testing.T) {
-	model := interfaceFixture()
-	model.noColor = false
+	model := withTerminalColors(interfaceFixture(), "#09090B", "#E4E4E7")
 	for style, want := range map[string][2]int{"block": {7, 15}, "none": {7, 15}, "slanted": {9, 19}, "joined_arrows": {6, 15}, "joined_rounded": {6, 15}, "joined_slanted": {6, 15}} {
 		model.application.settings.TabStyle = style
 		start, end, found := model.activeTabSpan(style, "course")
@@ -195,8 +224,7 @@ func TestTheStretchReachFollowsTheShapeOfTheTab(t *testing.T) {
 }
 
 func TestRoundedTabsDrawNoRule(t *testing.T) {
-	model := interfaceFixture()
-	model.noColor = false
+	model := withTerminalColors(interfaceFixture(), "#09090B", "#E4E4E7")
 	model.application.settings.TabStyle = "rounded"
 	if _, rule := tabRows(model); strings.Contains(rule, "▔") {
 		t.Fatalf("rounded tabs are closed shapes and should have no rule under them: %q", rule)
@@ -223,8 +251,7 @@ func TestTheAccentStaysFarEnoughFromTheBaseRuleToTellApartByLightness(t *testing
 
 func TestTheRuleStartsWhereTheBarStarts(t *testing.T) {
 	for style, prefix := range map[string]string{"joined_arrows": "▔", "block": "  ▔"} {
-		model := interfaceFixture()
-		model.noColor = false
+		model := withTerminalColors(interfaceFixture(), "#09090B", "#E4E4E7")
 		model.application.settings.TabStyle = style
 		_, rule := tabRows(model)
 		if !strings.HasPrefix(rule, prefix) {
@@ -248,5 +275,21 @@ func TestTheNoneStyleLeavesUnderliningToTheRule(t *testing.T) {
 	underline = underline[:strings.Index(underline, "x")]
 	if strings.Contains(model.tabs("none", "course"), underline) {
 		t.Fatal("the rule underlines the active tab, so its label should not also be underlined")
+	}
+}
+
+func TestTheTerminalForegroundReportIsKept(t *testing.T) {
+	model := interfaceFixture()
+	updated, _ := model.Update(tea.ForegroundColorMsg{Color: lipgloss.Color("#E4E4E7")})
+	if hexOf(updated.(interfaceModel).foreground) != "#E4E4E7" {
+		t.Fatal("the reported foreground should be kept for the tab colors")
+	}
+}
+
+func TestTheBaseRuleIsTheReportedColorsBlended(t *testing.T) {
+	model := withTerminalColors(interfaceFixture(), "#000000", "#FFFFFF")
+	base := lipgloss.NewStyle().Foreground(model.mixed(tabRuleShare)).Render("▔")
+	if !strings.Contains(rawTabRule(model), base[:strings.Index(base, "▔")]) {
+		t.Fatalf("the base rule should be the background blended toward the foreground:\n%q", rawTabRule(model))
 	}
 }
