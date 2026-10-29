@@ -311,3 +311,17 @@ func TestSkippingAQuizQuestionNeedsASecondPressThatExpires(t *testing.T) {
 	waitUntilGone(t, terminal, "Press Ctrl+N again to skip this question.")
 	waitForText(t, terminal, "What does the entry point delegate?")
 }
+
+func TestLeavingAQuizNeedsASecondCtrlL(t *testing.T) {
+	terminal := launchScreenWith(t, fixture(t), t.TempDir(), "--no-prefetch")
+	startQuiz(t, terminal)
+	if err := terminal.Press("Ctrl+L"); err != nil {
+		t.Fatal(err)
+	}
+	waitForText(t, terminal, "Press Ctrl+L again to leave this quiz. It will not be scored.")
+	if err := terminal.Press("Ctrl+L"); err != nil {
+		t.Fatal(err)
+	}
+	waitUntilGone(t, terminal, "Press Ctrl+L again")
+	waitUntilGone(t, terminal, "What does the entry point delegate?")
+}
