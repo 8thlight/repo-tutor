@@ -293,3 +293,32 @@ func TestRendererIsToldTheTerminalOnlyDoesPlainCursorMovement(t *testing.T) {
 		t.Fatalf("only TERM should change: %v", adjusted)
 	}
 }
+
+func TestTheSidebarRailRunsBesideTheInputAndStopsAboveTheFooter(t *testing.T) {
+	model := interfaceFixture()
+	model.width, model.height = 120, 36
+	model.resize()
+	lines := strings.Split(ansi.Strip(model.View().Content), "\n")
+	railColumn := 2 + sidebarWidth
+	hasRail := func(line string) bool {
+		runes := []rune(line)
+		return len(runes) > railColumn && runes[railColumn] == '│'
+	}
+	input, footer := -1, -1
+	for index, line := range lines {
+		if strings.Contains(line, "Enter send") {
+			input = index
+		}
+		if strings.Contains(line, "F1 Help") {
+			footer = index
+		}
+	}
+	if input < 0 || footer < 0 || !hasRail(lines[input]) {
+		t.Fatalf("the rail should run beside the input box (input row %d, footer row %d):\n%s", input, footer, strings.Join(lines, "\n"))
+	}
+	for index := footer - 2; index <= footer; index++ {
+		if hasRail(lines[index]) {
+			t.Fatalf("the rail should stop above the footer, but row %d has it:\n%s", index, strings.Join(lines, "\n"))
+		}
+	}
+}
