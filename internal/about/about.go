@@ -12,6 +12,7 @@ import (
 const (
 	Name               = "repo-tutor"
 	Copyright          = "Copyright © 2026 Eighth Light LLC."
+	License            = "Licensed under the GNU General Public License, version 3 or later."
 	Website            = "https://8thlight.com"
 	developmentVersion = "0.1.0-dev"
 	unknown            = "unknown"
@@ -102,6 +103,7 @@ func (build Build) Lines() []string {
 		fmt.Sprintf("Built from commit time %s", build.Time),
 		fmt.Sprintf("%s on %s", build.GoVersion, build.System),
 		Copyright,
+		License,
 		Website,
 	}
 }
