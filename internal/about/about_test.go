@@ -14,7 +14,7 @@ func TestBuildFactsComeFromBuildInfoAndDegradeToUnknown(t *testing.T) {
 		{Key: "vcs.modified", Value: "true"},
 	}}
 	text := FromBuildInfo(info, true, "darwin", "arm64").Text()
-	for _, expected := range []string{"repo-tutor v1.2.3", "Revision 0123456789ab (modified)", "2026-10-26T10:00:00Z", "go1.26.0 on darwin/arm64", "Copyright © 2026 Eighth Light LLC.", "Licensed under the GNU General Public License, version 3 or later.", "https://8thlight.com"} {
+	for _, expected := range []string{"repo-tutor v1.2.3", "Revision 0123456789ab (modified)", "2026-10-26T10:00:00Z", "go1.26.0 on darwin/arm64", "Copyright © 2026 8th Light, LLC.", "Licensed under the GNU General Public License, version 3 or later.", "https://8thlight.com"} {
 		if !strings.Contains(text, expected) {
 			t.Fatalf("missing %q:\n%s", expected, text)
 		}

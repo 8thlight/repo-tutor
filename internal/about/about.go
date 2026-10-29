@@ -11,7 +11,7 @@ import (
 
 const (
 	Name               = "repo-tutor"
-	Copyright          = "Copyright © 2026 Eighth Light LLC."
+	Copyright          = "Copyright © 2026 8th Light, LLC."
 	License            = "Licensed under the GNU General Public License, version 3 or later."
 	Website            = "https://8thlight.com"
 	developmentVersion = "0.1.0-dev"
