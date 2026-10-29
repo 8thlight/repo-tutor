@@ -520,3 +520,32 @@ func TestEscStopsARunningRequestAndKeepsTheWorkspaceOpen(t *testing.T) {
 		t.Fatalf("the workspace should stay open: %v %v", err, state.Exited)
 	}
 }
+
+func TestTabFillsAreTheReportedColorsBlended(t *testing.T) {
+	stateDirectory := t.TempDir()
+	if err := os.WriteFile(filepath.Join(stateDirectory, "settings.json"), []byte(`{"version":1,"tab_style":"joined_arrows"}`), 0600); err != nil {
+		t.Fatal(err)
+	}
+	terminal := tuitesttest.New(t, tuitesttest.Options{
+		Program: binary,
+		Args:    []string{fixture(t), "--agent", "codex", "--state-dir", stateDirectory, "--goal", "learn it", "--no-prefetch"},
+		Spawn: tuitest.SpawnOptions{Profile: &tuitest.Profile{Colors: tuitest.Colors{Foreground: "#ffffff", Background: "#000000", Cursor: "#ffffff"}},
+			Cols: tuitest.Ptr(uint16(120)), Rows: tuitest.Ptr(uint16(36)), WaitReady: tuitest.Ptr(false),
+			Env: map[string]string{"PATH": agentDirectory + ":/usr/bin:/bin", "HOME": t.TempDir(), "COLORTERM": "truecolor"},
+		},
+	})
+	waitForText(t, terminal, "Understanding")
+	cells, err := terminal.Cells(0, 0, 120, 6)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var fills []string
+	for _, cell := range cells {
+		if cell.Char == "C" && cell.Y < 4 {
+			fills = append(fills, string(cell.BG))
+		}
+	}
+	if len(fills) == 0 || fills[0] != "#373737" {
+		t.Fatalf("the second joined tab should be the background blended toward the foreground by its share: %v", fills)
+	}
+}
