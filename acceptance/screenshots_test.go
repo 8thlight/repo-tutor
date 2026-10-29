@@ -113,17 +113,8 @@ func TestScreenshots(t *testing.T) {
 				t.Fatal(err)
 			}
 			waitForText(t, terminal, page.heading)
-			if page.name == "about" {
-				if err := terminal.Resize(120, 58); err != nil {
-					t.Fatal(err)
-				}
-				waitForText(t, terminal, "Google Art Project")
-			}
-			capture(page.name)
-			if page.name == "about" {
-				if err := terminal.Resize(120, 36); err != nil {
-					t.Fatal(err)
-				}
+			if page.name != "about" || theme == "dark" {
+				capture(page.name)
 			}
 			if err := terminal.Press("Escape"); err != nil {
 				t.Fatal(err)
