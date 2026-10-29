@@ -1,6 +1,6 @@
 # 0500. Use the terminal's colors
 
-Status: proposed
+Status: accepted
 
 ## Context
 
