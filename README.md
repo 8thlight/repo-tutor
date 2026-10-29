@@ -2,9 +2,15 @@
 
 Reads a code repository and turns it into a fast onboarding course for a new developer.
 
+## Requirements
+
+- macOS or Linux. Windows is not supported natively; use WSL.
+- Codex CLI or Claude Code, installed and signed in.
+- Nix, to build from source with `nix develop`.
+
 ## Try it
 
-Install and sign in to Codex or Claude Code, then run:
+Run:
 
 ```sh
 nix develop
