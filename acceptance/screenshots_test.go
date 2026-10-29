@@ -114,10 +114,10 @@ func TestScreenshots(t *testing.T) {
 			}
 			waitForText(t, terminal, page.heading)
 			if page.name == "about" {
-				if err := terminal.Resize(100, 36); err != nil {
+				if err := terminal.Resize(120, 58); err != nil {
 					t.Fatal(err)
 				}
-				waitForText(t, terminal, "Copyright")
+				waitForText(t, terminal, "Google Art Project")
 			}
 			capture(page.name)
 			if page.name == "about" {
