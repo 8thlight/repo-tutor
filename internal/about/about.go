@@ -46,9 +46,15 @@ type Build struct {
 	System    string
 }
 
+var version string
+
 func Read() Build {
 	info, found := debug.ReadBuildInfo()
-	return FromBuildInfo(info, found, runtime.GOOS, runtime.GOARCH)
+	build := FromBuildInfo(info, found, runtime.GOOS, runtime.GOARCH)
+	if version != "" {
+		build.Version = version
+	}
+	return build
 }
 
 func FromBuildInfo(info *debug.BuildInfo, found bool, goos, goarch string) Build {

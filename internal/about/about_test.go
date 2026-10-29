@@ -28,6 +28,14 @@ func TestBuildFactsComeFromBuildInfoAndDegradeToUnknown(t *testing.T) {
 	}
 }
 
+func TestLinkerVersionOverridesBuildInfo(t *testing.T) {
+	version = "v0.2.0"
+	t.Cleanup(func() { version = "" })
+	if got := Read().Version; got != "v0.2.0" {
+		t.Fatalf("version %q, want the linker value", got)
+	}
+}
+
 func TestNoticesCoverEveryLinkedModule(t *testing.T) {
 	data, err := exec.Command("go", "list", "-deps", "-f", "{{with .Module}}{{if not .Main}}{{.Path}}{{end}}{{end}}", "../../binary").Output()
 	if err != nil {
