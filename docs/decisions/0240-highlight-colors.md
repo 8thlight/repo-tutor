@@ -1,6 +1,6 @@
 # 0240. Highlight colors
 
-Status: accepted
+Status: superseded by [0500](0500-use-the-terminal-colors.md)
 
 ## Context
 
