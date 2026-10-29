@@ -268,3 +268,26 @@ func TestHelpSettingsAndAboutOpenFromHomeAndEscapeCloses(t *testing.T) {
 		waitUntilGone(t, terminal, page.heading)
 	}
 }
+
+func TestSettingsChangeIsSavedToSettingsFile(t *testing.T) {
+	stateDirectory := t.TempDir()
+	terminal := launchScreenWith(t, fixture(t), stateDirectory)
+	if err := terminal.Press("F2"); err != nil {
+		t.Fatal(err)
+	}
+	waitForText(t, terminal, "TAB STYLE")
+	if err := terminal.Press("Up"); err != nil {
+		t.Fatal(err)
+	}
+	if err := terminal.Press("Space"); err != nil {
+		t.Fatal(err)
+	}
+	var data []byte
+	for deadline := time.Now().Add(5 * time.Second); time.Now().Before(deadline) && !strings.Contains(string(data), `"highlight": "purple"`); time.Sleep(20 * time.Millisecond) {
+		data, _ = os.ReadFile(filepath.Join(stateDirectory, "settings.json"))
+	}
+	if !strings.Contains(string(data), `"highlight": "purple"`) {
+		screen, _ := terminal.Screenshot("", tuitest.ScreenshotOptions{})
+		t.Fatalf("settings.json does not hold the chosen highlight color:\n%s\n%s", data, screen)
+	}
+}
