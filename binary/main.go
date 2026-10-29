@@ -10,10 +10,25 @@ import (
 	"repo-tutor/internal/terminal"
 )
 
+const signalExitBase = 128
+
 func main() {
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
-	if err := terminal.Run(ctx, os.Args[1:], os.Stdin, os.Stdout, os.Stderr); err != nil {
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	received := make(chan syscall.Signal, 1)
+	go func() {
+		received <- (<-signals).(syscall.Signal)
+		cancel()
+	}()
+	err := terminal.Run(ctx, os.Args[1:], os.Stdin, os.Stdout, os.Stderr)
+	select {
+	case stopping := <-received:
+		os.Exit(signalExitBase + int(stopping))
+	default:
+	}
+	if err != nil {
 		fmt.Fprintln(os.Stderr, "repo-tutor:", err)
 		os.Exit(1)
 	}

@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -256,17 +257,17 @@ func TestScanNeedsNoAgent(t *testing.T) {
 	}
 }
 
-func TestInterruptAtPromptPreservesCompletedLesson(t *testing.T) {
+func startAtPrompt(t *testing.T) (*exec.Cmd, context.Context, string, io.Closer) {
+	t.Helper()
 	repository, stateDirectory := fixture(t), t.TempDir()
 	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
-	defer cancel()
+	t.Cleanup(cancel)
 	command := exec.CommandContext(ctx, binary, repository, "--agent", "codex", "--state-dir", stateDirectory)
 	command.Env = append(os.Environ(), "PATH="+agentDirectory+string(os.PathListSeparator)+os.Getenv("PATH"))
 	input, err := command.StdinPipe()
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer input.Close()
 	output, err := command.StdoutPipe()
 	if err != nil {
 		t.Fatal(err)
@@ -288,15 +289,35 @@ func TestInterruptAtPromptPreservesCompletedLesson(t *testing.T) {
 	case <-ctx.Done():
 		t.Fatal("terminal never reached its prompt")
 	}
-	if err := command.Process.Signal(os.Interrupt); err != nil {
-		t.Fatal(err)
-	}
-	command.Wait()
-	if ctx.Err() != nil {
-		t.Fatal("Ctrl-C did not exit while waiting for terminal input")
-	}
-	if len(saved(t, stateDirectory)["turns"].([]any)) != 1 {
-		t.Fatal("Ctrl-C lost the completed lesson")
+	return command, ctx, stateDirectory, input
+}
+
+func TestSignalAtPromptExitsWithShellConventionAndKeepsCompletedLesson(t *testing.T) {
+	for name, expected := range map[string]struct {
+		signal syscall.Signal
+		code   int
+	}{
+		"interrupt": {syscall.SIGINT, 130},
+		"terminate": {syscall.SIGTERM, 143},
+		"hangup":    {syscall.SIGHUP, 129},
+	} {
+		t.Run(name, func(t *testing.T) {
+			command, ctx, stateDirectory, input := startAtPrompt(t)
+			defer input.Close()
+			if err := command.Process.Signal(expected.signal); err != nil {
+				t.Fatal(err)
+			}
+			command.Wait()
+			if ctx.Err() != nil {
+				t.Fatal("the signal did not end the process")
+			}
+			if code := command.ProcessState.ExitCode(); code != expected.code {
+				t.Fatalf("exit code %d, want %d", code, expected.code)
+			}
+			if len(saved(t, stateDirectory)["turns"].([]any)) != 1 {
+				t.Fatal("the signal lost the completed lesson")
+			}
+		})
 	}
 }
 
