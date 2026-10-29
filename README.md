@@ -2,6 +2,10 @@
 
 Reads a code repository and turns it into a fast onboarding course for a new developer.
 
+## Screenshots
+
+<kbd><a href="images/home.png"><img src="images/home.png" alt="Home page with the next recommended step" width="180"></a></kbd> <kbd><a href="images/course.png"><img src="images/course.png" alt="A lesson with evidence citations and a question box" width="180"></a></kbd> <kbd><a href="images/settings.png"><img src="images/settings.png" alt="Settings page showing tab styles, quiz length, and highlight colors" width="180"></a></kbd> <kbd><a href="images/about.png"><img src="images/about.png" alt="About page with the version and an ASCII painting" width="180"></a></kbd>
+
 ## Requirements
 
 - macOS or Linux. Windows is not supported natively; use WSL.
@@ -22,13 +26,7 @@ To put `repo-tutor` on your path, run `just install`. It copies the binary to `~
 
 Use `--agent claude` for Claude Code. Without `--agent`, the tutor chooses Codex when it is installed, then Claude. `just run ../repowise` also starts a session. Omit the path to study the current directory.
 
-![Home page with the next recommended step](images/home.png)
-
-![A lesson with evidence citations and a question box](images/course.png)
-
 In a terminal, the tutor opens a full-screen workspace with a lesson, a box for your questions and answers, and your course progress. The tabs are Home, Course, Quiz, and Progress. Course shows the lesson beside a sidebar with your course status and the keys that apply. Home lists what to do next, with a recommendation first: Course, Check what you know, Topics, Take an exam, Review a weak topic, Progress, Settings, and About. `F2` opens Settings, where you change the tab style, the highlight color, whether Markdown opens rendered, the quiz length, and the exam length. They are saved in `settings.json` beside your session folders, and deleting that file resets them.
-
-![Settings page showing tab styles, quiz length, and highlight colors](images/settings.png)
 
 Ask a question, answer one, or browse with the keyboard:
 
