@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"image/color"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -42,7 +41,8 @@ func (model interfaceModel) bodyHeight() int {
 func (model *interfaceModel) resize() {
 	palette := model.palette()
 	model.input.SetWidth(max(1, model.bodyWidth()-4))
-	inputStyles := textarea.DefaultStyles(model.dark)
+	inputStyles := textarea.DefaultStyles(true)
+	withoutStyleColors(&inputStyles)
 	inputStyles.Focused.Prompt = lipgloss.NewStyle().Foreground(palette.accent)
 	inputStyles.Focused.Text = lipgloss.NewStyle()
 	inputStyles.Focused.Placeholder = lipgloss.NewStyle().Faint(true)
@@ -81,10 +81,8 @@ func (model *interfaceModel) rebuildContent() {
 }
 
 func (model interfaceModel) markdownStyle() glamouransi.StyleConfig {
-	configuration := styles.DarkStyleConfig
-	if !model.dark {
-		configuration = styles.LightStyleConfig
-	}
+	choice := highlightByID(model.application.settings.Highlight)
+	configuration := terminalMarkdownStyle(choice.index, choice.index == noHighlight)
 	if model.noColor {
 		configuration = styles.ASCIIStyleConfig
 	}
@@ -92,13 +90,6 @@ func (model interfaceModel) markdownStyle() glamouransi.StyleConfig {
 	configuration.Document.Margin = &zero
 	configuration.Document.BlockPrefix = ""
 	configuration.Document.BlockSuffix = ""
-	if !model.noColor {
-		if choice := highlightByID(model.application.settings.Highlight); choice.index != noHighlight {
-			codeColor := strconv.Itoa(choice.index)
-			configuration.Code.Color = &codeColor
-		}
-		configuration.Code.BackgroundColor = nil
-	}
 	return configuration
 }
 
