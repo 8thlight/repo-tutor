@@ -27,7 +27,7 @@ Draw the workspace with the terminal's own colors and no colors of ours.
 
 **Source and Markdown.** The Chroma style for source files is one we define, and it maps token kinds to the ANSI colors, bold, and faint, with the citation marker in reverse video. The Glamour style for rendered Markdown uses the same mapping. Both replace the light and dark `github` styles.
 
-**Exception.** The About painting is an image, so it keeps its own colors, and it still shows only when the terminal reports 256 colors or more and `NO_COLOR` is unset.
+**Exception.** The About painting is an image, so it keeps its own colors and draws on its own black background, which makes it read the same on a light or a dark terminal. It still shows only when the terminal reports 256 colors or more and `NO_COLOR` is unset.
 
 **Testing.** An acceptance test visits every page with each highlight choice and checks that every cell uses the default color or an index from 0 to 15, with the painting excepted. This tests the rule exactly. We do not test contrast, because the learner's theme owns it. [0490](0490-screenshots-and-contrast.md) covers how screenshots get the brand colors.
 
