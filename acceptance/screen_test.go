@@ -1,8 +1,11 @@
 package acceptance_test
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"syscall"
@@ -380,12 +383,21 @@ func TestResizingWhileRunningRedrawsTheWorkspace(t *testing.T) {
 	waitForText(t, terminal, "TAB STYLE")
 }
 
-func coloredCells(t *testing.T, terminal *tuitest.Client, columns, rows uint16) int {
+func readCells(t *testing.T, terminal *tuitest.Client, columns, rows uint16) []tuitest.Cell {
 	t.Helper()
+	runtime.GC()
+	previous := debug.SetGCPercent(-1)
+	defer debug.SetGCPercent(previous)
 	cells, err := terminal.Cells(0, 0, columns, rows)
 	if err != nil {
 		t.Fatal(err)
 	}
+	return cells
+}
+
+func coloredCells(t *testing.T, terminal *tuitest.Client, columns, rows uint16) int {
+	t.Helper()
+	cells := readCells(t, terminal, columns, rows)
 	colored := 0
 	for _, cell := range cells {
 		if cell.FG != "default" || cell.BG != "default" {
@@ -535,10 +547,7 @@ func TestTabFillsAreTheReportedColorsBlended(t *testing.T) {
 		},
 	})
 	waitForText(t, terminal, "Understanding")
-	cells, err := terminal.Cells(0, 0, 120, 6)
-	if err != nil {
-		t.Fatal(err)
-	}
+	cells := readCells(t, terminal, 120, 6)
 	var fills []string
 	for _, cell := range cells {
 		if cell.Char == "C" && cell.Y < 4 {
@@ -547,5 +556,98 @@ func TestTabFillsAreTheReportedColorsBlended(t *testing.T) {
 	}
 	if len(fills) == 0 || fills[0] != "#373737" {
 		t.Fatalf("the second joined tab should be the background blended toward the foreground by its share: %v", fills)
+	}
+}
+
+func allowedColor(color string, derived map[string]bool) bool {
+	if color == "default" || derived[color] {
+		return true
+	}
+	number, err := strconv.Atoi(color)
+	return err == nil && number >= 0 && number <= 15
+}
+
+func fixedColors(t *testing.T, terminal *tuitest.Client, columns, rows uint16, derived map[string]bool) []string {
+	t.Helper()
+	cells := readCells(t, terminal, columns, rows)
+	var found []string
+	for _, cell := range cells {
+		for _, color := range []string{string(cell.FG), string(cell.BG)} {
+			if !allowedColor(color, derived) {
+				found = append(found, fmt.Sprintf("%q at %d,%d fg=%s bg=%s", cell.Char, cell.X, cell.Y, cell.FG, cell.BG))
+			}
+		}
+	}
+	return found
+}
+
+func TestEveryPageUsesOnlyTheTerminalColorsAndTheirBlends(t *testing.T) {
+	derived := map[string]bool{"#000000": true, "#ffffff": true, "#262626": true, "#373737": true, "#484848": true, "#595959": true, "#333333": true}
+	for _, highlight := range []string{"none", "red", "green", "yellow", "blue", "magenta", "cyan"} {
+		t.Run(highlight, func(t *testing.T) {
+			stateDirectory := t.TempDir()
+			settingsJSON := `{"version":1,"tab_style":"joined_arrows","highlight":"` + highlight + `"}`
+			if err := os.WriteFile(filepath.Join(stateDirectory, "settings.json"), []byte(settingsJSON), 0600); err != nil {
+				t.Fatal(err)
+			}
+			terminal := tuitesttest.New(t, tuitesttest.Options{
+				Program: binary,
+				Args:    []string{fixture(t), "--agent", "codex", "--state-dir", stateDirectory, "--goal", "learn it", "--no-prefetch"},
+				Spawn: tuitest.SpawnOptions{Profile: &tuitest.Profile{Colors: tuitest.Colors{Foreground: "#ffffff", Background: "#000000", Cursor: "#ffffff"}},
+					Cols: tuitest.Ptr(uint16(100)), Rows: tuitest.Ptr(uint16(36)), WaitReady: tuitest.Ptr(false),
+					Env: map[string]string{"PATH": agentDirectory + ":/usr/bin:/bin", "HOME": t.TempDir(), "COLORTERM": "truecolor"},
+				},
+			})
+			waitForText(t, terminal, "Lesson ready")
+			check := func(page string) {
+				t.Helper()
+				if found := fixedColors(t, terminal, 100, 36, derived); len(found) > 0 {
+					screen, _ := terminal.Screenshot("", tuitest.ScreenshotOptions{})
+					t.Fatalf("%s page: %d cells use a color of our own, for example %s\n%s", page, len(found), found[0], screen)
+				}
+			}
+			check("Home")
+			for _, page := range []struct{ key, heading, name string }{
+				{"F1", "Show this help", "Help"},
+				{"F2", "TAB STYLE", "Settings"},
+				{"F3", "About repo-tutor", "About"},
+				{"Ctrl+K", "Choose your next topic", "Topics"},
+				{"Ctrl+S", "Follow the evidence", "Sources"},
+				{"Ctrl+P", "Coverage", "Progress"},
+			} {
+				if err := terminal.Press(page.key); err != nil {
+					t.Fatal(err)
+				}
+				waitForText(t, terminal, page.heading)
+				check(page.name)
+				if err := terminal.Press("Escape"); err != nil {
+					t.Fatal(err)
+				}
+				waitUntilGone(t, terminal, page.heading)
+			}
+			if err := terminal.Press("Enter"); err != nil {
+				t.Fatal(err)
+			}
+			waitForText(t, terminal, "Execution starts at main.go:2")
+			check("Course")
+			if err := terminal.Press("Ctrl+S"); err != nil {
+				t.Fatal(err)
+			}
+			waitForText(t, terminal, "Follow the evidence")
+			if err := terminal.Press("Enter"); err != nil {
+				t.Fatal(err)
+			}
+			waitForText(t, terminal, "func main()")
+			check("Source")
+			if err := terminal.Press("Escape"); err != nil {
+				t.Fatal(err)
+			}
+			waitUntilGone(t, terminal, "func main()")
+			if err := terminal.Press("Ctrl+G"); err != nil {
+				t.Fatal(err)
+			}
+			waitForText(t, terminal, "What does the entry point delegate?")
+			check("Quiz")
+		})
 	}
 }
