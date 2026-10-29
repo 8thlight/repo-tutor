@@ -291,3 +291,23 @@ func TestSettingsChangeIsSavedToSettingsFile(t *testing.T) {
 		t.Fatalf("settings.json does not hold the chosen highlight color:\n%s\n%s", data, screen)
 	}
 }
+
+func startQuiz(t *testing.T, terminal *tuitest.Client) {
+	t.Helper()
+	openCourse(t, terminal)
+	if err := terminal.Press("Ctrl+G"); err != nil {
+		t.Fatal(err)
+	}
+	waitForText(t, terminal, "What does the entry point delegate?")
+}
+
+func TestSkippingAQuizQuestionNeedsASecondPressThatExpires(t *testing.T) {
+	terminal := launchScreenWith(t, fixture(t), t.TempDir(), "--no-prefetch")
+	startQuiz(t, terminal)
+	if err := terminal.Press("Ctrl+N"); err != nil {
+		t.Fatal(err)
+	}
+	waitForText(t, terminal, "Press Ctrl+N again to skip this question.")
+	waitUntilGone(t, terminal, "Press Ctrl+N again to skip this question.")
+	waitForText(t, terminal, "What does the entry point delegate?")
+}
