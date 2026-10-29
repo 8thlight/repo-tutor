@@ -58,11 +58,16 @@ func fixture(t *testing.T) string {
 
 func run(t *testing.T, input string, arguments ...string) (string, error) {
 	t.Helper()
+	return runWithEnvironment(t, nil, input, arguments...)
+}
+
+func runWithEnvironment(t *testing.T, environment []string, input string, arguments ...string) (string, error) {
+	t.Helper()
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 	command := exec.CommandContext(ctx, binary, arguments...)
 	command.Stdin = strings.NewReader(input)
-	command.Env = append(os.Environ(), "PATH="+agentDirectory+string(os.PathListSeparator)+os.Getenv("PATH"))
+	command.Env = append(append(os.Environ(), "PATH="+agentDirectory+string(os.PathListSeparator)+os.Getenv("PATH")), environment...)
 	output, err := command.CombinedOutput()
 	return string(output), err
 }

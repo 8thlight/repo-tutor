@@ -136,3 +136,31 @@ func TestNextLessonIsPreparedInTheBackgroundAndUsedWithoutAnotherCall(t *testing
 		t.Fatalf("moving to the prepared topic made %d new agent calls", calls-prepared)
 	}
 }
+
+func readTenTopicsOfThisRepository(t *testing.T) (string, string) {
+	t.Helper()
+	repository, stateDirectory := "..", t.TempDir()
+	output, err := runWithEnvironment(t, []string{"FAKE_AGENT_CITED_PATH=README.md"}, strings.Repeat("/next\n", 10)+"/quit\n", repository, "--agent", "codex", "--state-dir", stateDirectory, "--plain", "--goal", "learn it")
+	if err != nil {
+		t.Fatalf("reading topics failed: %v\n%s", err, output)
+	}
+	progress := saved(t, stateDirectory)["progress"].(map[string]any)
+	if len(progress) < 10 {
+		t.Fatalf("only %d topics were read: %v", len(progress), progress)
+	}
+	return repository, stateDirectory
+}
+
+func TestExamIsOfferedAfterTenTopicsWithoutAskingTheAgent(t *testing.T) {
+	repository, stateDirectory := readTenTopicsOfThisRepository(t)
+	calls := agentCalls(t, stateDirectory)
+	terminal := launchScreenWith(t, repository, stateDirectory, "--no-prefetch")
+	waitForText(t, terminal, "topics read")
+	if err := terminal.Press("Shift+Tab"); err != nil {
+		t.Fatal(err)
+	}
+	waitForText(t, terminal, "Take an exam")
+	if after := agentCalls(t, stateDirectory); after != calls {
+		t.Fatalf("opening a saved course made %d agent calls", after-calls)
+	}
+}
