@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -30,6 +31,7 @@ func main() {
 		panic(err)
 	}
 	if request.Message == "wait forever" {
+		os.WriteFile(os.Getenv("FAKE_AGENT_PID_FILE"), []byte(strconv.Itoa(os.Getpid())), 0600)
 		time.Sleep(time.Minute)
 	}
 	if request.Message == "simulate failure" {
