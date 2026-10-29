@@ -1,6 +1,6 @@
 # repo-tutor
 
-Reads a code repository and turns it into a fast onboarding course for a new developer.
+Reads a code repository and turns it into a fast onboarding course for a new developer. It helps a new developer become productive in a codebase in the shortest possible time.
 
 ## Screenshots
 
@@ -124,10 +124,6 @@ If a request fails, its reply and assessment are not recorded. Check the reporte
 4. Order topics from the dependency graph, foundations first.
 5. Run tutor and quiz sessions grounded in real files and line citations.
 6. Track learner progress and focus on weak areas.
-
-## Goal
-
-A new developer becomes productive in a codebase in the shortest time.
 
 ## Status
 
