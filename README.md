@@ -32,7 +32,7 @@ In a terminal, the tutor opens a full-screen workspace with a lesson, a box for 
 
 ### Settings
 
-`F2` opens Settings, where you change the tab style, the highlight color, whether Markdown opens rendered, the quiz length, and the exam length. They are saved in `settings.json` beside your session folders, and deleting that file resets them.
+`F2` opens Settings, where you change the tab style, the highlight color (None or one of your terminal's red, green, yellow, blue, magenta, and cyan), whether Markdown opens rendered, the quiz length, and the exam length. They are saved in `settings.json` beside your session folders, and deleting that file resets them.
 
 ## Keys
 
@@ -70,7 +70,7 @@ While a request loads, the lesson pane shows a loading view. Topics stay open, a
 
 ## Plain mode
 
-Use `--plain` for line input, terminal scrollback, or a screen reader. Pipes, redirected output, `TERM=dumb`, and `--ask TEXT` use plain output automatically. The full-screen interface adapts to terminal width and light or dark backgrounds; `NO_COLOR=1` disables styling.
+Use `--plain` for line input, terminal scrollback, or a screen reader. Pipes, redirected output, `TERM=dumb`, and `--ask TEXT` use plain output automatically. The full-screen interface adapts to terminal width and draws in your terminal's own colors, so it follows your theme; `NO_COLOR=1` disables color.
 
 The full-screen interface has no slash commands: a line that starts with a slash is sent as a question, and every action has a key, a list, or a Home entry. Slash commands work in plain mode:
 
