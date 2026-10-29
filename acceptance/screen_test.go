@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
-	"runtime/debug"
 	"strconv"
 	"strings"
 	"syscall"
@@ -383,21 +381,12 @@ func TestResizingWhileRunningRedrawsTheWorkspace(t *testing.T) {
 	waitForText(t, terminal, "TAB STYLE")
 }
 
-func readCells(t *testing.T, terminal *tuitest.Client, columns, rows uint16) []tuitest.Cell {
+func coloredCells(t *testing.T, terminal *tuitest.Client, columns, rows uint16) int {
 	t.Helper()
-	runtime.GC()
-	previous := debug.SetGCPercent(-1)
-	defer debug.SetGCPercent(previous)
 	cells, err := terminal.Cells(0, 0, columns, rows)
 	if err != nil {
 		t.Fatal(err)
 	}
-	return cells
-}
-
-func coloredCells(t *testing.T, terminal *tuitest.Client, columns, rows uint16) int {
-	t.Helper()
-	cells := readCells(t, terminal, columns, rows)
 	colored := 0
 	for _, cell := range cells {
 		if cell.FG != "default" || cell.BG != "default" {
@@ -550,7 +539,11 @@ func TestTabFillsAreTheReportedColorsBlended(t *testing.T) {
 	var fills []string
 	for deadline := time.Now().Add(5 * time.Second); time.Now().Before(deadline) && (len(fills) == 0 || fills[0] != "#373737"); time.Sleep(50 * time.Millisecond) {
 		fills = nil
-		for _, cell := range readCells(t, terminal, 120, 6) {
+		cells, err := terminal.Cells(0, 0, 120, 6)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, cell := range cells {
 			if cell.Char == "C" && cell.Y < 4 {
 				fills = append(fills, string(cell.BG))
 			}
@@ -571,7 +564,10 @@ func allowedColor(color string, derived map[string]bool) bool {
 
 func fixedColors(t *testing.T, terminal *tuitest.Client, columns, rows uint16, derived map[string]bool) []string {
 	t.Helper()
-	cells := readCells(t, terminal, columns, rows)
+	cells, err := terminal.Cells(0, 0, columns, rows)
+	if err != nil {
+		t.Fatal(err)
+	}
 	var found []string
 	for _, cell := range cells {
 		for _, color := range []string{string(cell.FG), string(cell.BG)} {

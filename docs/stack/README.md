@@ -14,7 +14,7 @@
 | Reading hints | Local Git history and source branch counts |
 | Platforms | macOS and Linux |
 
-`just build` disables C bindings and writes the self-contained executable to `output/repo-tutor`. `just install` builds it and copies it to `$PREFIX/bin`, which defaults to `~/.local/bin`; it uses the POSIX `install` command, so it works the same on macOS and Linux. Development and checks run in `nix develop`. `just screenshots` regenerates the README images in `images/` from the real binary, in a light and a dark terminal theme; a person reviews and commits them. `just check` includes race-enabled Go tests and terminal acceptance tests with fake agent processes.
+`just build` disables C bindings and writes the self-contained executable to `output/repo-tutor`. `just install` builds it and copies it to `$PREFIX/bin`, which defaults to `~/.local/bin`; it uses the POSIX `install` command, so it works the same on macOS and Linux. Development and checks run in `nix develop`. The shell sets `GODEBUG=gcshrinkstackoff=1`, because tui-test 0.1.1 crashes a Go test process when the garbage collector shrinks a stack during a cell read; outside the shell, set it yourself to run the terminal tests. `just screenshots` regenerates the README images in `images/` from the real binary, in a light and a dark terminal theme; a person reviews and commits them. `just check` includes race-enabled Go tests and terminal acceptance tests with fake agent processes.
 
 The initial drivers were exercised with Codex CLI 0.162.1 and Claude Code 2.1.296. `repo-tutor doctor` prints the installed versions; authentication and account limits are checked when a real turn runs. Older CLIs may lack the isolation or structured-output flags and report an error.
 
