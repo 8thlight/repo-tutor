@@ -377,3 +377,33 @@ func TestResizingWhileRunningRedrawsTheWorkspace(t *testing.T) {
 	}
 	waitForText(t, terminal, "TAB STYLE")
 }
+
+func coloredCells(t *testing.T, terminal *tuitest.Client, columns, rows uint16) int {
+	t.Helper()
+	cells, err := terminal.Cells(0, 0, columns, rows)
+	if err != nil {
+		t.Fatal(err)
+	}
+	colored := 0
+	for _, cell := range cells {
+		if cell.FG != "default" || cell.BG != "default" {
+			colored++
+		}
+	}
+	return colored
+}
+
+func TestColorIsOnByDefaultAndOffWithNoColor(t *testing.T) {
+	for name, scenario := range map[string]struct {
+		environment map[string]string
+		colored     bool
+	}{"default": {nil, true}, "no color": {map[string]string{"NO_COLOR": "1"}, false}} {
+		t.Run(name, func(t *testing.T) {
+			terminal := launchTerminal(t, 120, 36, scenario.environment, fixture(t), "--agent", "codex", "--state-dir", t.TempDir(), "--goal", "learn it", "--no-prefetch")
+			waitForText(t, terminal, "Understanding")
+			if count := coloredCells(t, terminal, 120, 36); (count > 0) != scenario.colored {
+				t.Fatalf("%d colored cells, want colored=%v", count, scenario.colored)
+			}
+		})
+	}
+}
