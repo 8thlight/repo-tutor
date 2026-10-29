@@ -1,7 +1,9 @@
 package about
 
 import (
+	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime/debug"
 	"strings"
 	"testing"
@@ -33,6 +35,22 @@ func TestLinkerVersionOverridesBuildInfo(t *testing.T) {
 	t.Cleanup(func() { version = "" })
 	if got := Read().Version; got != "v0.2.0" {
 		t.Fatalf("version %q, want the linker value", got)
+	}
+}
+
+func TestNoticesAreCurrent(t *testing.T) {
+	generated := filepath.Join(t.TempDir(), "NOTICES.txt")
+	command := exec.Command("go", "run", "./internal/about/generate", generated)
+	command.Dir = "../.."
+	if output, err := command.CombinedOutput(); err != nil {
+		t.Fatalf("%v\n%s", err, output)
+	}
+	data, err := os.ReadFile(generated)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(data) != Notices() {
+		t.Fatal("NOTICES.txt is out of date; run just notices")
 	}
 }
 
@@ -71,7 +89,7 @@ func TestOnlyReleaseTagsReplaceTheDevelopmentVersion(t *testing.T) {
 
 func TestNoticesStartWithTheGoStandardLibraryLicense(t *testing.T) {
 	text := Notices()
-	library := strings.Index(text, "\nGo standard library go")
+	library := strings.Index(text, "\nGo standard library\n")
 	firstModule := strings.Index(text, "\ncharm.land/")
 	if library < 0 || firstModule < 0 || library > firstModule {
 		t.Fatalf("the Go standard library should be listed before the modules: %d %d", library, firstModule)
