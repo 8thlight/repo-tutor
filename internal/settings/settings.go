@@ -18,6 +18,7 @@ const (
 	TabStyleJoinedRounded = "joined_rounded"
 	TabStyleJoinedArrows  = "joined_arrows"
 
+	HighlightNone  = "none"
 	HighlightGreen = "green"
 )
 
@@ -25,7 +26,7 @@ var (
 	TabStyles   = []string{TabStyleNone, TabStyleBlock, TabStyleSlanted, TabStyleRounded, TabStyleJoinedSlanted, TabStyleJoinedRounded, TabStyleJoinedArrows}
 	QuizLengths = []int{3, 5, 10}
 	ExamLengths = []int{10, 20, 30, 0}
-	Highlights  = []string{"red", "orange", "yellow", HighlightGreen, "blue", "dark_blue", "purple"}
+	Highlights  = []string{HighlightNone, "red", HighlightGreen, "yellow", "blue", "magenta", "cyan"}
 )
 
 type Settings struct {

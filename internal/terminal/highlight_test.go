@@ -9,83 +9,47 @@ import (
 	"repo-tutor/internal/settings"
 )
 
-var terminalBackgrounds = []string{"#000000", "#09090B", "#1E1E1E", "#282C34", "#FFFFFF", "#FAFAFA", "#F4F4F4", "#EEEEEE"}
-
-func TestEveryBrandColorIsReadableOnEveryBackground(t *testing.T) {
-	for _, brand := range highlightColors {
-		for _, background := range terminalBackgrounds {
-			shifted := readableOn(lipgloss.Color(brand.hex), lipgloss.Color(background))
-			if ratio := contrastBetween(shifted, lipgloss.Color(background)); ratio < 4.5 {
-				t.Fatalf("%s on %s has contrast %.2f (%s)", brand.id, background, ratio, hexOf(shifted))
-			}
-		}
-	}
-}
-
-func TestABrandColorThatAlreadyReadsIsLeftAlone(t *testing.T) {
-	for id, background := range map[string]string{"green": "#09090B", "yellow": "#1E1E1E", "orange": "#09090B", "dark_blue": "#FFFFFF"} {
-		brand := highlightByID(id)
-		if got := hexOf(readableOn(lipgloss.Color(brand.hex), lipgloss.Color(background))); got != brand.hex {
-			t.Fatalf("%s on %s should stay %s, got %s", id, background, brand.hex, got)
-		}
-	}
-}
-
-func TestAShiftKeepsTheHueAndMovesTowardTheContrast(t *testing.T) {
-	green := lipgloss.Color(highlightByID("green").hex)
-	darker := readableOn(green, lipgloss.Color("#FAFAFA"))
-	baseHue, _, baseLightness := toHSL(green)
-	hue, _, lightness := toHSL(darker)
-	if lightness >= baseLightness || hue < baseHue-2 || hue > baseHue+2 {
-		t.Fatalf("green on a light terminal should darken and keep its hue: %s", hexOf(darker))
-	}
-	lighter := readableOn(lipgloss.Color(highlightByID("blue").hex), lipgloss.Color("#09090B"))
-	_, _, blueLightness := toHSL(lipgloss.Color(highlightByID("blue").hex))
-	if _, _, shifted := toHSL(lighter); shifted <= blueLightness {
-		t.Fatalf("blue on a dark terminal should lighten: %s", hexOf(lighter))
-	}
-}
-
-func TestPaletteUsesTheChosenHighlight(t *testing.T) {
-	model := interfaceFixture()
-	model.noColor = false
-	model.dark = true
-	if hexOf(model.palette().accent) != "#93D500" {
-		t.Fatalf("green is the default and reads on a dark terminal, got %s", hexOf(model.palette().accent))
-	}
-	model.application.settings.Highlight = "purple"
-	if hexOf(model.palette().accent) == "#93D500" {
-		t.Fatal("choosing purple should change the accent")
-	}
-	model.dark = false
-	model.application.settings.Highlight = "green"
-	if hexOf(model.palette().accent) == "#93D500" {
-		t.Fatal("green should darken on a light terminal")
-	}
-}
-
-func TestEverySettingsHighlightHasABrandColor(t *testing.T) {
+func TestEverySettingsHighlightHasATerminalColor(t *testing.T) {
 	var ids []string
-	for _, brand := range highlightColors {
-		ids = append(ids, brand.id)
+	for _, choice := range highlightColors {
+		ids = append(ids, choice.id)
 	}
 	if !slices.Equal(ids, settings.Highlights) {
-		t.Fatalf("the brand table and the settings values must list the same colors in the same order: %v vs %v", ids, settings.Highlights)
+		t.Fatalf("the highlight table and the settings values must list the same colors in the same order: %v vs %v", ids, settings.Highlights)
+	}
+}
+
+func TestPaletteUsesTheTerminalColorOfTheChosenHighlight(t *testing.T) {
+	model := interfaceFixture()
+	model.noColor = false
+	for id, want := range map[string]any{"green": lipgloss.ANSIColor(2), "red": lipgloss.ANSIColor(1), "cyan": lipgloss.ANSIColor(6), "none": lipgloss.NoColor{}} {
+		model.application.settings.Highlight = id
+		if got := model.palette().accent; got != want {
+			t.Fatalf("%s: accent is %v, want %v", id, got, want)
+		}
+	}
+}
+
+func TestEveryHighlightIsOneOfTheSixteenTerminalColors(t *testing.T) {
+	for _, choice := range highlightColors {
+		if choice.index != noHighlight && (choice.index < 1 || choice.index > 6) {
+			t.Fatalf("%s uses color %d, outside the six hues", choice.id, choice.index)
+		}
 	}
 }
 
 func TestInlineCodeFollowsTheChosenHighlight(t *testing.T) {
 	model := interfaceFixture()
 	model.noColor = false
-	model.dark = true
-	for _, id := range []string{"green", "purple", "orange"} {
+	for id, want := range map[string]string{"green": "2", "red": "1", "magenta": "5"} {
 		model.application.settings.Highlight = id
-		if got := *model.markdownStyle().Code.Color; got != hexOf(model.palette().accent) {
-			t.Fatalf("%s: inline code is %s, the highlight is %s", id, got, hexOf(model.palette().accent))
+		if got := *model.markdownStyle().Code.Color; got != want {
+			t.Fatalf("%s: inline code is %s, want %s", id, got, want)
 		}
 	}
 	model.noColor = true
-	if model.markdownStyle().Code.Color != nil && *model.markdownStyle().Code.Color == hexOf(model.palette().accent) {
+	model.application.settings.Highlight = "red"
+	if model.markdownStyle().Code.Color != nil && *model.markdownStyle().Code.Color == "1" {
 		t.Fatal("with no color the ASCII style should keep its own code color")
 	}
 }

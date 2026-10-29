@@ -71,7 +71,7 @@ func (model interfaceModel) homeEntries() []homeEntry {
 
 func (model interfaceModel) homeContent() string {
 	palette := model.palette()
-	muted := lipgloss.NewStyle().Foreground(palette.muted)
+	muted := lipgloss.NewStyle().Faint(true)
 	accent := lipgloss.NewStyle().Foreground(palette.accent).Bold(true)
 	width := model.bodyWidth()
 	var content strings.Builder

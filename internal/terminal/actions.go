@@ -23,9 +23,8 @@ func (model interfaceModel) nextTopicLabel() (string, bool) {
 }
 
 func (model interfaceModel) styledActions(actions [][2]string) string {
-	palette := model.palette()
-	key := lipgloss.NewStyle().Foreground(palette.foreground).Bold(true)
-	label := lipgloss.NewStyle().Foreground(palette.muted)
+	key := lipgloss.NewStyle().Bold(true)
+	label := lipgloss.NewStyle().Faint(true)
 	rendered := make([]string, len(actions))
 	for index, action := range actions {
 		rendered[index] = key.Render(action[0]) + " " + label.Render(action[1])
@@ -94,7 +93,7 @@ func (model interfaceModel) sidebarShortcutsTitle() string {
 
 func (model interfaceModel) sidebarShortcuts() string {
 	if model.movingToAnotherTopic() {
-		return lipgloss.NewStyle().Foreground(model.palette().foreground).Bold(true).Render("Ctrl+K") + "  " + lipgloss.NewStyle().Foreground(model.palette().muted).Render("Choose a topic")
+		return lipgloss.NewStyle().Bold(true).Render("Ctrl+K") + "  " + lipgloss.NewStyle().Faint(true).Render("Choose a topic")
 	}
 	actions := model.pageActions()
 	if len(actions) > 0 {
@@ -113,9 +112,8 @@ func (model interfaceModel) sidebarShortcuts() string {
 }
 
 func (model interfaceModel) renderSidebarRows(actions [][2]string) string {
-	palette := model.palette()
-	key := lipgloss.NewStyle().Foreground(palette.foreground).Bold(true)
-	label := lipgloss.NewStyle().Foreground(palette.muted)
+	key := lipgloss.NewStyle().Bold(true)
+	label := lipgloss.NewStyle().Faint(true)
 	rows := make([]string, len(actions))
 	for index, action := range actions {
 		rows[index] = key.Render(action[0]) + "  " + label.Render(action[1])
