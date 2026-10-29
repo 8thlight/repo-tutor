@@ -60,7 +60,7 @@ func main() {
 	reply := map[string]any{
 		"explanation": "Execution starts at main.go:2.",
 		"question":    question, "assessment": assessment,
-		"feedback": feedback, "citations": []map[string]any{{"path": "main.go", "line": line}},
+		"feedback": feedback, "citations": []map[string]any{{"path": citedPath(), "line": line}},
 	}
 	arguments, _ := json.Marshal(os.Args[1:])
 	file, err := os.OpenFile("invocations.jsonl", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
@@ -81,4 +81,11 @@ func main() {
 		encoder.Encode(map[string]any{"type": "item.completed", "item": map[string]any{"type": "agent_message", "text": string(encoded)}})
 		encoder.Encode(map[string]any{"type": "turn.completed"})
 	}
+}
+
+func citedPath() string {
+	if path := os.Getenv("FAKE_AGENT_CITED_PATH"); path != "" {
+		return path
+	}
+	return "main.go"
 }
