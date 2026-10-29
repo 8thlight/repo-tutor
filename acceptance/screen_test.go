@@ -547,11 +547,13 @@ func TestTabFillsAreTheReportedColorsBlended(t *testing.T) {
 		},
 	})
 	waitForText(t, terminal, "Understanding")
-	cells := readCells(t, terminal, 120, 6)
 	var fills []string
-	for _, cell := range cells {
-		if cell.Char == "C" && cell.Y < 4 {
-			fills = append(fills, string(cell.BG))
+	for deadline := time.Now().Add(5 * time.Second); time.Now().Before(deadline) && (len(fills) == 0 || fills[0] != "#373737"); time.Sleep(50 * time.Millisecond) {
+		fills = nil
+		for _, cell := range readCells(t, terminal, 120, 6) {
+			if cell.Char == "C" && cell.Y < 4 {
+				fills = append(fills, string(cell.BG))
+			}
 		}
 	}
 	if len(fills) == 0 || fills[0] != "#373737" {
