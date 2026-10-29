@@ -26,8 +26,17 @@ const (
 	SplashCaption = "Prince Charles Louis of the Palatinate with his Tutor Wolrad von Plessen in Historical Dress. Jan Lievens, 1631. Public domain, from the J. Paul Getty Museum via Google Art Project."
 )
 
+const (
+	splashCanvas = "\x1b[48;2;0;0;0m"
+	colorReset   = "\x1b[0m"
+)
+
 func Splash() string {
-	return strings.TrimRight(splash, "\n")
+	lines := strings.Split(strings.TrimRight(splash, "\n"), "\n")
+	for index, line := range lines {
+		lines[index] = splashCanvas + strings.ReplaceAll(line, colorReset, colorReset+splashCanvas) + colorReset
+	}
+	return strings.Join(lines, "\n")
 }
 
 //go:embed NOTICES.txt

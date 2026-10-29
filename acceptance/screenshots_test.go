@@ -113,9 +113,7 @@ func TestScreenshots(t *testing.T) {
 				t.Fatal(err)
 			}
 			waitForText(t, terminal, page.heading)
-			if page.name != "about" || theme == "dark" {
-				capture(page.name)
-			}
+			capture(page.name)
 			if err := terminal.Press("Escape"); err != nil {
 				t.Fatal(err)
 			}

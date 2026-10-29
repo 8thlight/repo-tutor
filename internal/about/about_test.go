@@ -54,6 +54,17 @@ func TestNoticesAreCurrent(t *testing.T) {
 	}
 }
 
+func TestSplashDrawsOnItsOwnBlackCanvasSoItReadsOnAnyTerminal(t *testing.T) {
+	for index, line := range strings.Split(Splash(), "\n") {
+		if !strings.HasPrefix(line, splashCanvas) || !strings.HasSuffix(line, colorReset) {
+			t.Fatalf("line %d does not start on the canvas and end with a reset: %q", index, line)
+		}
+		if strings.Count(line, colorReset) != strings.Count(line, colorReset+splashCanvas)+1 {
+			t.Fatalf("line %d resets the canvas without restoring it: %q", index, line)
+		}
+	}
+}
+
 func TestNoticesCoverEveryLinkedModule(t *testing.T) {
 	data, err := exec.Command("go", "list", "-deps", "-f", "{{with .Module}}{{if not .Main}}{{.Path}}{{end}}{{end}}", "../../binary").Output()
 	if err != nil {
