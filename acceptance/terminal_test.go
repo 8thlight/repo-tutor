@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"syscall"
 	"testing"
@@ -257,13 +258,14 @@ func TestScanNeedsNoAgent(t *testing.T) {
 	}
 }
 
-func startAtPrompt(t *testing.T) (*exec.Cmd, context.Context, string, io.Closer) {
+func startAtPrompt(t *testing.T) (*exec.Cmd, context.Context, string, io.WriteCloser, string) {
 	t.Helper()
 	repository, stateDirectory := fixture(t), t.TempDir()
 	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
 	t.Cleanup(cancel)
 	command := exec.CommandContext(ctx, binary, repository, "--agent", "codex", "--state-dir", stateDirectory)
-	command.Env = append(os.Environ(), "PATH="+agentDirectory+string(os.PathListSeparator)+os.Getenv("PATH"))
+	pidFile := filepath.Join(t.TempDir(), "agent.pid")
+	command.Env = append(os.Environ(), "PATH="+agentDirectory+string(os.PathListSeparator)+os.Getenv("PATH"), "FAKE_AGENT_PID_FILE="+pidFile)
 	input, err := command.StdinPipe()
 	if err != nil {
 		t.Fatal(err)
@@ -289,7 +291,7 @@ func startAtPrompt(t *testing.T) (*exec.Cmd, context.Context, string, io.Closer)
 	case <-ctx.Done():
 		t.Fatal("terminal never reached its prompt")
 	}
-	return command, ctx, stateDirectory, input
+	return command, ctx, stateDirectory, input, pidFile
 }
 
 func TestSignalAtPromptExitsWithShellConventionAndKeepsCompletedLesson(t *testing.T) {
@@ -302,7 +304,7 @@ func TestSignalAtPromptExitsWithShellConventionAndKeepsCompletedLesson(t *testin
 		"hangup":    {syscall.SIGHUP, 129},
 	} {
 		t.Run(name, func(t *testing.T) {
-			command, ctx, stateDirectory, input := startAtPrompt(t)
+			command, ctx, stateDirectory, input, _ := startAtPrompt(t)
 			defer input.Close()
 			if err := command.Process.Signal(expected.signal); err != nil {
 				t.Fatal(err)
@@ -318,6 +320,34 @@ func TestSignalAtPromptExitsWithShellConventionAndKeepsCompletedLesson(t *testin
 				t.Fatal("the signal lost the completed lesson")
 			}
 		})
+	}
+}
+
+func TestHangupStopsTheRunningAgent(t *testing.T) {
+	command, ctx, _, input, pidFile := startAtPrompt(t)
+	defer input.Close()
+	if _, err := io.WriteString(input, "wait forever\n"); err != nil {
+		t.Fatal(err)
+	}
+	var pid int
+	for pid == 0 {
+		if ctx.Err() != nil {
+			t.Fatal("the agent never started")
+		}
+		if data, err := os.ReadFile(pidFile); err == nil {
+			pid, _ = strconv.Atoi(string(data))
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	if err := command.Process.Signal(syscall.SIGHUP); err != nil {
+		t.Fatal(err)
+	}
+	command.Wait()
+	for deadline := time.Now().Add(2 * time.Second); syscall.Kill(pid, 0) == nil; time.Sleep(20 * time.Millisecond) {
+		if time.Now().After(deadline) {
+			syscall.Kill(pid, syscall.SIGKILL)
+			t.Fatal("the agent kept running after the hangup")
+		}
 	}
 }
 
