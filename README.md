@@ -141,6 +141,8 @@ Checks cover formatting, documentation, source analysis, agent event protocols, 
 
 ## License
 
-Copyright © 2026 Eighth Light LLC. Licensed under the GNU General Public License, version 3 or later. See [LICENSE](LICENSE).
+Copyright © 2026 8th Light, LLC. Licensed under the GNU General Public License, version 3 or later. See [LICENSE](LICENSE).
 
-<a href="https://8thlight.com"><img src="images/8th-light-logo.svg" alt="8th Light" height="24"></a>
+8th Light® and the 8th Light logo are trademarks of 8th Light, LLC and are not covered by the GNU General Public License.
+
+<a href="https://8thlight.com"><img src="images/8th-light-logo.svg" alt="8th Light" width="64"></a>
