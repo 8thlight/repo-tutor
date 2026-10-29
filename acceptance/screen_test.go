@@ -3,7 +3,9 @@ package acceptance_test
 import (
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 	"unicode/utf8"
@@ -406,4 +408,85 @@ func TestColorIsOnByDefaultAndOffWithNoColor(t *testing.T) {
 			}
 		})
 	}
+}
+
+func launchWithSlowQuestion(t *testing.T) (*tuitest.Client, string) {
+	t.Helper()
+	pidFile := filepath.Join(t.TempDir(), "agent.pid")
+	terminal := launchTerminal(t, 120, 36, map[string]string{"FAKE_AGENT_PID_FILE": pidFile}, fixture(t), "--agent", "codex", "--state-dir", t.TempDir(), "--goal", "learn it", "--no-prefetch")
+	openCourse(t, terminal)
+	if err := terminal.Type("wait forever"); err != nil {
+		t.Fatal(err)
+	}
+	if err := terminal.Press("Enter"); err != nil {
+		t.Fatal(err)
+	}
+	return terminal, pidFile
+}
+
+func waitForAgentToStart(t *testing.T, pidFile string) int {
+	t.Helper()
+	for deadline := time.Now().Add(5 * time.Second); time.Now().Before(deadline); time.Sleep(20 * time.Millisecond) {
+		if data, err := os.ReadFile(pidFile); err == nil {
+			if pid, err := strconv.Atoi(string(data)); err == nil {
+				return pid
+			}
+		}
+	}
+	t.Fatal("the agent never started")
+	return 0
+}
+
+func waitForAgentToStop(t *testing.T, pid int) {
+	t.Helper()
+	for deadline := time.Now().Add(3 * time.Second); time.Now().Before(deadline); time.Sleep(20 * time.Millisecond) {
+		if syscall.Kill(pid, 0) != nil {
+			return
+		}
+	}
+	syscall.Kill(pid, syscall.SIGKILL)
+	t.Fatal("the agent kept running")
+}
+
+func TestCtrlCQuitsWhenIdle(t *testing.T) {
+	terminal := launchScreen(t)
+	waitForText(t, terminal, "Lesson ready")
+	if err := terminal.Press("Ctrl+C"); err != nil {
+		t.Fatal(err)
+	}
+	if state := waitForExit(t, terminal); *state.Exited != 0 {
+		t.Fatalf("exit code %d, want 0", *state.Exited)
+	}
+}
+
+func TestCtrlCStopsARunningRequestAndKeepsTheWorkspaceOpen(t *testing.T) {
+	terminal, pidFile := launchWithSlowQuestion(t)
+	pid := waitForAgentToStart(t, pidFile)
+	if err := terminal.Press("Ctrl+C"); err != nil {
+		t.Fatal(err)
+	}
+	waitForAgentToStop(t, pid)
+	state, err := terminal.State()
+	if err != nil || state.Exited != nil {
+		t.Fatalf("the workspace should stay open: %v %v", err, state.Exited)
+	}
+	if err := terminal.Press("Ctrl+Q"); err != nil {
+		t.Fatal(err)
+	}
+	if state := waitForExit(t, terminal); *state.Exited != 0 {
+		t.Fatalf("exit code %d, want 0", *state.Exited)
+	}
+}
+
+func TestCtrlQWhileRunningStopsTheAgentAndExitsCleanly(t *testing.T) {
+	terminal, pidFile := launchWithSlowQuestion(t)
+	pid := waitForAgentToStart(t, pidFile)
+	if err := terminal.Press("Ctrl+Q"); err != nil {
+		t.Fatal(err)
+	}
+	state := waitForExit(t, terminal)
+	if *state.Exited != 0 || state.Modes["alternate_screen"] || !state.Modes["cursor_visible"] {
+		t.Fatalf("exit %d, modes %v", *state.Exited, state.Modes)
+	}
+	waitForAgentToStop(t, pid)
 }
