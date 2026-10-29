@@ -1,6 +1,6 @@
 # 0510. Derive tab colors from the terminal's colors
 
-Status: proposed
+Status: accepted
 
 ## Context
 
