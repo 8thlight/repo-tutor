@@ -35,6 +35,9 @@ test:
 notices:
     go run ./internal/about/generate internal/about/NOTICES.txt
 
+screenshots:
+    REPO_TUTOR_SCREENSHOTS="$PWD/images" go test ./acceptance -run TestScreenshots -count=1
+
 build:
     CGO_ENABLED=0 go build -trimpath -ldflags "-X repo-tutor/internal/about.version=${VERSION:-}" -o output/repo-tutor ./binary
 
