@@ -77,6 +77,7 @@ type interfaceModel struct {
 	richColor         bool
 	noColor           bool
 	background        color.Color
+	foreground        color.Color
 	busy              bool
 	cancel            context.CancelFunc
 	intent            turnIntent
@@ -198,7 +199,7 @@ func newInterface(ctx context.Context, application application, runner turnRunne
 }
 
 func (model interfaceModel) Init() tea.Cmd {
-	commands := []tea.Cmd{tea.RequestBackgroundColor, textarea.Blink}
+	commands := []tea.Cmd{tea.RequestBackgroundColor, tea.RequestForegroundColor, textarea.Blink}
 	if model.goalPending {
 		return tea.Batch(append(commands, model.input.Focus())...)
 	}
@@ -264,6 +265,9 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 		return model, nil
 	case tea.ColorProfileMsg:
 		model.richColor = message.Profile == colorprofile.TrueColor || message.Profile == colorprofile.ANSI256
+		return model, nil
+	case tea.ForegroundColorMsg:
+		model.foreground = message.Color
 		return model, nil
 	case tea.BackgroundColorMsg:
 		model.dark = message.IsDark()

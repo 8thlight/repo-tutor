@@ -33,8 +33,31 @@ var joinedSeparators = map[string]string{
 
 var tabPages = []struct{ page, label string }{{"home", "Home"}, {"course", "Course"}, {"quiz", "Quiz"}, {"progress", "Progress"}}
 
+const (
+	inactiveTabShare  = 0.15
+	strongestTabShare = 0.35
+	tabRuleShare      = 0.20
+)
+
+func (model interfaceModel) terminalColorsKnown() bool {
+	return model.background != nil && model.foreground != nil
+}
+
+func (model interfaceModel) mixed(share float64) color.Color {
+	return blend(model.background, model.foreground, share)
+}
+
+func (model interfaceModel) drawnTabStyle(style string) string {
+	_, joined := joinedSeparators[style]
+	_, edged := tabEdges[style]
+	if (joined || edged) && !model.terminalColorsKnown() {
+		return settings.TabStyleBlock
+	}
+	return style
+}
+
 func (model interfaceModel) tabsBleed() bool {
-	_, joined := joinedSeparators[model.application.settings.TabStyle]
+	_, joined := joinedSeparators[model.drawnTabStyle(model.application.settings.TabStyle)]
 	return joined && !model.noColor
 }
 
@@ -47,13 +70,10 @@ func blend(from, to color.Color, share float64) color.Color {
 
 func (model interfaceModel) joinedFills(active string) []color.Color {
 	palette := model.palette()
-	end := color.Color(lipgloss.Color("#E4E4E7"))
-	if !model.dark {
-		end = lipgloss.Color("#1F1F23")
-	}
 	fills := make([]color.Color, len(tabPages))
 	for index, page := range tabPages {
-		fills[index] = blend(palette.muted, end, float64(index)/float64(len(tabPages)-1))
+		share := inactiveTabShare + (strongestTabShare-inactiveTabShare)*float64(index)/float64(len(tabPages)-1)
+		fills[index] = model.mixed(share)
 		if page.page == active {
 			fills[index] = palette.accent
 		}
@@ -70,7 +90,11 @@ func (model interfaceModel) joinedCells(style, active string) []string {
 		if index+1 < len(fills) {
 			separator = separator.Background(fills[index+1])
 		}
-		cells[index] = lipgloss.NewStyle().Background(fills[index]).Foreground(palette.cutout).Bold(page.page == active).Render(" "+page.label+" ") + separator.Render(joinedSeparators[style])
+		text := model.foreground
+		if page.page == active {
+			text = palette.cutout
+		}
+		cells[index] = lipgloss.NewStyle().Background(fills[index]).Foreground(text).Bold(page.page == active).Render(" "+page.label+" ") + separator.Render(joinedSeparators[style])
 	}
 	return cells
 }
@@ -81,6 +105,7 @@ func (model interfaceModel) tabs(style, active string) string {
 }
 
 func (model interfaceModel) tabCells(style, active string) ([]string, string) {
+	style = model.drawnTabStyle(style)
 	if _, joined := joinedSeparators[style]; joined && !model.noColor {
 		return model.joinedCells(style, active), ""
 	}
@@ -90,10 +115,6 @@ func (model interfaceModel) tabCells(style, active string) ([]string, string) {
 	for index, page := range pages {
 		current := active == page.page
 		label := " " + page.label + " "
-		fill := palette.muted
-		if current {
-			fill = palette.accent
-		}
 		switch {
 		case model.noColor && current:
 			rendered[index] = lipgloss.NewStyle().Underline(true).Render("[" + page.label + "]")
@@ -103,8 +124,16 @@ func (model interfaceModel) tabCells(style, active string) ([]string, string) {
 			rendered[index] = lipgloss.NewStyle().Foreground(palette.accent).Bold(true).Render(label)
 		case style == settings.TabStyleNone:
 			rendered[index] = lipgloss.NewStyle().Foreground(palette.muted).Render(label)
+		case !model.terminalColorsKnown() && current:
+			rendered[index] = lipgloss.NewStyle().Foreground(palette.accent).Reverse(true).Bold(true).Render(label)
+		case !model.terminalColorsKnown():
+			rendered[index] = lipgloss.NewStyle().Reverse(true).Render(label)
 		default:
-			block := lipgloss.NewStyle().Background(fill).Foreground(palette.cutout).Bold(current).Render(label)
+			fill, text := model.mixed(inactiveTabShare), model.foreground
+			if current {
+				fill, text = palette.accent, palette.cutout
+			}
+			block := lipgloss.NewStyle().Background(fill).Foreground(text).Bold(current).Render(label)
 			if edges, found := tabEdges[style]; found {
 				edge := lipgloss.NewStyle().Foreground(fill)
 				block = edge.Render(edges[0]) + block + edge.Render(edges[1])
@@ -136,7 +165,7 @@ func (model interfaceModel) ruleReach() ruleReach {
 	if model.noColor {
 		return ruleLabel
 	}
-	return ruleReaches[model.application.settings.TabStyle]
+	return ruleReaches[model.drawnTabStyle(model.application.settings.TabStyle)]
 }
 
 func (model interfaceModel) activeTabSpan(style, active string) (int, int, bool) {
@@ -164,12 +193,16 @@ func (model interfaceModel) tabRule(width int) string {
 		return strings.Repeat(" ", width)
 	}
 	palette := model.palette()
-	start, end, found := model.activeTabSpan(model.application.settings.TabStyle, model.activeTab())
+	start, end, found := model.activeTabSpan(model.drawnTabStyle(model.application.settings.TabStyle), model.activeTab())
 	base := func(count int) string {
 		if model.noColor {
 			return strings.Repeat(" ", count)
 		}
-		return lipgloss.NewStyle().Foreground(palette.rule).Render(strings.Repeat("▔", count))
+		rule := palette.rule
+		if model.terminalColorsKnown() {
+			rule = model.mixed(tabRuleShare)
+		}
+		return lipgloss.NewStyle().Foreground(rule).Render(strings.Repeat("▔", count))
 	}
 	if !found || start >= width {
 		return base(width)
