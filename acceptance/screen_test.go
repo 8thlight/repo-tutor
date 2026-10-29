@@ -164,3 +164,27 @@ func TestExamIsOfferedAfterTenTopicsWithoutAskingTheAgent(t *testing.T) {
 		t.Fatalf("opening a saved course made %d agent calls", after-calls)
 	}
 }
+
+func TestSavedCoursePagesOpenWithoutAskingTheAgent(t *testing.T) {
+	repository, stateDirectory := readTenTopicsOfThisRepository(t)
+	calls := agentCalls(t, stateDirectory)
+	terminal := launchScreenWith(t, repository, stateDirectory, "--no-prefetch")
+	waitForText(t, terminal, "topics read")
+	for _, page := range []struct{ key, heading string }{
+		{"Ctrl+K", "Choose your next topic"},
+		{"Ctrl+S", "Follow the evidence"},
+		{"Ctrl+P", "Coverage"},
+	} {
+		if err := terminal.Press(page.key); err != nil {
+			t.Fatal(err)
+		}
+		waitForText(t, terminal, page.heading)
+		if err := terminal.Press("Escape"); err != nil {
+			t.Fatal(err)
+		}
+		waitForText(t, terminal, "Ask about this topic")
+	}
+	if after := agentCalls(t, stateDirectory); after != calls {
+		t.Fatalf("opening the pages made %d agent calls", after-calls)
+	}
+}
