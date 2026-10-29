@@ -1,7 +1,9 @@
 package acceptance_test
 
 import (
+	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -11,9 +13,14 @@ import (
 
 func launchScreen(t *testing.T) *tuitest.Client {
 	t.Helper()
+	return launchScreenWith(t, fixture(t), t.TempDir())
+}
+
+func launchScreenWith(t *testing.T, repository, stateDirectory string, extra ...string) *tuitest.Client {
+	t.Helper()
 	terminal := tuitesttest.New(t, tuitesttest.Options{
 		Program: binary,
-		Args:    []string{fixture(t), "--agent", "codex", "--state-dir", t.TempDir(), "--goal", "learn it"},
+		Args:    append([]string{repository, "--agent", "codex", "--state-dir", stateDirectory, "--goal", "learn it"}, extra...),
 		Spawn: tuitest.SpawnOptions{
 			Cols: tuitest.Ptr(uint16(120)), Rows: tuitest.Ptr(uint16(36)), WaitReady: tuitest.Ptr(false),
 			Env: map[string]string{"PATH": agentDirectory + ":" + "/usr/bin:/bin", "HOME": t.TempDir(), "FAKE_AGENT_PID_FILE": filepath.Join(t.TempDir(), "agent.pid")},
@@ -69,4 +76,44 @@ func waitForExit(t *testing.T, terminal *tuitest.Client) tuitest.State {
 	}
 	t.Fatal("the process did not exit")
 	return tuitest.State{}
+}
+
+func openCourse(t *testing.T, terminal *tuitest.Client) {
+	t.Helper()
+	waitForText(t, terminal, "Lesson ready")
+	if err := terminal.Press("Enter"); err != nil {
+		t.Fatal(err)
+	}
+	waitForText(t, terminal, "Execution starts at main.go:2")
+}
+
+func agentCalls(t *testing.T, stateDirectory string) int {
+	t.Helper()
+	files, _ := filepath.Glob(filepath.Join(stateDirectory, "*", "agent", "invocations.jsonl"))
+	if len(files) == 0 {
+		return 0
+	}
+	data, err := os.ReadFile(files[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	return len(strings.Split(strings.TrimSpace(string(data)), "\n"))
+}
+
+func TestSecondLaunchShowsTheCachedLessonWithoutAskingTheAgent(t *testing.T) {
+	repository, stateDirectory := fixture(t), t.TempDir()
+	first := launchScreenWith(t, repository, stateDirectory, "--no-prefetch")
+	openCourse(t, first)
+	if err := first.Press("Ctrl+Q"); err != nil {
+		t.Fatal(err)
+	}
+	waitForExit(t, first)
+	if calls := agentCalls(t, stateDirectory); calls != 1 {
+		t.Fatalf("the first launch made %d agent calls, want 1", calls)
+	}
+	second := launchScreenWith(t, repository, stateDirectory, "--no-prefetch")
+	waitForText(t, second, "Execution starts at main.go:2")
+	if calls := agentCalls(t, stateDirectory); calls != 1 {
+		t.Fatalf("the second launch made %d agent calls, want 1", calls)
+	}
 }
