@@ -4,7 +4,7 @@ Status: accepted
 
 ## Context
 
-The tool lives in the public repository `8thlight/repo-tutor`. Its `main` branch requires a pull request and a passing `check`. The only way to get it is to build it from source with Nix and `just`. People who want to try it should be able to download a binary, and install it with Homebrew or Nix. The company has no known Apple Developer ID certificate, and it has no existing Homebrew tap or Go release configuration. The version shown by `--version` comes from the Go build information, which holds a tag only when the build runs inside a Git checkout.
+The tool lives in the public repository `8thlight/repo-tutor`. Its `main` branch requires a pull request and a passing `check`. The only way to get it is to build it from source with Nix and `just`. People who want to try it should be able to download a binary, and install it with Homebrew or Nix. We have no known Apple Developer ID certificate, and no existing Homebrew tap or Go release configuration. The version shown by `--version` comes from the Go build information, which holds a tag only when the build runs inside a Git checkout.
 
 ## Decision
 
@@ -18,7 +18,7 @@ Publish releases as GitHub Releases, built by a workflow in this repository.
 
 **Provenance.** The release job creates a GitHub artifact attestation for each archive, and a user can check one with `gh attestation verify`. The job needs no key and no stored secret for this. Only the release job gets the `contents: write`, `id-token: write`, and `attestations: write` permissions. Third-party actions are pinned to a commit, as `check.yml` does.
 
-**No Apple signing for now.** The macOS binaries are not signed with a Developer ID and are not notarized. The Go linker adds the ad hoc signature that Apple Silicon requires. Homebrew and `curl` do not mark files as quarantined, so those installs run. A browser download is quarantined, and the README tells the user to run `xattr -d com.apple.quarantine` on it. Signing and notarization wait until the company has a certificate, and they would supersede this paragraph.
+**No Apple signing for now.** The macOS binaries are not signed with a Developer ID and are not notarized. The Go linker adds the ad hoc signature that Apple Silicon requires. Homebrew and `curl` do not mark files as quarantined, so those installs run. A browser download is quarantined, and the README tells the user to run `xattr -d com.apple.quarantine` on it. Signing and notarization wait until we have a certificate, and they would supersede this paragraph.
 
 **Version in the binary.** The `about` package gets a `version` variable that a linker flag can set. When it is set, it wins over the Go build information. The release workflow and the Nix package set it from the tag. A local `go build` leaves it empty and keeps today's behavior. A build from a source archive, which has no Git data, then reports the right version.
 
