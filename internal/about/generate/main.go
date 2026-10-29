@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"fmt"
 	"os"
 	"os/exec"
@@ -10,6 +11,9 @@ import (
 )
 
 var licenseNames = []string{"LICENSE", "LICENSE.md", "LICENSE.txt", "LICENCE", "COPYING", "COPYING.md"}
+
+//go:embed go-license.txt
+var goLicense string
 
 type module struct{ path, version, directory string }
 
@@ -42,18 +46,6 @@ func licenseText(directory string) (string, error) {
 	return "", fmt.Errorf("no license file in %s", directory)
 }
 
-func standardLibrary() (module, error) {
-	root, err := exec.Command("go", "env", "GOROOT").Output()
-	if err != nil {
-		return module{}, err
-	}
-	version, err := exec.Command("go", "env", "GOVERSION").Output()
-	if err != nil {
-		return module{}, err
-	}
-	return module{"Go standard library", strings.TrimSpace(string(version)), strings.TrimSpace(string(root))}, nil
-}
-
 func main() {
 	if len(os.Args) != 2 {
 		fmt.Fprintln(os.Stderr, "usage: generate OUTPUT")
@@ -64,14 +56,9 @@ func main() {
 		fmt.Fprintln(os.Stderr, "list modules:", err)
 		os.Exit(1)
 	}
-	library, err := standardLibrary()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "find the Go standard library:", err)
-		os.Exit(1)
-	}
-	modules = append([]module{library}, modules...)
 	var notices strings.Builder
 	notices.WriteString("Third-party software linked into repo-tutor, with each license. The Go standard library comes first.\n")
+	fmt.Fprintf(&notices, "\n================\nGo standard library\n================\n\n%s\n", strings.TrimSpace(goLicense))
 	for _, current := range modules {
 		text, err := licenseText(current.directory)
 		if err != nil {

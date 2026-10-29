@@ -1,7 +1,7 @@
 Third-party software linked into repo-tutor, with each license. The Go standard library comes first.
 
 ================
-Go standard library go1.27.2
+Go standard library
 ================
 
 Copyright 2009 The Go Authors.
