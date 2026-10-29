@@ -117,3 +117,22 @@ func TestSecondLaunchShowsTheCachedLessonWithoutAskingTheAgent(t *testing.T) {
 		t.Fatalf("the second launch made %d agent calls, want 1", calls)
 	}
 }
+
+func TestNextLessonIsPreparedInTheBackgroundAndUsedWithoutAnotherCall(t *testing.T) {
+	repository, stateDirectory := fixture(t), t.TempDir()
+	terminal := launchScreenWith(t, repository, stateDirectory)
+	openCourse(t, terminal)
+	for deadline := time.Now().Add(5 * time.Second); agentCalls(t, stateDirectory) < 2; time.Sleep(20 * time.Millisecond) {
+		if time.Now().After(deadline) {
+			t.Fatalf("the next lesson was never prepared; %d agent calls", agentCalls(t, stateDirectory))
+		}
+	}
+	prepared := agentCalls(t, stateDirectory)
+	if err := terminal.Press("Ctrl+N"); err != nil {
+		t.Fatal(err)
+	}
+	waitForText(t, terminal, "Topic 2 / 2")
+	if calls := agentCalls(t, stateDirectory); calls != prepared {
+		t.Fatalf("moving to the prepared topic made %d new agent calls", calls-prepared)
+	}
+}
