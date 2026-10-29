@@ -4,7 +4,7 @@ Reads a code repository and turns it into a fast onboarding course for a new dev
 
 ## Screenshots
 
-<kbd><a href="images/home.png"><img src="images/home.png" alt="Home page with the next recommended step" width="180"></a></kbd> <kbd><a href="images/course.png"><img src="images/course.png" alt="A lesson with evidence citations and a question box" width="180"></a></kbd> <kbd><a href="images/settings.png"><img src="images/settings.png" alt="Settings page showing tab styles, quiz length, and highlight colors" width="180"></a></kbd> <kbd><a href="images/about.png"><img src="images/about.png" alt="About page with the version and an ASCII painting" width="180"></a></kbd>
+<kbd><a href="images/home-light.png"><picture><source media="(prefers-color-scheme: dark)" srcset="images/home-dark.png"><img src="images/home-light.png" alt="Home page with the next recommended step" width="180"></picture></a></kbd> <kbd><a href="images/course-light.png"><picture><source media="(prefers-color-scheme: dark)" srcset="images/course-dark.png"><img src="images/course-light.png" alt="A lesson with evidence citations and a question box" width="180"></picture></a></kbd> <kbd><a href="images/settings-light.png"><picture><source media="(prefers-color-scheme: dark)" srcset="images/settings-dark.png"><img src="images/settings-light.png" alt="Settings page showing tab styles, quiz length, and highlight colors" width="180"></picture></a></kbd> <kbd><a href="images/about-dark.png"><img src="images/about-dark.png" alt="About page with the painting of a prince and his tutor" width="180"></a></kbd>
 
 ## Requirements
 
