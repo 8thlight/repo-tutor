@@ -26,7 +26,15 @@ To put `repo-tutor` on your path, run `just install`. It copies the binary to `~
 
 Use `--agent claude` for Claude Code. Without `--agent`, the tutor chooses Codex when it is installed, then Claude. `just run ../repowise` also starts a session. Omit the path to study the current directory.
 
-In a terminal, the tutor opens a full-screen workspace with a lesson, a box for your questions and answers, and your course progress. The tabs are Home, Course, Quiz, and Progress. Course shows the lesson beside a sidebar with your course status and the keys that apply. Home lists what to do next, with a recommendation first: Course, Check what you know, Topics, Take an exam, Review a weak topic, Progress, Settings, and About. `F2` opens Settings, where you change the tab style, the highlight color, whether Markdown opens rendered, the quiz length, and the exam length. They are saved in `settings.json` beside your session folders, and deleting that file resets them.
+## The workspace
+
+In a terminal, the tutor opens a full-screen workspace with a lesson, a box for your questions and answers, and your course progress. The tabs are Home, Course, Quiz, and Progress. Course shows the lesson beside a sidebar with your course status and the keys that apply. Home lists what to do next, with a recommendation first: Course, Check what you know, Topics, Take an exam, Review a weak topic, Progress, Settings, and About.
+
+### Settings
+
+`F2` opens Settings, where you change the tab style, the highlight color, whether Markdown opens rendered, the quiz length, and the exam length. They are saved in `settings.json` beside your session folders, and deleting that file resets them.
+
+## Keys
 
 Ask a question, answer one, or browse with the keyboard:
 
@@ -50,9 +58,17 @@ Ask a question, answer one, or browse with the keyboard:
 
 Topic and source lists support arrow keys and `/` to filter. Press `Enter` to confirm a filter, then `Enter` again to open an item. You can browse while the tutor thinks. A failed request keeps your draft and completed progress.
 
-A lesson is reading and ends with no question, so the box under it is always for your own questions. An action line offers a quiz on the topic, more on the topic, or the next topic. In a quiz, the tutor stops at feedback after an answer. Press `Enter` with an empty answer box or `Ctrl+N` when you are ready for the next question, and press `Ctrl+N` twice to skip an open one. You can ask about the feedback before moving on. Each quiz has a goal of 3, 5, or 10 questions, set on the `F2` page. `Ctrl+B` shows answered, current, and upcoming questions, and `A` on a skipped one shows its answer. Incorrect answers and skips still count toward completion, while correctness is tracked separately. After finishing, `Ctrl+F` adds more questions, as many as the quiz length. The next question is prepared while you read and answer the current one. After you have read ten topics, Home offers an exam with one question from each topic read, up to 10, 20, 30, or every topic read, also set on the `F2` page. An exam you leave after ten questions keeps a partial result.
+## Lessons, quizzes, and exams
+
+A lesson is reading and ends with no question, so the box under it is always for your own questions. An action line offers a quiz on the topic, more on the topic, or the next topic.
+
+In a quiz, the tutor stops at feedback after an answer. Press `Enter` with an empty answer box or `Ctrl+N` when you are ready for the next question, and press `Ctrl+N` twice to skip an open one. You can ask about the feedback before moving on. Each quiz has a goal of 3, 5, or 10 questions, set on the `F2` page. `Ctrl+B` shows answered, current, and upcoming questions, and `A` on a skipped one shows its answer. Incorrect answers and skips still count toward completion, while correctness is tracked separately. After finishing, `Ctrl+F` adds more questions, as many as the quiz length. The next question is prepared while you read and answer the current one.
+
+After you have read ten topics, Home offers an exam with one question from each topic read, up to 10, 20, 30, or every topic read, also set on the `F2` page. An exam you leave after ten questions keeps a partial result.
 
 While a request loads, the lesson pane shows a loading view. Topics stay open, and so do the lesson's sources unless you are moving to another topic. Sources use syntax highlighting with a marker at the cited line. Highlighting needs no language server or extra installation.
+
+## Plain mode
 
 Use `--plain` for line input, terminal scrollback, or a screen reader. Pipes, redirected output, `TERM=dumb`, and `--ask TEXT` use plain output automatically. The full-screen interface adapts to terminal width and light or dark backgrounds; `NO_COLOR=1` disables styling.
 
@@ -72,6 +88,8 @@ The full-screen interface has no slash commands: a line that starts with a slash
 | `/sources` or `/read README.md:1` | Inspect the source snapshot |
 | `/map` or `/glossary` | Show a dependency diagram or type index |
 | `/quit` | Save and exit |
+
+## Your goal
 
 The first time you open a repository, the tutor asks what you want to learn. Press `Enter` to keep the suggested goal or type your own. `--goal` answers it ahead of time. Your progress saves automatically. Run the same command to resume. Use `--new` to archive the previous session and start again, or `--goal "Trace the persistence pipeline"` when starting a course. `--model NAME` selects a model through the chosen CLI.
 
