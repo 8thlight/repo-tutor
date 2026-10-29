@@ -3,6 +3,7 @@ set shell := ["bash", "-euo", "pipefail", "-c"]
 
 md_paths := "docs AGENTS.md README.md"
 link_paths := "'docs/**/*.md' AGENTS.md README.md"
+prefix := env("PREFIX", env("HOME") + "/.local")
 
 default:
     @just --list
@@ -36,6 +37,10 @@ notices:
 
 build:
     CGO_ENABLED=0 go build -trimpath -o output/repo-tutor ./binary
+
+install: build
+    install -d {{ prefix }}/bin
+    install -m 0755 output/repo-tutor {{ prefix }}/bin/repo-tutor
 
 run *args:
     go run ./binary {{ args }}
