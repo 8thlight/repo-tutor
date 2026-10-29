@@ -1,6 +1,6 @@
 # 0100. About page and version output
 
-Status: accepted. About moves to `F3` under [0350](0350-settings-on-f2.md).
+Status: accepted. About moves to `F3` under [0350](0350-settings-on-f2.md). The all rights reserved `LICENSE` gave way to the GPL under [0470](0470-gpl-license.md).
 
 ## Context
 
