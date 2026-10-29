@@ -154,27 +154,25 @@ func TestReviewAndLoadingFitSmallTerminals(t *testing.T) {
 }
 
 func TestSourceHighlightingPreservesCodeAndLineNumbers(t *testing.T) {
-	for _, dark := range []bool{true, false} {
-		model := interfaceFixture()
-		model.dark, model.noColor = dark, false
-		for path, source := range map[string]string{"main.go": "package main\n/* a\ncomment */\nfunc main() {\n\tprintln(\"hello\")\n}\n", "value.py": "def value():\n    return \"hello\"\n", "main.ts": "const value: string = `hello\nworld`;\n"} {
-			colored := strings.Join(model.highlightSource(path, source), "\n")
-			want := strings.ReplaceAll(strings.TrimSuffix(source, "\n"), "\t", "    ")
-			if ansi.Strip(colored) != want || !strings.Contains(colored, "\x1b[") {
-				t.Fatalf("highlighting altered %s or lost colors:\n%q", path, colored)
-			}
-			model.noColor = true
-			plain := strings.Join(model.highlightSource(path, source), "\n")
-			if plain != want {
-				t.Fatalf("NO_COLOR altered source %s", path)
-			}
-			model.noColor = false
+	model := interfaceFixture()
+	model.noColor = false
+	for path, source := range map[string]string{"main.go": "package main\n/* a\ncomment */\nfunc main() {\n\tprintln(\"hello\")\n}\n", "value.py": "def value():\n    return \"hello\"\n", "main.ts": "const value: string = `hello\nworld`;\n"} {
+		colored := strings.Join(model.highlightSource(path, source), "\n")
+		want := strings.ReplaceAll(strings.TrimSuffix(source, "\n"), "\t", "    ")
+		if ansi.Strip(colored) != want || !strings.Contains(colored, "\x1b[") {
+			t.Fatalf("highlighting altered %s or lost colors:\n%q", path, colored)
 		}
-		opened, _ := model.openSource(model.application.state.Turns[0].Reply.Citations[0])
-		content := ansi.Strip(opened.(interfaceModel).pageContent)
-		if !strings.Contains(content, "›    2  func main() {}") {
-			t.Fatalf("source citation marker or line number changed:\n%s", content)
+		model.noColor = true
+		plain := strings.Join(model.highlightSource(path, source), "\n")
+		if plain != want {
+			t.Fatalf("NO_COLOR altered source %s", path)
 		}
+		model.noColor = false
+	}
+	opened, _ := model.openSource(model.application.state.Turns[0].Reply.Citations[0])
+	content := ansi.Strip(opened.(interfaceModel).pageContent)
+	if !strings.Contains(content, "›    2  func main() {}") {
+		t.Fatalf("source citation marker or line number changed:\n%s", content)
 	}
 }
 

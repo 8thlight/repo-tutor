@@ -73,7 +73,6 @@ type interfaceModel struct {
 	pageTitle         string
 	pageContent       string
 	history           int
-	dark              bool
 	richColor         bool
 	noColor           bool
 	background        color.Color
@@ -175,7 +174,7 @@ func newInterface(ctx context.Context, application application, runner turnRunne
 	model := interfaceModel{
 		application: application, ctx: ctx, run: runner,
 		input: input, viewport: viewport.New(), spinner: activity, prefetchSpinner: background,
-		width: 100, height: 32, dark: true, noColor: noColor,
+		width: 100, height: 32, noColor: noColor,
 		page: "lesson", history: len(application.state.Turns) - 1,
 		notice: "",
 	}
@@ -270,7 +269,6 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 		model.foreground = message.Color
 		return model, nil
 	case tea.BackgroundColorMsg:
-		model.dark = message.IsDark()
 		model.background = message.Color
 		model.resize()
 		return model, nil

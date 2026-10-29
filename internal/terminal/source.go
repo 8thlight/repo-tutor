@@ -6,7 +6,6 @@ import (
 	"charm.land/lipgloss/v2"
 	"github.com/alecthomas/chroma/v2"
 	"github.com/alecthomas/chroma/v2/lexers"
-	"github.com/alecthomas/chroma/v2/styles"
 
 	"repo-tutor/internal/tutor"
 )
@@ -25,17 +24,9 @@ func (model interfaceModel) highlightSource(path, content string) []string {
 	if err != nil {
 		return plain
 	}
-	theme := styles.Get("github-dark")
-	if !model.dark {
-		theme = styles.Get("github")
-	}
 	var highlighted strings.Builder
 	for token := iterator(); token != chroma.EOF; token = iterator() {
-		entry := theme.Get(token.Type)
-		style := lipgloss.NewStyle().Bold(entry.Bold == chroma.Yes).Italic(entry.Italic == chroma.Yes)
-		if entry.Colour.IsSet() {
-			style = style.Foreground(lipgloss.Color(entry.Colour.String()))
-		}
+		style := sourceTokenStyle(token.Type)
 		for index, line := range strings.Split(token.Value, "\n") {
 			if index > 0 {
 				highlighted.WriteByte('\n')
@@ -44,4 +35,30 @@ func (model interfaceModel) highlightSource(path, content string) []string {
 		}
 	}
 	return strings.Split(highlighted.String(), "\n")
+}
+
+const (
+	ansiRed     = 1
+	ansiGreen   = 2
+	ansiMagenta = 5
+	ansiCyan    = 6
+)
+
+func sourceTokenStyle(kind chroma.TokenType) lipgloss.Style {
+	style := lipgloss.NewStyle()
+	switch {
+	case kind.InCategory(chroma.Comment):
+		return style.Faint(true).Italic(true)
+	case kind.InCategory(chroma.Keyword):
+		return style.Foreground(lipgloss.ANSIColor(ansiMagenta))
+	case kind.InSubCategory(chroma.LiteralString):
+		return style.Foreground(lipgloss.ANSIColor(ansiGreen))
+	case kind.InSubCategory(chroma.LiteralNumber), kind == chroma.NameBuiltin, kind == chroma.NameConstant:
+		return style.Foreground(lipgloss.ANSIColor(ansiCyan))
+	case kind == chroma.NameFunction, kind == chroma.NameClass:
+		return style.Foreground(lipgloss.ANSIColor(ansiBlue)).Bold(true)
+	case kind.InCategory(chroma.Error):
+		return style.Foreground(lipgloss.ANSIColor(ansiRed))
+	}
+	return style
 }
