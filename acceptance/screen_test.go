@@ -18,16 +18,25 @@ func launchScreen(t *testing.T) *tuitest.Client {
 
 func launchScreenWith(t *testing.T, repository, stateDirectory string, extra ...string) *tuitest.Client {
 	t.Helper()
-	terminal := tuitesttest.New(t, tuitesttest.Options{
-		Program: binary,
-		Args:    append([]string{repository, "--agent", "codex", "--state-dir", stateDirectory, "--goal", "learn it"}, extra...),
-		Spawn: tuitest.SpawnOptions{
-			Cols: tuitest.Ptr(uint16(120)), Rows: tuitest.Ptr(uint16(36)), WaitReady: tuitest.Ptr(false),
-			Env: map[string]string{"PATH": agentDirectory + ":" + "/usr/bin:/bin", "HOME": t.TempDir(), "FAKE_AGENT_PID_FILE": filepath.Join(t.TempDir(), "agent.pid")},
-		},
-	})
+	terminal := launchTerminal(t, 120, 36, nil, append([]string{repository, "--agent", "codex", "--state-dir", stateDirectory, "--goal", "learn it"}, extra...)...)
 	waitForText(t, terminal, "Understanding")
 	return terminal
+}
+
+func launchTerminal(t *testing.T, columns, rows uint16, environment map[string]string, arguments ...string) *tuitest.Client {
+	t.Helper()
+	variables := map[string]string{"PATH": agentDirectory + ":" + "/usr/bin:/bin", "HOME": t.TempDir(), "FAKE_AGENT_PID_FILE": filepath.Join(t.TempDir(), "agent.pid")}
+	for name, value := range environment {
+		variables[name] = value
+	}
+	return tuitesttest.New(t, tuitesttest.Options{
+		Program: binary,
+		Args:    arguments,
+		Spawn: tuitest.SpawnOptions{
+			Cols: tuitest.Ptr(columns), Rows: tuitest.Ptr(rows), WaitReady: tuitest.Ptr(false),
+			Env: variables,
+		},
+	})
 }
 
 func waitForText(t *testing.T, terminal *tuitest.Client, text string) {
@@ -187,4 +196,45 @@ func TestSavedCoursePagesOpenWithoutAskingTheAgent(t *testing.T) {
 	if after := agentCalls(t, stateDirectory); after != calls {
 		t.Fatalf("opening the pages made %d agent calls", after-calls)
 	}
+}
+
+func launchWithoutGoal(t *testing.T) (*tuitest.Client, string) {
+	t.Helper()
+	stateDirectory := t.TempDir()
+	terminal := launchTerminal(t, 120, 36, nil, fixture(t), "--agent", "codex", "--state-dir", stateDirectory, "--no-prefetch")
+	waitForText(t, terminal, "What do you want to learn?")
+	return terminal, stateDirectory
+}
+
+func TestEnterKeepsTheSuggestedGoalOnFirstRun(t *testing.T) {
+	terminal, stateDirectory := launchWithoutGoal(t)
+	if err := terminal.Press("Enter"); err != nil {
+		t.Fatal(err)
+	}
+	waitForText(t, terminal, "Lesson ready")
+	if state := saved(t, stateDirectory); state["goal"] == "" || state["goal"] == nil {
+		t.Fatalf("the suggested goal was not saved: %v", state["goal"])
+	}
+}
+
+func TestTypedGoalIsSavedOnFirstRun(t *testing.T) {
+	terminal, stateDirectory := launchWithoutGoal(t)
+	if err := terminal.Type("Trace the entry point"); err != nil {
+		t.Fatal(err)
+	}
+	if err := terminal.Press("Enter"); err != nil {
+		t.Fatal(err)
+	}
+	waitForText(t, terminal, "Lesson ready")
+	if goal := saved(t, stateDirectory)["goal"]; goal != "Trace the entry point" {
+		t.Fatalf("saved goal %q", goal)
+	}
+}
+
+func TestOtherKeysAreHeldUntilTheGoalIsChosen(t *testing.T) {
+	terminal, _ := launchWithoutGoal(t)
+	if err := terminal.Press("Ctrl+N"); err != nil {
+		t.Fatal(err)
+	}
+	waitForText(t, terminal, "Choose your goal first. Enter keeps the default.")
 }
