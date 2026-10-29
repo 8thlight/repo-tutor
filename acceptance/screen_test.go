@@ -96,6 +96,18 @@ func openCourse(t *testing.T, terminal *tuitest.Client) {
 	waitForText(t, terminal, "Execution starts at main.go:2")
 }
 
+func waitUntilGone(t *testing.T, terminal *tuitest.Client, text string) {
+	t.Helper()
+	var screen string
+	for deadline := time.Now().Add(5 * time.Second); time.Now().Before(deadline); time.Sleep(20 * time.Millisecond) {
+		screen, _ = terminal.Screenshot("", tuitest.ScreenshotOptions{})
+		if !strings.Contains(screen, text) {
+			return
+		}
+	}
+	t.Fatalf("%q never went away:\n%s", text, screen)
+}
+
 func agentCalls(t *testing.T, stateDirectory string) int {
 	t.Helper()
 	files, _ := filepath.Glob(filepath.Join(stateDirectory, "*", "agent", "invocations.jsonl"))
@@ -237,4 +249,22 @@ func TestOtherKeysAreHeldUntilTheGoalIsChosen(t *testing.T) {
 		t.Fatal(err)
 	}
 	waitForText(t, terminal, "Choose your goal first. Enter keeps the default.")
+}
+
+func TestHelpSettingsAndAboutOpenFromHomeAndEscapeCloses(t *testing.T) {
+	terminal := launchScreen(t)
+	for _, page := range []struct{ key, heading string }{
+		{"F1", "Show this help"},
+		{"F2", "TAB STYLE"},
+		{"F3", "About repo-tutor"},
+	} {
+		if err := terminal.Press(page.key); err != nil {
+			t.Fatal(err)
+		}
+		waitForText(t, terminal, page.heading)
+		if err := terminal.Press("Escape"); err != nil {
+			t.Fatal(err)
+		}
+		waitUntilGone(t, terminal, page.heading)
+	}
 }
