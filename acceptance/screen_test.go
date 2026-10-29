@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"unicode/utf8"
 
 	tuitest "github.com/microsoft/tui-test/bindings/go"
 	"github.com/microsoft/tui-test/bindings/go/tuitesttest"
@@ -324,4 +325,38 @@ func TestLeavingAQuizNeedsASecondCtrlL(t *testing.T) {
 	}
 	waitUntilGone(t, terminal, "Press Ctrl+L again")
 	waitUntilGone(t, terminal, "What does the entry point delegate?")
+}
+
+func widestLine(screen string) (int, string) {
+	widest, widestLine := 0, ""
+	for _, line := range strings.Split(screen, "\n") {
+		if width := utf8.RuneCountInString(strings.TrimRight(line, " ")); width > widest {
+			widest, widestLine = width, line
+		}
+	}
+	return widest, widestLine
+}
+
+func waitToFitWithin(t *testing.T, terminal *tuitest.Client, columns int) {
+	t.Helper()
+	var widest int
+	var line string
+	for deadline := time.Now().Add(5 * time.Second); time.Now().Before(deadline); time.Sleep(20 * time.Millisecond) {
+		screen, _ := terminal.Screenshot("", tuitest.ScreenshotOptions{})
+		if widest, line = widestLine(screen); widest <= columns {
+			return
+		}
+	}
+	t.Fatalf("a line is %d columns wide in a %d column terminal: %q", widest, columns, line)
+}
+
+func TestNarrowTerminalKeepsTheLessonAndFooterReadable(t *testing.T) {
+	terminal := launchTerminal(t, 60, 24, nil, fixture(t), "--agent", "codex", "--state-dir", t.TempDir(), "--goal", "learn it", "--no-prefetch")
+	waitForText(t, terminal, "Lesson ready")
+	if err := terminal.Press("Enter"); err != nil {
+		t.Fatal(err)
+	}
+	waitForText(t, terminal, "Execution starts at main.go:2")
+	waitForText(t, terminal, "Ctrl+Q quit")
+	waitToFitWithin(t, terminal, 60)
 }
