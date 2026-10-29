@@ -1,6 +1,6 @@
 # 0250. Joined tab styles
 
-Status: accepted. Tab colors follow [0500](0500-use-the-terminal-colors.md).
+Status: accepted. Tab colors follow [0510](0510-derive-tab-colors-from-the-terminal.md).
 
 ## Context
 

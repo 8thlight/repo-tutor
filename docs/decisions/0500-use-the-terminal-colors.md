@@ -1,6 +1,6 @@
 # 0500. Use the terminal's colors
 
-Status: accepted
+Status: accepted. Tab fills and the tab rule follow [0510](0510-derive-tab-colors-from-the-terminal.md), which replaces the sentence on the joined styles under Roles and allows blends of the reported background and foreground.
 
 ## Context
 
