@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image/color"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -18,16 +19,13 @@ import (
 	"repo-tutor/internal/tutor"
 )
 
-type interfacePalette struct{ accent, foreground, muted, border, warning, cutout, rule color.Color }
+type interfacePalette struct{ accent, warning, cutout color.Color }
 
 func (model interfaceModel) palette() interfacePalette {
 	if model.noColor {
 		return interfacePalette{}
 	}
-	if model.dark {
-		return interfacePalette{model.highlight(model.application.settings.Highlight), lipgloss.Color("#E4E4E7"), lipgloss.Color("#A1A1AA"), lipgloss.Color("#3F3F46"), lipgloss.Color("#FBBF24"), model.cutoutColor("#09090B"), lipgloss.Color("#2E2E33")}
-	}
-	return interfacePalette{model.highlight(model.application.settings.Highlight), lipgloss.Color("#18181B"), lipgloss.Color("#52525B"), lipgloss.Color("#D4D4D8"), lipgloss.Color("#92400E"), model.cutoutColor("#FAFAFA"), lipgloss.Color("#D4D4D8")}
+	return interfacePalette{model.highlight(model.application.settings.Highlight), lipgloss.ANSIColor(ansiYellow), model.background}
 }
 
 func (model interfaceModel) bodyWidth() int {
@@ -46,9 +44,9 @@ func (model *interfaceModel) resize() {
 	model.input.SetWidth(max(1, model.bodyWidth()-4))
 	inputStyles := textarea.DefaultStyles(model.dark)
 	inputStyles.Focused.Prompt = lipgloss.NewStyle().Foreground(palette.accent)
-	inputStyles.Focused.Text = lipgloss.NewStyle().Foreground(palette.foreground)
-	inputStyles.Focused.Placeholder = lipgloss.NewStyle().Foreground(palette.muted)
-	inputStyles.Blurred.Placeholder = lipgloss.NewStyle().Foreground(palette.muted)
+	inputStyles.Focused.Text = lipgloss.NewStyle()
+	inputStyles.Focused.Placeholder = lipgloss.NewStyle().Faint(true)
+	inputStyles.Blurred.Placeholder = lipgloss.NewStyle().Faint(true)
 	model.input.SetStyles(inputStyles)
 	model.spinner.Style = lipgloss.NewStyle().Foreground(palette.accent)
 	model.viewport.SetWidth(model.bodyWidth())
@@ -95,8 +93,10 @@ func (model interfaceModel) markdownStyle() glamouransi.StyleConfig {
 	configuration.Document.BlockPrefix = ""
 	configuration.Document.BlockSuffix = ""
 	if !model.noColor {
-		codeColor := hexOf(model.palette().accent)
-		configuration.Code.Color = &codeColor
+		if choice := highlightByID(model.application.settings.Highlight); choice.index != noHighlight {
+			codeColor := strconv.Itoa(choice.index)
+			configuration.Code.Color = &codeColor
+		}
 		configuration.Code.BackgroundColor = nil
 	}
 	return configuration
@@ -118,7 +118,7 @@ func (model interfaceModel) markdown(text string) string {
 
 func (model interfaceModel) lessonContent() string {
 	palette := model.palette()
-	muted := lipgloss.NewStyle().Foreground(palette.muted)
+	muted := lipgloss.NewStyle().Faint(true)
 	heading := lipgloss.NewStyle().Foreground(palette.accent).Bold(true)
 	turns := model.application.state.Turns
 	if len(turns) == 0 {
@@ -156,7 +156,7 @@ func (model interfaceModel) lessonContent() string {
 	}
 	if turn.Reply.Question != "" && turn.Action != "answer" && index != len(turns)-1 {
 		question := heading.Render("NEXT QUESTION") + "\n" + lipgloss.NewStyle().Width(max(1, model.bodyWidth()-6)).Render(tutor.Plain(turn.Reply.Question))
-		blocks = append(blocks, lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(palette.border).Padding(1, 2).Width(max(1, model.bodyWidth()-2)).Render(question))
+		blocks = append(blocks, lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).Padding(1, 2).Width(max(1, model.bodyWidth()-2)).Render(question))
 	}
 	var sources []string
 	seen := map[string]bool{}
@@ -177,7 +177,7 @@ func (model interfaceModel) sectionDivider(label string) string {
 		text = "── " + label + " "
 	}
 	text += strings.Repeat("─", max(0, model.bodyWidth()-ansi.StringWidth(text)))
-	return lipgloss.NewStyle().Foreground(model.palette().muted).Render(text)
+	return lipgloss.NewStyle().Faint(true).Render(text)
 }
 
 func (model interfaceModel) inQuiz() bool {
@@ -226,7 +226,7 @@ func (model interfaceModel) titleOf(identifier string) string {
 
 func (model interfaceModel) composer() string {
 	palette := model.palette()
-	muted := lipgloss.NewStyle().Foreground(palette.muted)
+	muted := lipgloss.NewStyle().Faint(true)
 	if model.page != "lesson" && !model.askingGoal() {
 		content := muted.Render("Esc goes back")
 		if model.input.Value() != "" {
@@ -260,7 +260,7 @@ func (model interfaceModel) composer() string {
 		above, title = "", goalQuestion
 	}
 	if model.busy {
-		above, title, tint = "", waitingPhrase(model.intent.action), palette.border
+		above, title, tint = "", waitingPhrase(model.intent.action), lipgloss.NoColor{}
 	}
 	actions := ""
 	if line := model.actionLine(); line != "" {
@@ -274,7 +274,7 @@ func (model interfaceModel) composer() string {
 
 func (model interfaceModel) sidebar() string {
 	palette := model.palette()
-	muted := lipgloss.NewStyle().Foreground(palette.muted)
+	muted := lipgloss.NewStyle().Faint(true)
 	title := lipgloss.NewStyle().Foreground(palette.accent).Bold(true)
 	score := tutor.ScoreCourse(model.application.course, model.application.state.Progress)
 	visited, total := score.Read, score.Total
@@ -289,13 +289,13 @@ func (model interfaceModel) sidebar() string {
 	if model.bodyHeight() >= 19 {
 		content += "\n\n" + muted.Render(model.sidebarShortcutsTitle()) + "\n" + model.sidebarShortcuts()
 	}
-	return lipgloss.NewStyle().Width(sidebarWidth).Height(model.bodyHeight()).MaxHeight(model.bodyHeight()).BorderRight(true).BorderStyle(lipgloss.NormalBorder()).BorderForeground(palette.border).Render(content)
+	return lipgloss.NewStyle().Width(sidebarWidth).Height(model.bodyHeight()).MaxHeight(model.bodyHeight()).BorderRight(true).BorderStyle(lipgloss.NormalBorder()).Render(content)
 }
 
 func (model interfaceModel) View() tea.View {
 	palette := model.palette()
 	accent := lipgloss.NewStyle().Foreground(palette.accent).Bold(true)
-	muted := lipgloss.NewStyle().Foreground(palette.muted)
+	muted := lipgloss.NewStyle().Faint(true)
 	if model.width < 44 || model.height < 18 {
 		view := tea.NewView(fmt.Sprintf("repo-tutor\n\nWiden to 44 columns and 18 rows.\nCurrent: %d × %d\n\nCtrl+Q quits; --plain works at any size.", model.width, model.height))
 		view.AltScreen = true

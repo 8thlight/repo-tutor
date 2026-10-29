@@ -50,17 +50,19 @@ func TestANewerVersionIsReadButReadOnly(t *testing.T) {
 }
 
 func TestEncodedSettingsDecodeToThemselves(t *testing.T) {
-	want := settings.Settings{TabStyle: "slanted", MarkdownOpensRendered: false, Highlight: "dark_blue", QuizLength: 10, ExamLength: 30}
+	want := settings.Settings{TabStyle: "slanted", MarkdownOpensRendered: false, Highlight: "blue", QuizLength: 10, ExamLength: 30}
 	got, status := settings.Decode(settings.Encode(want))
 	if got != want || status != (settings.Status{}) {
 		t.Fatalf("got %+v %+v", got, status)
 	}
 }
 
-func TestAnEarlierTealValueFallsBackToGreen(t *testing.T) {
-	got, status := settings.Decode([]byte(`{"version":1,"highlight":"teal"}`))
-	if got.Highlight != "green" || status.Unreadable {
-		t.Fatalf("got %+v %+v", got, status)
+func TestAnEarlierHighlightValueFallsBackToGreen(t *testing.T) {
+	for _, earlier := range []string{"teal", "orange", "dark_blue", "purple"} {
+		got, status := settings.Decode([]byte(`{"version":1,"highlight":"` + earlier + `"}`))
+		if got.Highlight != "green" || status.Unreadable {
+			t.Fatalf("%s: got %+v %+v", earlier, got, status)
+		}
 	}
 }
 

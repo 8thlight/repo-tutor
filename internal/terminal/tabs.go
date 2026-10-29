@@ -2,7 +2,6 @@ package terminal
 
 import (
 	"image/color"
-	"math"
 	"strings"
 
 	"charm.land/lipgloss/v2"
@@ -12,13 +11,6 @@ import (
 )
 
 var tabHintSets = [][]keyHint{{{"Tab", "Next", false}}}
-
-func (model interfaceModel) cutoutColor(fallback string) color.Color {
-	if model.background != nil {
-		return model.background
-	}
-	return lipgloss.Color(fallback)
-}
 
 var tabEdges = map[string][2]string{
 	settings.TabStyleSlanted: {"\ue0ba", "\ue0b8"},
@@ -59,13 +51,6 @@ func (model interfaceModel) drawnTabStyle(style string) string {
 func (model interfaceModel) tabsBleed() bool {
 	_, joined := joinedSeparators[model.drawnTabStyle(model.application.settings.TabStyle)]
 	return joined && !model.noColor
-}
-
-func blend(from, to color.Color, share float64) color.Color {
-	fromRed, fromGreen, fromBlue := channels(from)
-	toRed, toGreen, toBlue := channels(to)
-	mix := func(start, end float64) uint8 { return uint8(math.Round((start + (end-start)*share) * 255)) }
-	return color.RGBA{mix(fromRed, toRed), mix(fromGreen, toGreen), mix(fromBlue, toBlue), 255}
 }
 
 func (model interfaceModel) joinedFills(active string) []color.Color {
@@ -123,7 +108,7 @@ func (model interfaceModel) tabCells(style, active string) ([]string, string) {
 		case style == settings.TabStyleNone && current:
 			rendered[index] = lipgloss.NewStyle().Foreground(palette.accent).Bold(true).Render(label)
 		case style == settings.TabStyleNone:
-			rendered[index] = lipgloss.NewStyle().Foreground(palette.muted).Render(label)
+			rendered[index] = lipgloss.NewStyle().Faint(true).Render(label)
 		case !model.terminalColorsKnown() && current:
 			rendered[index] = lipgloss.NewStyle().Foreground(palette.accent).Reverse(true).Bold(true).Render(label)
 		case !model.terminalColorsKnown():
@@ -198,11 +183,11 @@ func (model interfaceModel) tabRule(width int) string {
 		if model.noColor {
 			return strings.Repeat(" ", count)
 		}
-		rule := palette.rule
+		rule := lipgloss.NewStyle().Faint(true)
 		if model.terminalColorsKnown() {
-			rule = model.mixed(tabRuleShare)
+			rule = lipgloss.NewStyle().Foreground(model.mixed(tabRuleShare))
 		}
-		return lipgloss.NewStyle().Foreground(rule).Render(strings.Repeat("▔", count))
+		return rule.Render(strings.Repeat("▔", count))
 	}
 	if !found || start >= width {
 		return base(width)

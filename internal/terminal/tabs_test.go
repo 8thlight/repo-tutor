@@ -10,19 +10,6 @@ import (
 	"github.com/charmbracelet/x/ansi"
 )
 
-func TestTabTextKeepsReadableContrastOnBothFills(t *testing.T) {
-	for _, dark := range []bool{true, false} {
-		model := interfaceFixture()
-		model.noColor, model.dark = false, dark
-		palette := model.palette()
-		for name, fill := range map[string]color.Color{"active": palette.accent, "inactive": palette.muted} {
-			if ratio := contrastBetween(palette.cutout, fill); ratio < 4.5 {
-				t.Fatalf("dark=%t %s tab text contrast is %.2f, want at least 4.5", dark, name, ratio)
-			}
-		}
-	}
-}
-
 func TestTabTextUsesTheReportedTerminalBackground(t *testing.T) {
 	model := interfaceFixture()
 	model.noColor = false
@@ -232,20 +219,6 @@ func TestRoundedTabsDrawNoRule(t *testing.T) {
 	model.noColor = true
 	if _, rule := tabRows(model); !strings.Contains(rule, "▔") {
 		t.Fatal("with no color the bar is bracketed and keeps its underline")
-	}
-}
-
-func TestTheAccentStaysFarEnoughFromTheBaseRuleToTellApartByLightness(t *testing.T) {
-	for _, dark := range []bool{true, false} {
-		for _, brand := range highlightColors {
-			model := interfaceFixture()
-			model.noColor, model.dark = false, dark
-			model.application.settings.Highlight = brand.id
-			palette := model.palette()
-			if ratio := contrastBetween(palette.accent, palette.rule); ratio < 3 {
-				t.Fatalf("dark=%t %s: the accent and base rule differ by only %.2f, under 3", dark, brand.id, ratio)
-			}
-		}
 	}
 }
 

@@ -26,8 +26,8 @@ var (
 
 func (model interfaceModel) renderKeyHints(hints []keyHint, separator string) string {
 	palette := model.palette()
-	key := lipgloss.NewStyle().Foreground(palette.foreground).Bold(true)
-	label := lipgloss.NewStyle().Foreground(palette.muted)
+	key := lipgloss.NewStyle().Bold(true)
+	label := lipgloss.NewStyle().Faint(true)
 	alert := lipgloss.NewStyle().Foreground(palette.warning).Bold(true)
 	rendered := make([]string, len(hints))
 	for index, hint := range hints {
@@ -155,7 +155,7 @@ func (model interfaceModel) framedInput(title string, hints []keyHint, tint colo
 	width := max(12, model.bodyWidth())
 	inner := width - 2
 	border := lipgloss.NewStyle().Foreground(tint)
-	caption := lipgloss.NewStyle().Foreground(model.palette().muted)
+	caption := lipgloss.NewStyle().Faint(true)
 	title = ansi.Truncate(title, max(1, inner-4), "…")
 	top := border.Render("╭─ ") + caption.Render(title) + border.Render(" "+strings.Repeat("─", max(0, inner-3-ansi.StringWidth(title)))+"╮")
 	bottom := border.Render("╰" + strings.Repeat("─", inner) + "╯")

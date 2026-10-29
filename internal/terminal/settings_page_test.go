@@ -162,9 +162,8 @@ func TestNoColorSaysTabStyleDoesNotApply(t *testing.T) {
 func TestHighlightChoiceIsSavedAndChangesTheAccent(t *testing.T) {
 	model := settingsPageFixture(t)
 	model.noColor = false
-	model.dark = true
 	before := model.palette().accent
-	for range 16 {
+	for range 17 {
 		model, _ = press(model, tea.KeyDown, 0)
 	}
 	model, _ = press(model, tea.KeySpace, 0)
@@ -177,12 +176,12 @@ func TestHighlightChoiceIsSavedAndChangesTheAccent(t *testing.T) {
 	}
 }
 
-func TestHighlightRowsShowASwatchAndTheShiftNote(t *testing.T) {
+func TestHighlightRowsShowASwatchAndTheTerminalNote(t *testing.T) {
 	model := settingsPageFixture(t)
 	model.noColor = false
 	content := ansi.Strip(model.settingsContent())
-	if strings.Count(content, "██") != 7 || !strings.Contains(content, highlightShiftNote) {
-		t.Fatalf("each brand color should show a swatch under the shift note:\n%s", content)
+	if strings.Count(content, "██") != 7 || !strings.Contains(content, highlightTerminalNote) {
+		t.Fatalf("each highlight should show a swatch under the terminal note:\n%s", content)
 	}
 	model.noColor = true
 	if !strings.Contains(ansi.Strip(model.settingsContent()), noColorHighlightNote) {

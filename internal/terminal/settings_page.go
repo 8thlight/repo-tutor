@@ -20,7 +20,7 @@ const (
 	settingsKeysNote      = "↑↓ move · Space chooses · F2 or Esc closes"
 	noColorNote           = "Color is off, so tab style does not apply."
 	noColorHighlightNote  = "Color is off, so highlight color does not apply."
-	highlightShiftNote    = "Colors shift to stay readable on your terminal's background."
+	highlightTerminalNote = "Drawn in your terminal's own colors."
 	settingsLabelWidth    = 14
 	examLengthNote        = "An exam has one question for each topic you have read, up to this many."
 )
@@ -166,7 +166,7 @@ func (model interfaceModel) settingsContent() string {
 
 func (model interfaceModel) settingsLayout() (string, int) {
 	palette := model.palette()
-	muted := lipgloss.NewStyle().Foreground(palette.muted)
+	muted := lipgloss.NewStyle().Faint(true)
 	heading := lipgloss.NewStyle().Foreground(palette.accent).Bold(true)
 	narrow := model.bodyWidth() < settingsNarrowWidth
 	lines := []string{muted.Render(settingsKeysNote), ""}
@@ -192,7 +192,7 @@ func (model interfaceModel) settingsLayout() (string, int) {
 			case model.noColor && group == "HIGHLIGHT COLOR":
 				lines = append(lines, muted.Render(noColorHighlightNote))
 			case group == "HIGHLIGHT COLOR":
-				lines = append(lines, muted.Render(highlightShiftNote))
+				lines = append(lines, muted.Render(highlightTerminalNote))
 			case group == "EXAM LENGTH":
 				lines = append(lines, muted.Render(examLengthNote))
 			}
