@@ -1,6 +1,6 @@
 # 0480. Test the full-screen interface in a real terminal
 
-Status: accepted
+Status: accepted. Screenshots are no longer deferred, under [0490](0490-screenshots-and-contrast.md). Recordings stay deferred.
 
 ## Context
 
