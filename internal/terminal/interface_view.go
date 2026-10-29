@@ -263,7 +263,7 @@ func (model interfaceModel) composer() string {
 	return actions + model.sectionDivider("") + "\n\n" + above + model.framedInput(title, model.typingHints(), tint)
 }
 
-func (model interfaceModel) sidebar() string {
+func (model interfaceModel) sidebar(height int) string {
 	palette := model.palette()
 	muted := lipgloss.NewStyle().Faint(true)
 	title := lipgloss.NewStyle().Foreground(palette.accent).Bold(true)
@@ -280,7 +280,9 @@ func (model interfaceModel) sidebar() string {
 	if model.bodyHeight() >= 19 {
 		content += "\n\n" + muted.Render(model.sidebarShortcutsTitle()) + "\n" + model.sidebarShortcuts()
 	}
-	return lipgloss.NewStyle().Width(sidebarWidth).Height(model.bodyHeight()).MaxHeight(model.bodyHeight()).BorderRight(true).BorderStyle(lipgloss.NormalBorder()).Render(content)
+	column := lipgloss.NewStyle().Width(sidebarWidth).Height(height).MaxHeight(height).Render(content)
+	rail := muted.Render(strings.TrimSuffix(strings.Repeat("│\n", height), "\n"))
+	return lipgloss.JoinHorizontal(lipgloss.Top, column, rail)
 }
 
 func (model interfaceModel) View() tea.View {
@@ -332,12 +334,10 @@ func (model interfaceModel) View() tea.View {
 	}
 	main := accent.Render(ansi.Truncate(title, model.bodyWidth(), "…")) + "\n\n" + body
 	main = lipgloss.NewStyle().Width(model.bodyWidth()).MaxWidth(model.bodyWidth()).Height(model.bodyHeight()).MaxHeight(model.bodyHeight()).Render(main)
+	column := lipgloss.JoinVertical(lipgloss.Left, main, "", model.composer())
+	workspace := column
 	if model.width >= 108 {
-		main = lipgloss.JoinHorizontal(lipgloss.Top, model.sidebar(), "  ", main)
-	}
-	composer := model.composer()
-	if model.width >= 108 {
-		composer = lipgloss.NewStyle().PaddingLeft(sidebarOffset).Render(composer)
+		workspace = lipgloss.JoinHorizontal(lipgloss.Top, model.sidebar(lipgloss.Height(column)), "  ", column)
 	}
 	notice := model.notice
 	if model.busy {
@@ -360,7 +360,7 @@ func (model interfaceModel) View() tea.View {
 	if model.tabsBleed() {
 		navigationRows = navigation + "\n" + model.tabRule(navigationWidth)
 	}
-	content := lipgloss.JoinVertical(lipgloss.Left, margin.Render(lipgloss.JoinVertical(lipgloss.Left, header, "")), navigationRows, margin.Render(lipgloss.JoinVertical(lipgloss.Left, main, "", composer, "", footer)))
+	content := lipgloss.JoinVertical(lipgloss.Left, margin.Render(lipgloss.JoinVertical(lipgloss.Left, header, "")), navigationRows, margin.Render(lipgloss.JoinVertical(lipgloss.Left, workspace, "", footer)))
 	content = lipgloss.NewStyle().MaxWidth(model.width).MaxHeight(model.height).Render(content)
 	if model.noColor {
 		content = ansi.Strip(content)
