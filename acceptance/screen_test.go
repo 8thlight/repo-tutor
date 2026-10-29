@@ -360,3 +360,20 @@ func TestNarrowTerminalKeepsTheLessonAndFooterReadable(t *testing.T) {
 	waitForText(t, terminal, "Ctrl+Q quit")
 	waitToFitWithin(t, terminal, 60)
 }
+
+func TestResizingWhileRunningRedrawsTheWorkspace(t *testing.T) {
+	terminal := launchScreen(t)
+	if err := terminal.Resize(60, 24); err != nil {
+		t.Fatal(err)
+	}
+	waitForText(t, terminal, "Ctrl+Q quit")
+	waitToFitWithin(t, terminal, 60)
+	if err := terminal.Resize(140, 40); err != nil {
+		t.Fatal(err)
+	}
+	waitForText(t, terminal, "Ctrl+Q quit")
+	if err := terminal.Press("F2"); err != nil {
+		t.Fatal(err)
+	}
+	waitForText(t, terminal, "TAB STYLE")
+}
