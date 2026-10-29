@@ -27,6 +27,7 @@
 
       devShells = forAllSystems (pkgs: {
         default = pkgs.mkShell {
+          GODEBUG = "gcshrinkstackoff=1";
           packages = [
             pkgs.go
             pkgs.gopls
