@@ -1,6 +1,6 @@
 # 0490. Generate screenshots in light and dark terminals
 
-Status: proposed
+Status: accepted
 
 ## Context
 
