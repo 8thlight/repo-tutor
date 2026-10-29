@@ -490,3 +490,33 @@ func TestCtrlQWhileRunningStopsTheAgentAndExitsCleanly(t *testing.T) {
 	}
 	waitForAgentToStop(t, pid)
 }
+
+func TestPressingTheSameFunctionKeyAgainClosesItsPage(t *testing.T) {
+	terminal := launchScreen(t)
+	for _, page := range []struct{ key, heading string }{
+		{"F1", "Show this help"},
+		{"F2", "TAB STYLE"},
+		{"F3", "About repo-tutor"},
+	} {
+		if err := terminal.Press(page.key); err != nil {
+			t.Fatal(err)
+		}
+		waitForText(t, terminal, page.heading)
+		if err := terminal.Press(page.key); err != nil {
+			t.Fatal(err)
+		}
+		waitUntilGone(t, terminal, page.heading)
+	}
+}
+
+func TestEscStopsARunningRequestAndKeepsTheWorkspaceOpen(t *testing.T) {
+	terminal, pidFile := launchWithSlowQuestion(t)
+	pid := waitForAgentToStart(t, pidFile)
+	if err := terminal.Press("Escape"); err != nil {
+		t.Fatal(err)
+	}
+	waitForAgentToStop(t, pid)
+	if state, err := terminal.State(); err != nil || state.Exited != nil {
+		t.Fatalf("the workspace should stay open: %v %v", err, state.Exited)
+	}
+}
