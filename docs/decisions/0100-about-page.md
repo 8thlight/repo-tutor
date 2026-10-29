@@ -4,7 +4,7 @@ Status: accepted. About moves to `F3` under [0350](0350-settings-on-f2.md). The 
 
 ## Context
 
-A learner or maintainer cannot tell which build they run, when it was built, or who owns it. A bug report has no version to name. The repository is private and internal to the company, and it has no license file. The company website states its notice as "COPYRIGHT © 2026 EIGHTH LIGHT LLC."
+A learner or maintainer cannot tell which build they run, when it was built, or who owns it. A bug report has no version to name. The repository is private and internal to the company, and it has no license file. The company style guide sets the minimum copyright notice as "© [YEAR] 8th Light, LLC."
 
 ## Decision
 
@@ -22,7 +22,7 @@ The facts are:
 
 Read build facts with `runtime/debug.ReadBuildInfo`. When the build has no version control data, print `unknown` for those fields and do not fail. The Nix build must be checked for this before the page ships.
 
-The copyright line is "Copyright © 2026 Eighth Light LLC." It follows the wording on the company website, which is the source of truth. The repository's `LICENSE` file says all rights reserved. It stays that way until the company reviews the project for open source release. The year is a constant that a person updates. The page prints the website address as plain text, because a terminal cannot be assumed to open links. Terminals that support hyperlinks also get it as a clickable link.
+The copyright line is "Copyright © 2026 8th Light, LLC." It follows the Copyright & Trademarks page of the company style guide, which is the source of truth. The repository's `LICENSE` file says all rights reserved. It stays that way until the company reviews the project for open source release. The year is a constant that a person updates. The page prints the website address as plain text, because a terminal cannot be assumed to open links. Terminals that support hyperlinks also get it as a clickable link.
 
 Ship a generated notices file inside the binary that lists each third-party module and its license text. The About page shows a short credit line and `--version --notices` prints the full text. The dependencies in `go.mod` are the source, so a check in `just check` fails when a module is missing from the file.
 
@@ -32,4 +32,4 @@ The version reads `0.1.0-dev` unless the build comes from a release tag. Go stam
 
 ## Consequences
 
-A bug report can carry the exact build. The binary gains a notices file and a small amount of embedded art, so its size grows by that much. The copyright constant needs a yearly check by a person. If the company changes its published notice, the constant and this record change together.
+A bug report can carry the exact build. The binary gains a notices file and a small amount of embedded art, so its size grows by that much. The copyright constant needs a yearly check by a person. If the company changes its style guide notice, the constant and this record change together.

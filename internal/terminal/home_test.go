@@ -108,7 +108,7 @@ func TestAboutPageShowsBuildCopyrightAndSessionAgent(t *testing.T) {
 	opened, _ := model.Update(tea.KeyPressMsg{Code: tea.KeyF3})
 	model = opened.(interfaceModel)
 	content := ansi.Strip(model.View().Content)
-	for _, expected := range []string{"About repo-tutor", "Copyright © 2026 Eighth Light LLC.", "https://8thlight.com", "This session uses codex (default model)."} {
+	for _, expected := range []string{"About repo-tutor", "Copyright © 2026 8th Light, LLC.", "https://8thlight.com", "This session uses codex (default model)."} {
 		if !strings.Contains(content, expected) {
 			t.Fatalf("about page is missing %q:\n%s", expected, content)
 		}
