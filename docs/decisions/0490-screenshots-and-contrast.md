@@ -8,7 +8,7 @@ The README screenshots are images that a person captured by hand. They go stale:
 
 [0480](0480-terminal-acceptance-tests.md) added terminal tests with tui-test and deferred screenshots. A trial for this decision showed three facts:
 
-- The tui-test profile sets the emulator's foreground and background colors, the emulator answers the background query, and the binary then draws a different palette. A light profile and a dark profile gave different colors for every text style.
+- The tui-test profile sets the emulator's foreground and background colors, the emulator answers the background query, and the binary then draws a different palette. A light profile and a dark profile gave different colors for every text style. The trial used GitHub's colors, and the measurements below are to be repeated on the profiles chosen here.
 - The test can read the foreground and background of every cell, so it can compute a contrast ratio for everything drawn.
 - Measured on the Home page, body and muted text pass in both modes. The tab rule is the one failure: it is xterm color 17 in the dark palette, 1.05 to 1 against a near-black background, so it cannot be seen. The accent green in the light palette measures 4.2 to 1, and the divider lines measure 1.4 to 1 (light) and 1.9 to 1 (dark).
 
@@ -16,7 +16,7 @@ The README screenshots are images that a person captured by hand. They go stale:
 
 Generate the README screenshots from the real binary, and test contrast on every page in both modes.
 
-**Two terminal themes.** Tests use two profiles, taken from GitHub's own light and dark colors: `#1f2328` on `#ffffff`, and `#e6edf3` on `#0d1117`. A test that checks the screen runs once for each profile.
+**Terminal themes.** Tests use profiles built from our own colors. The 8th Light style guide sets a neutral primary palette, so the dark profile is lightest gray `#F4F4F4` on charcoal `#141414`, and the light profile is charcoal `#141414` on white `#FFFFFF`. The workspace palette was designed against the surfaces `#09090B` and `#FAFAFA`, so a second pair of profiles, dark and light, uses those. A test that checks the screen runs once for each profile. The workspace palette itself is not a brand palette, and this decision does not change it.
 
 **Contrast floor.** For each cell that draws a character, the test computes the WCAG contrast ratio of its foreground against the background, using the profile color where the cell has no background of its own. Letters and digits must reach 4.5 to 1. Every other glyph, such as rules, borders, bars, and markers, must reach 3 to 1. A page that falls below either floor fails the test. A new color has to pass in both modes before it ships.
 
