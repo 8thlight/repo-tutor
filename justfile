@@ -41,6 +41,9 @@ screenshots:
 build:
     CGO_ENABLED=0 go build -trimpath -ldflags "-X repo-tutor/internal/about.version=${VERSION:-}" -o output/repo-tutor ./binary
 
+release version:
+    bash "{{ justfile_directory() }}/internal/release/release.sh" {{ version }}
+
 build-release-archives version:
     rm -rf output/release
     mkdir -p output/release
