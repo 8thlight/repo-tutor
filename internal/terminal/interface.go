@@ -49,6 +49,8 @@ type interfaceModel struct {
 	homeSelected      int
 	origin            string
 	sourceList        string
+	sourceCitation    int
+	lessonReturn      *lessonPlace
 	goalPending       bool
 	noticeGeneration  int
 	skipArmed         bool
@@ -235,6 +237,9 @@ func (model interfaceModel) primaryPage() bool {
 }
 
 func (model interfaceModel) back() (tea.Model, tea.Cmd) {
+	if model.page == "source" && model.sourceCitation > 0 && model.lessonReturn != nil {
+		return model.backToTheLesson()
+	}
 	if model.page == "source" && model.sourceList != "" {
 		return model.openPicker(model.sourceList, "")
 	}
@@ -347,6 +352,9 @@ func (model interfaceModel) update(message tea.Msg) (tea.Model, tea.Cmd) {
 			if next, command, handled := model.goalKey(message); handled {
 				return next, command
 			}
+		}
+		if next, command, handled := model.citationKey(message.String()); handled {
+			return next, command
 		}
 		switch message.String() {
 		case "ctrl+q":

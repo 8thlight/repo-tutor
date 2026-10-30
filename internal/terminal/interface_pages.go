@@ -199,6 +199,7 @@ func (model interfaceModel) openSource(location repository.Location) (tea.Model,
 }
 
 func (model interfaceModel) openFile(location repository.Location) (tea.Model, tea.Cmd) {
+	model.sourceCitation, model.lessonReturn = 0, nil
 	switch model.page {
 	case "sources":
 		model.sourceList = model.page
