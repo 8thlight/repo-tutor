@@ -45,3 +45,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release create "${VERSION}" output/dist/* --generate-notes --verify-tag
+      - name: Update the Homebrew tap
+        env:
+          TAP_DEPLOY_KEY: ${{ secrets.HOMEBREW_TAP_DEPLOY_KEY }}
+          TAP_URL: git@github.com:${{ vars.HOMEBREW_TAP_REPOSITORY || '8thlight/homebrew-tap' }}.git
+          TAP_BRANCH: ${{ github.ref_type == 'tag' && 'main' || 'dryrun' }}
+        run: |
+          if [ -z "${TAP_DEPLOY_KEY}" ]; then
+            echo "::notice::HOMEBREW_TAP_DEPLOY_KEY is not set, so the tap is not updated."
+            exit 0
+          fi
+          nix develop --command just tap-update "${VERSION}" "${TAP_BRANCH}"
