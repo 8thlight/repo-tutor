@@ -1,6 +1,6 @@
 # 0510. Derive tab colors from the terminal's colors
 
-Status: accepted
+Status: accepted. The 35% ceiling of the joined styles is lowered on themes with little contrast, as the last Decision paragraph describes.
 
 ## Context
 
@@ -30,6 +30,8 @@ The shares are constants in the code. No fixed color of ours is involved, so the
 **Rule for 0500.** The colors the workspace draws are the default colors, the sixteen ANSI colors, and blends of the reported background and foreground at the shares above. It uses no fixed color of ours. The About painting stays the one exception.
 
 **Testing.** A terminal test sets a profile with a known background and foreground, opens each tab style, and checks that every tab fill and the rule equal the blend at the stated share. The no-fixed-colors check of 0500 accepts only the default color, indexed colors 0 to 15, and those blends for the profile in use. A test with a profile that reports nothing checks the Block fallback. If the tui-test emulator does not answer the foreground query, a unit test of the fill function covers the blends and a terminal test covers the fallback.
+
+**Ceiling on low-contrast themes.** A joined style steps from 15% up to a ceiling of 35%, and it lowers the ceiling when 35% would leave the tab text too faint. The text must keep a contrast of at least 4.5 to 1 with the fill, or 60% of the theme's own text contrast when that is lower, so a theme that is faint to begin with is not asked for more than it has. The ceiling is the largest share, from 15% up to 35%, that meets this. It never drops below 21%, so each separator still shows. Themes with room, such as the 8th Light Charcoal and Black themes and most light themes, keep the full 15% to 35% gradient. Dark Gray, Nord, Tokyo Night, and Gruvbox dark step to about 27% to 32%. The single-fill Block, Slanted, and Rounded styles stay at 15%.
 
 ## Consequences
 

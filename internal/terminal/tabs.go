@@ -53,11 +53,35 @@ func (model interfaceModel) tabsBleed() bool {
 	return joined && !model.noColor
 }
 
+const (
+	readableTabText   = 4.5
+	keptThemeContrast = 0.6
+	smallestTabStep   = 0.06
+)
+
+func strongestShare(background, foreground color.Color) float64 {
+	floor := min(readableTabText, keptThemeContrast*contrastBetween(background, foreground))
+	low, high := inactiveTabShare, strongestTabShare
+	if contrastBetween(blend(background, foreground, high), foreground) >= floor {
+		return high
+	}
+	for range 20 {
+		middle := (low + high) / 2
+		if contrastBetween(blend(background, foreground, middle), foreground) >= floor {
+			low = middle
+		} else {
+			high = middle
+		}
+	}
+	return max(low, inactiveTabShare+smallestTabStep)
+}
+
 func (model interfaceModel) joinedFills(active string) []color.Color {
 	palette := model.palette()
+	ceiling := strongestShare(model.background, model.foreground)
 	fills := make([]color.Color, len(tabPages))
 	for index, page := range tabPages {
-		share := inactiveTabShare + (strongestTabShare-inactiveTabShare)*float64(index)/float64(len(tabPages)-1)
+		share := inactiveTabShare + (ceiling-inactiveTabShare)*float64(index)/float64(len(tabPages)-1)
 		fills[index] = model.mixed(share)
 		if page.page == active {
 			fills[index] = palette.accent
