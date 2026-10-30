@@ -27,15 +27,18 @@ func citationNumber(pressed string) (number int, withControl bool) {
 	return 0, false
 }
 
-func (model interfaceModel) citationNotice() string {
-	count := len(model.shownCitations())
-	switch count {
-	case 0:
-		return "This lesson cites no sources."
-	case 1:
-		return "This lesson cites 1 source."
+func sourceCount(count int) string {
+	if count == 1 {
+		return "1 source"
 	}
-	return fmt.Sprintf("This lesson cites %d sources.", count)
+	return fmt.Sprintf("%d sources", count)
+}
+
+func (model interfaceModel) citationNotice() string {
+	if count := len(model.shownCitations()); count > 0 {
+		return "This lesson cites " + sourceCount(count) + "."
+	}
+	return "This lesson cites no sources."
 }
 
 func (model interfaceModel) citationKey(pressed string) (tea.Model, tea.Cmd, bool) {
