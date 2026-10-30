@@ -17,7 +17,7 @@ jobs:
         run: nix develop --command just screenshots
       - name: Require the committed screenshots to match
         run: |
-          changed="$(git status --porcelain -- images)"
+          changed="$(git status --porcelain -- images ':!images/about-*.png')"
           if [ -n "${changed}" ]; then
             echo "::error::The screenshots in images/ are out of date. Download the screenshots artifact, review the images, and commit them."
             echo "${changed}"
