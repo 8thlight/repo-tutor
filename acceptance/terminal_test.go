@@ -14,6 +14,8 @@ import (
 	"syscall"
 	"testing"
 	"time"
+
+	"repo-tutor/internal/session"
 )
 
 var binary string
@@ -130,7 +132,7 @@ func TestInvalidOrFailedTurnDoesNotChangeProgress(t *testing.T) {
 	if output, err := run(t, "/quit\n", arguments...); err != nil {
 		t.Fatalf("initial lesson: %v\n%s", err, output)
 	}
-	for _, question := range []string{"invent a citation", "simulate failure", "wait forever"} {
+	for _, question := range []string{"invent a citation", "invent a marker", "simulate failure", "wait forever"} {
 		output, err := run(t, "", append(arguments, "--timeout", "50ms", "--ask", question)...)
 		if err == nil {
 			t.Fatalf("invalid turn succeeded: %s\n%s", question, output)
@@ -206,7 +208,7 @@ func TestProbeMarksKnownTopicAndSurvivesResume(t *testing.T) {
 	}
 	state := saved(t, stateDirectory)
 	probe := state["probe"].(map[string]any)
-	if probe["answered"] != float64(1) || len(state["turns"].([]any)) != 3 || state["version"] != float64(7) {
+	if probe["answered"] != float64(1) || len(state["turns"].([]any)) != 3 || state["version"] != float64(session.Version) {
 		t.Fatalf("probe was not saved after one answer: %+v", state)
 	}
 	output, err = run(t, "/topics\n/quit\n", arguments...)
@@ -353,6 +355,17 @@ func TestHangupStopsTheRunningAgent(t *testing.T) {
 			syscall.Kill(pid, syscall.SIGKILL)
 			t.Fatal("the agent kept running after the hangup")
 		}
+	}
+}
+
+func TestMarkersInTheLessonAreSavedWithTheCitationsTheyPointTo(t *testing.T) {
+	repository, stateDirectory := fixture(t), t.TempDir()
+	if output, err := run(t, "/quit\n", repository, "--agent", "codex", "--state-dir", stateDirectory); err != nil {
+		t.Fatalf("lesson: %v\n%s", err, output)
+	}
+	turn := saved(t, stateDirectory)["turns"].([]any)[0].(map[string]any)["reply"].(map[string]any)
+	if turn["explanation"] != "Execution starts at main.go:2 [1]." || len(turn["citations"].([]any)) != 1 {
+		t.Fatalf("the saved lesson should keep its marker and its citation: %+v", turn)
 	}
 }
 

@@ -14,7 +14,7 @@ import (
 	"repo-tutor/internal/tutor"
 )
 
-const Version = 7
+const Version = 8
 
 type Turn struct {
 	Topic   string      `json:"topic"`
