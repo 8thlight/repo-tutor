@@ -3,6 +3,7 @@ name: check
 on:
   pull_request:
   push:
+    branches: ["**"]
 
 permissions:
   contents: read
