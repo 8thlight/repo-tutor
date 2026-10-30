@@ -28,23 +28,23 @@ jobs:
       - name: Run every check
         run: nix develop --command just check
       - name: Build the archives
-        run: nix develop --command just dist "${VERSION}"
+        run: nix develop --command just build-release-archives "${VERSION}"
       - name: Render the Homebrew formula
-        run: nix develop --command just formula "${VERSION}"
+        run: nix develop --command just render-homebrew-formula "${VERSION}"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: archives-${{ env.VERSION }}
-          path: output/dist/*
+          path: output/release/*
           retention-days: 7
       - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         if: github.ref_type == 'tag'
         with:
-          subject-path: output/dist/*.tar.gz
+          subject-path: output/release/*.tar.gz
       - name: Publish the release
         if: github.ref_type == 'tag'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${VERSION}" output/dist/* --generate-notes --verify-tag
+        run: gh release create "${VERSION}" output/release/* --generate-notes --verify-tag
       - name: Update the Homebrew tap
         env:
           TAP_DEPLOY_KEY: ${{ secrets.HOMEBREW_TAP_DEPLOY_KEY }}
@@ -55,4 +55,4 @@ jobs:
             echo "::notice::HOMEBREW_TAP_DEPLOY_KEY is not set, so the tap is not updated."
             exit 0
           fi
-          nix develop --command just tap-update "${VERSION}" "${TAP_BRANCH}"
+          nix develop --command just update-homebrew-tap "${VERSION}" "${TAP_BRANCH}"
