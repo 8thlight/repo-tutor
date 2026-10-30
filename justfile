@@ -58,6 +58,25 @@ dist version:
 formula version:
     go run ./internal/release/formula output/dist/checksums.txt {{ version }} > output/dist/repo-tutor.rb
 
+tap-update version branch:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    : "${TAP_DEPLOY_KEY:?set TAP_DEPLOY_KEY to the private key}"
+    work="$(mktemp -d)"
+    trap 'rm -rf "$work"' EXIT
+    install -m 0600 /dev/null "$work/key"
+    printf '%s\n' "$TAP_DEPLOY_KEY" > "$work/key"
+    export GIT_SSH_COMMAND="ssh -i $work/key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
+    git clone --quiet "${TAP_URL:?set TAP_URL to the tap repository}" "$work/tap"
+    cd "$work/tap"
+    git checkout --quiet -B {{ branch }}
+    mkdir -p Formula
+    cp "{{ justfile_directory() }}/output/dist/repo-tutor.rb" Formula/repo-tutor.rb
+    git add Formula/repo-tutor.rb
+    if git diff --cached --quiet; then echo "The tap already has this formula."; exit 0; fi
+    git -c user.name="repo-tutor release" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit --quiet -m "repo-tutor {{ version }}"
+    git push --quiet --force origin {{ branch }}
+
 install: build
     install -d {{ prefix }}/bin
     install -m 0755 output/repo-tutor {{ prefix }}/bin/repo-tutor

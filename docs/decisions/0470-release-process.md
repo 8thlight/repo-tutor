@@ -1,6 +1,6 @@
 # 0470. Release process
 
-Status: accepted. The release also renders the Homebrew formula and attaches it to the release. The step that commits it to the tap waits for the tap repository.
+Status: accepted. The release also renders the Homebrew formula and attaches it to the release. The tap is updated with a deploy key and not a token, as the last Decision paragraph says.
 
 ## Context
 
@@ -27,6 +27,8 @@ Publish releases as GitHub Releases, built by a workflow in this repository.
 **Nix.** The flake gains `packages.default`, built with `buildGoModule` from the `./binary` package with the same version flag, so `nix run github:8thlight/repo-tutor` and `nix profile install` work. It covers the four systems the release builds for. A submission to nixpkgs waits for the same record of use.
 
 **Not in scope.** Windows builds, Linux packages (`.deb`, `.rpm`), `go install`, Apple signing, Homebrew core, and nixpkgs.
+
+**Tap key.** The release workflow updates the tap over SSH with a deploy key that has write access to `homebrew-tap` alone, kept as the secret `HOMEBREW_TAP_DEPLOY_KEY` in this repository. It replaces the scoped token above, because a deploy key belongs to the one repository, ties to no person, and does not expire. Only the step that pushes the formula can read it. A manual dry run pushes the formula to a `dryrun` branch of the tap and never to its default branch. Only repository admins can create `v*` tags, through a tag ruleset, since a tag starts a job that can read the key. The step is skipped when the secret is absent.
 
 ## Consequences
 
