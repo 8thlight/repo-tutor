@@ -17,6 +17,7 @@ import (
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/ansi"
 
+	"repo-tutor/internal/repository"
 	"repo-tutor/internal/tutor"
 )
 
@@ -168,16 +169,7 @@ func (model interfaceModel) lessonContent() string {
 		question := heading.Render("NEXT QUESTION") + "\n" + lipgloss.NewStyle().Width(max(1, model.bodyWidth()-6)).Render(tutor.Plain(turn.Reply.Question))
 		blocks = append(blocks, lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).Padding(1, 2).Width(max(1, model.bodyWidth()-2)).Render(question))
 	}
-	var sources []string
-	seen := map[string]bool{}
-	for _, citation := range turn.Reply.Citations {
-		name := fmt.Sprintf("%s:%d", citation.Path, citation.Line)
-		if !seen[name] {
-			sources = append(sources, tutor.Plain(name))
-			seen[name] = true
-		}
-	}
-	blocks = append(blocks, muted.Render("EVIDENCE · Ctrl+S to open source")+"\n"+muted.Render(strings.Join(sources, "\n")))
+	blocks = append(blocks, model.evidenceBlock(turn.Reply.Citations))
 	return strings.Join(blocks, "\n\n")
 }
 
@@ -435,4 +427,18 @@ func turnLabel(action string) string {
 	default:
 		return "lesson"
 	}
+}
+
+func (model interfaceModel) evidenceBlock(citations []repository.Location) string {
+	count := fmt.Sprintf("%d sources", len(citations))
+	if len(citations) == 1 {
+		count = "1 source"
+	}
+	number := lipgloss.NewStyle().Foreground(model.palette().accent).Bold(true)
+	faint := lipgloss.NewStyle().Faint(true)
+	rows := []string{model.sectionDivider("EVIDENCE · " + count)}
+	for index, citation := range citations {
+		rows = append(rows, "  "+number.Render(fmt.Sprintf("[%d]", index+1))+"  "+tutor.Plain(citation.Path)+faint.Render(fmt.Sprintf(":%d", citation.Line)))
+	}
+	return strings.Join(rows, "\n")
 }
