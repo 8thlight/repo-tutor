@@ -72,7 +72,7 @@ func main() {
 	if os.Getenv("FAKE_AGENT_SCENARIO") == "screenshots" {
 		reply["explanation"] = screenshotLesson
 		reply["question"] = "Why does Add return a new Shelf and not change the one it was given?"
-		reply["citations"] = []map[string]any{{"path": "main.go", "line": 19}, {"path": "README.md", "line": 1}}
+		reply["citations"] = []map[string]any{{"path": "main.go", "line": 19}, {"path": "internal/library/library.go", "line": 11}, {"path": "internal/storage/storage.go", "line": 17}}
 	}
 	arguments, _ := json.Marshal(os.Args[1:])
 	file, err := os.OpenFile("invocations.jsonl", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
@@ -102,4 +102,4 @@ func citedPath() string {
 	return "main.go"
 }
 
-const screenshotLesson = "Run `bookshelf add \"Title\"` and the tool keeps a list of books you want to read.\n\n- `main.go` is the entry point. It loads the shelf from `books.json`, adds the book you named, and saves it again.\n- `library.Shelf` holds the books. Its `Add` method returns a new shelf, so nothing changes behind your back.\n- `storage.Store` reads and writes the JSON file, and treats a missing file as an empty shelf.\n\nEvery claim cites a file and a line, so you can open the source and check it."
+const screenshotLesson = "Run `bookshelf add \"Title\"` and the tool keeps a list of books you want to read.\n\n- `main.go` is the entry point. It loads the shelf from `books.json`, adds the book you named, and saves it again [1].\n- `library.Shelf` holds the books. Its `Add` method returns a new shelf, so nothing changes behind your back [2].\n- `storage.Store` reads and writes the JSON file, and treats a missing file as an empty shelf [3].\n\nEvery claim carries a number, so you can open its source and check it."
