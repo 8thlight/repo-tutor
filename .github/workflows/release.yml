@@ -64,3 +64,23 @@ jobs:
             exit 0
           fi
           nix develop --command just update-homebrew-tap "${VERSION}" "${TAP_BRANCH}"
+      - name: Explain what to do after a failure
+        if: failure() && github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "${VERSION}" >/dev/null 2>&1; then
+            {
+              echo "### ${VERSION} is published, so do not delete it"
+              echo "People may already have these files. If only the tap step failed, run the update-homebrew-tap workflow with ${VERSION}. For any other problem, fix it and release the next version."
+            } >> "${GITHUB_STEP_SUMMARY}"
+          else
+            {
+              echo "### Nothing was published for ${VERSION}"
+              echo "Delete the tag, fix the problem on main, then tag the new commit again:"
+              echo '```sh'
+              echo "git push origin --delete ${VERSION} && git tag -d ${VERSION}"
+              echo "git tag -a ${VERSION} -m \"repo-tutor ${VERSION}\" && git push origin ${VERSION}"
+              echo '```'
+            } >> "${GITHUB_STEP_SUMMARY}"
+          fi
