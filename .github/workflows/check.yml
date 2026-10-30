@@ -15,3 +15,5 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@3138316df39ed29be04236d7ffc686fa525866aa # v23
       - name: Run every check
         run: nix develop --command just check
+      - name: Build the Nix package
+        run: nix build .#default --no-link
