@@ -36,3 +36,27 @@ func TestCitedSourcesKeepsOnlyMarkersThatHaveACitation(t *testing.T) {
 		t.Fatalf("got %v, want [1 2]", got)
 	}
 }
+
+func TestReplaceMarkersChangesOnlyMarkersThatHaveACitation(t *testing.T) {
+	wrap := func(number int) string { return "<" + string(rune('0'+number)) + ">" }
+	for name, test := range map[string]struct {
+		text      string
+		citations int
+		want      string
+	}{
+		"each marker":                     {"A [1] and B [2].", 2, "A <1> and B <2>."},
+		"adjacent markers":                {"Both [1][2].", 2, "Both <1><2>."},
+		"a number with no citation stays": {"Odd [3].", 2, "Odd [3]."},
+		"inline code is kept":             {"Use `items[1]` here [1].", 1, "Use `items[1]` here <1>."},
+		"fenced code is kept":             {"```\nx[1]\n```\nThen [1].", 1, "```\nx[1]\n```\nThen <1>."},
+		"a link is kept":                  {"See [1](https://example.com) [1].", 1, "See [1](https://example.com) <1>."},
+		"no markers":                      {"Plain text.", 1, "Plain text."},
+		"a backtick inside a fence does not pair with one outside": {"```\na`b\n```\nSee `c` and [1].", 1, "```\na`b\n```\nSee `c` and <1>."},
+	} {
+		t.Run(name, func(t *testing.T) {
+			if got := tutor.ReplaceMarkers(test.text, test.citations, wrap); got != test.want {
+				t.Fatalf("got %q, want %q", got, test.want)
+			}
+		})
+	}
+}
