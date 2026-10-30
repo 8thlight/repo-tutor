@@ -1,6 +1,6 @@
 # 0470. Release process
 
-Status: accepted. The release also renders the Homebrew formula and attaches it to the release. The tap is updated with a deploy key and not a token, as the last Decision paragraph says.
+Status: accepted. The release also renders the Homebrew formula and attaches it to the release. The tap is updated with a deploy key and not a token, and a person cuts a release with `just release`, as the last two Decision paragraphs say.
 
 ## Context
 
@@ -29,6 +29,10 @@ Publish releases as GitHub Releases, built by a workflow in this repository.
 **Not in scope.** Windows builds, Linux packages (`.deb`, `.rpm`), `go install`, Apple signing, Homebrew core, and nixpkgs.
 
 **Tap key.** The release workflow updates the tap over SSH with a deploy key that has write access to `homebrew-tap` alone, kept as the secret `HOMEBREW_TAP_DEPLOY_KEY` in this repository. It replaces the scoped token above, because a deploy key belongs to the one repository, ties to no person, and does not expire. Only the step that pushes the formula can read it. A manual dry run pushes the formula to a `dryrun` branch of the tap and never to its default branch. Only repository admins can create `v*` tags, through a tag ruleset, since a tag starts a job that can read the key. The step is skipped when the secret is absent.
+
+**Cutting a release.** `just release X.Y.Z` is the one way to start a release. It refuses unless the tree is clean, `main` is level with `origin/main`, the tag is new, the version is newer than `VERSION`, and the `check` workflow has passed on that commit. It then runs `just check`, writes `VERSION`, commits "Release vX.Y.Z", tags that commit, and pushes both with one atomic push. The Nix package reads `VERSION`, so it reports the release version. The release workflow fails at its first step if the tag does not equal `v` plus the file's contents. The recipes `build-release-archives`, `render-homebrew-formula`, and `update-homebrew-tap` run in the workflow and not on a laptop, because the attestation and the tap key exist only there.
+
+**After a failure.** Nothing deletes a tag or a release automatically, since that would need a bypass of the tag ruleset and could pull files from people who already have them. A failure summary says what to do. Before the release exists, the person deletes the tag, fixes `main`, and tags again. After it exists, the release stays, and a failed tap step is repeated with the `update-homebrew-tap` workflow, which takes the formula from the release. Any other problem is fixed in the next version.
 
 ## Consequences
 
