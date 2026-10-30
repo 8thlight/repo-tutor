@@ -36,7 +36,33 @@ notices:
     go run ./internal/about/generate internal/about/NOTICES.txt
 
 screenshots:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ "$(uname -s)" != Darwin ]; then
+        echo "Generate the screenshots on macOS. The About painting draws with a system font that differs on Linux." >&2
+        exit 1
+    fi
     REPO_TUTOR_SCREENSHOTS="$PWD/images" go test ./acceptance -run TestScreenshots -count=1
+
+check-screenshots:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    rm -rf output/screenshots
+    mkdir -p output/screenshots
+    REPO_TUTOR_SCREENSHOTS="$PWD/output/screenshots" go test ./acceptance -run TestScreenshots -count=1
+    stale=0
+    for image in output/screenshots/*.png; do
+        name="$(basename "$image")"
+        case "$name" in about-*) continue ;; esac
+        if ! cmp -s "$image" "images/$name"; then
+            echo "stale: images/$name" >&2
+            stale=1
+        fi
+    done
+    if [ "$stale" != 0 ]; then
+        echo "Run just screenshots on a Mac, review the images, and commit them." >&2
+        exit 1
+    fi
 
 build:
     CGO_ENABLED=0 go build -trimpath -ldflags "-X repo-tutor/internal/about.version=${VERSION:-}" -o output/repo-tutor ./binary
