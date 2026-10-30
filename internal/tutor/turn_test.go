@@ -22,6 +22,23 @@ func TestReplyBoundary(t *testing.T) {
 		{name: "supported answer", valid: true},
 		{name: "invented file", change: func(reply *tutor.Reply, _ *tutor.Request) { reply.Citations[0].Path = "imaginary.go" }},
 		{name: "unprovided line", change: func(reply *tutor.Reply, _ *tutor.Request) { reply.Citations[0].Line = 1 }},
+		{name: "marked claim", valid: true, change: func(reply *tutor.Reply, _ *tutor.Request) { reply.Explanation = "Execution begins in main.go [1]." }},
+		{name: "marker with no citation", change: func(reply *tutor.Reply, _ *tutor.Request) { reply.Explanation = "Execution begins in main.go [2]." }},
+		{name: "feedback marker with no citation", change: func(reply *tutor.Reply, _ *tutor.Request) { reply.Feedback = "You found it [3]." }},
+		{name: "marker zero", change: func(reply *tutor.Reply, _ *tutor.Request) { reply.Explanation = "Execution begins [0]." }},
+		{name: "array index in code is not a marker", valid: true, change: func(reply *tutor.Reply, _ *tutor.Request) { reply.Explanation = "Execution begins in `books[7]` [1]." }},
+		{name: "ten citations", change: func(reply *tutor.Reply, _ *tutor.Request) {
+			reply.Citations = nil
+			for range 10 {
+				reply.Citations = append(reply.Citations, repository.Location{Path: "main.go", Line: 3})
+			}
+		}},
+		{name: "nine citations", valid: true, change: func(reply *tutor.Reply, _ *tutor.Request) {
+			reply.Citations = nil
+			for range 9 {
+				reply.Citations = append(reply.Citations, repository.Location{Path: "main.go", Line: 3})
+			}
+		}},
 		{name: "missing evidence", change: func(reply *tutor.Reply, _ *tutor.Request) { reply.Citations = nil }},
 		{name: "unsolicited grade", change: func(_ *tutor.Reply, request *tutor.Request) { request.Action = "lesson" }},
 		{name: "missing question to assess", change: func(_ *tutor.Reply, request *tutor.Request) { request.Question = "" }},
@@ -223,5 +240,17 @@ func TestThePromptKeepsQuestionsForQuizzesAndProbes(t *testing.T) {
 	}
 	if strings.Contains(prompt, "end with one comprehension question") {
 		t.Fatal("lessons no longer end with a question")
+	}
+}
+
+func TestThePromptAsksForNumberedMarkersAndNotPathReferences(t *testing.T) {
+	prompt := tutor.Prepare(hotspotSnapshot(), tutor.Request{Action: "lesson", Topic: tutor.Overview}).Prompt
+	for _, expected := range []string{"mark each factual code claim with [n]", "at most nine", "Do not write path:line\nin the text"} {
+		if !strings.Contains(prompt, expected) {
+			t.Fatalf("the prompt should say %q", expected)
+		}
+	}
+	if strings.Contains(prompt, "use path:line references") {
+		t.Fatal("the prompt should no longer ask for path:line references in the text")
 	}
 }

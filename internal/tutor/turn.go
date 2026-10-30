@@ -84,8 +84,11 @@ history may undercount. Go branch counts use syntax nodes; Python and JavaScript
 counts are text estimates that can include strings. These are reading priorities, not bug
 predictions or certified complexity measurements. Use them to suggest what to trace or test.
 Cite at least one provided source using its exact relative path and a line in its excerpt.
-In explanation and feedback use path:line references for factual code claims. The citations
-array must include the supporting locations. Never cite an unprovided line.
+Put each supporting location in the citations array, at most nine, in the order you first need
+them. In explanation and feedback, mark each factual code claim with [n] straight after it,
+where n is the position in citations, counting from 1, of the location that supports it, as in
+"Execution starts in main.go [1]." Two sources for one claim read [1][2]. Do not write path:line
+in the text and do not use [n] for anything else. Never cite an unprovided line.
 For action lesson, explain the current topic. Do not ask the learner a question; leave
 question empty. The learner can ask their own questions and start a quiz afterward.
 A topic that begins with :file: names one source file. Explain that file: its purpose, its main
@@ -179,8 +182,13 @@ func DecodeReply(content string, prepared Context, request Request) (Reply, erro
 	if request.Action == "lesson" {
 		reply.Question = ""
 	}
-	if len(reply.Citations) == 0 || len(reply.Citations) > 32 {
-		return Reply{}, fmt.Errorf("agent returned no source citations or too many citations")
+	if len(reply.Citations) == 0 || len(reply.Citations) > MaxCitations {
+		return Reply{}, fmt.Errorf("agent returned no source citations or more than %d", MaxCitations)
+	}
+	for _, text := range []string{reply.Explanation, reply.Feedback} {
+		if number, outside := markerOutOfRange(text, len(reply.Citations)); outside {
+			return Reply{}, fmt.Errorf("agent marked a claim [%d] but returned only %s", number, describeCitations(len(reply.Citations)))
+		}
 	}
 	for _, citation := range reply.Citations {
 		valid := false
