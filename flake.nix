@@ -15,7 +15,7 @@
           pname = "repo-tutor";
           version = self.shortRev or self.dirtyShortRev or "dev";
           src = self;
-          vendorHash = "sha256-o/AxPLtSBNcw0jD9o3YeUaWsNAAuq47Jqhc0MWelLQc=";
+          vendorHash = "sha256-DGFtp74ANqE99+u+f1/N1Nj853HfYdwX94pDxtgG4Ko=";
           subPackages = [ "binary" ];
           env.CGO_ENABLED = 0;
           doCheck = false;
