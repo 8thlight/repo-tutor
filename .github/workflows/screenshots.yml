@@ -13,19 +13,5 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: DeterminateSystems/nix-installer-action@3138316df39ed29be04236d7ffc686fa525866aa # v23
-      - name: Regenerate the screenshots
-        run: nix develop --command just screenshots
-      - name: Require the committed screenshots to match
-        run: |
-          changed="$(git status --porcelain -- images ':!images/about-*.png')"
-          if [ -n "${changed}" ]; then
-            echo "::error::The screenshots in images/ are out of date. Download the screenshots artifact, review the images, and commit them."
-            echo "${changed}"
-            exit 1
-          fi
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: failure()
-        with:
-          name: screenshots
-          path: images/*.png
-          retention-days: 3
+      - name: Require the committed screenshots to be current
+        run: nix develop --command just check-screenshots
