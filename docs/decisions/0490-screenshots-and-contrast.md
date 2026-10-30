@@ -1,6 +1,6 @@
 # 0490. Generate screenshots in light and dark terminals
 
-Status: accepted
+Status: accepted. The README now shows one themed screenshot that links to a gallery page in `images/`, which holds every page in a light and a dark version, in place of the row of small images described under README. The About painting draws on its own black background, so it has a light version too.
 
 ## Context
 
