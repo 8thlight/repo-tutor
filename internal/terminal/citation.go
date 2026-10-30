@@ -101,3 +101,8 @@ func (model interfaceModel) backToTheLesson() (tea.Model, tea.Cmd) {
 	}
 	return model, nil
 }
+
+func (model interfaceModel) bareDigitsOpenCitations() bool {
+	return model.page == "lesson" && !model.askingGoal() && !model.movingToAnotherTopic() &&
+		len(model.shownCitations()) > 0 && (model.input.Value() == "" || model.busy) && !questionOpen(model.application.state)
+}
