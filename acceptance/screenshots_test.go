@@ -91,7 +91,7 @@ func TestScreenshots(t *testing.T) {
 	for theme, colors := range screenshotThemes {
 		terminal := tuitesttest.New(t, tuitesttest.Options{
 			Program: program,
-			Args:    []string{"..", "--agent", "codex", "--state-dir", t.TempDir(), "--goal", "Understand how repo-tutor starts and saves a session", "--no-prefetch"},
+			Args:    []string{"testdata/bookshelf", "--agent", "codex", "--state-dir", t.TempDir(), "--goal", "Understand how bookshelf adds and saves a book", "--no-prefetch"},
 			Spawn: tuitest.SpawnOptions{Profile: &tuitest.Profile{Colors: colors},
 				Cols: tuitest.Ptr(uint16(120)), Rows: tuitest.Ptr(uint16(36)), WaitReady: tuitest.Ptr(false),
 				Env: map[string]string{"PATH": agentDirectory + ":/usr/bin:/bin", "HOME": t.TempDir(), "COLORTERM": "truecolor", "FAKE_AGENT_SCENARIO": "screenshots"},

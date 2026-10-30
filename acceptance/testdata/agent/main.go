@@ -64,8 +64,8 @@ func main() {
 	}
 	if os.Getenv("FAKE_AGENT_SCENARIO") == "screenshots" {
 		reply["explanation"] = screenshotLesson
-		reply["question"] = "Which function would you read first to see how the command line is parsed?"
-		reply["citations"] = []map[string]any{{"path": "binary/main.go", "line": 15}, {"path": "README.md", "line": 1}}
+		reply["question"] = "Why does Add return a new Shelf and not change the one it was given?"
+		reply["citations"] = []map[string]any{{"path": "main.go", "line": 19}, {"path": "README.md", "line": 1}}
 	}
 	arguments, _ := json.Marshal(os.Args[1:])
 	file, err := os.OpenFile("invocations.jsonl", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
@@ -95,4 +95,4 @@ func citedPath() string {
 	return "main.go"
 }
 
-const screenshotLesson = "Run `repo-tutor` on a repository. It reads the files on your machine, builds a course, and opens a full-screen workspace.\n\n- `binary/main.go` is the entry point. It listens for `SIGINT`, `SIGTERM`, and `SIGHUP`, then hands control to `terminal.Run`.\n- `terminal.Run` picks a command: `scan`, `doctor`, or the tutor itself.\n- The tool never calls a model API. It runs your installed agent CLI headless and asks it for one small lesson at a time.\n\nEvery claim cites a file and a line, so you can open the source and check it."
+const screenshotLesson = "Run `bookshelf add \"Title\"` and the tool keeps a list of books you want to read.\n\n- `main.go` is the entry point. It loads the shelf from `books.json`, adds the book you named, and saves it again.\n- `library.Shelf` holds the books. Its `Add` method returns a new shelf, so nothing changes behind your back.\n- `storage.Store` reads and writes the JSON file, and treats a missing file as an empty shelf.\n\nEvery claim cites a file and a line, so you can open the source and check it."
