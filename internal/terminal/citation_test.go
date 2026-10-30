@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	tea "charm.land/bubbletea/v2"
+	"github.com/charmbracelet/x/ansi"
 
 	"repo-tutor/internal/repository"
 )
@@ -151,5 +152,38 @@ func TestDigitsOnAFileOpenedFromSourcesDoNotToggle(t *testing.T) {
 	}
 	if still := digit(file, '1'); still.page != "source" {
 		t.Fatalf("1 should not close a file that did not come from a citation, got %s", still.page)
+	}
+}
+
+func TestTheSidebarOffersTheDigitsOnlyWhenTheyCanAct(t *testing.T) {
+	offered := func(model interfaceModel) bool {
+		return strings.Contains(ansi.Strip(model.sidebarShortcuts()), "1-9  Open a source")
+	}
+	if !offered(citedFixture()) {
+		t.Fatal("the sidebar should offer the digits on a lesson with citations and an empty box")
+	}
+	typing := citedFixture()
+	typing.input.SetValue("a draft")
+	if offered(typing) {
+		t.Fatal("the digits type while the box holds text, so the sidebar should not offer them")
+	}
+	asking := citedFixture()
+	asking.application.state.Question = "How many?"
+	if offered(asking) {
+		t.Fatal("the digits type while a question waits, so the sidebar should not offer them")
+	}
+	bare := citedFixture()
+	bare.application.state.Turns[0].Reply.Citations = nil
+	if offered(bare) {
+		t.Fatal("with no citations there is nothing to open")
+	}
+}
+
+func TestACitationSourceNamesItsDigitAsTheWayBack(t *testing.T) {
+	text := ansi.Strip(digit(citedFixture(), '2').sidebarShortcuts())
+	for _, expected := range []string{"2  Back to the lesson", "1-9  Another source"} {
+		if !strings.Contains(text, expected) {
+			t.Fatalf("the sidebar should say %q:\n%s", expected, text)
+		}
 	}
 }

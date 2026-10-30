@@ -107,7 +107,11 @@ func (model interfaceModel) sidebarShortcuts() string {
 	if state := model.application.state; model.leavable() || (inQuestionFlow(state) && model.page == "lesson") {
 		actions = append(actions, [2]string{"Ctrl+L", "Leave " + model.flowName()})
 	}
-	actions = append(actions, [2]string{"Ctrl+K", "Choose a topic"}, [2]string{"Ctrl+S", "Follow a citation"})
+	actions = append(actions, [2]string{"Ctrl+K", "Choose a topic"})
+	if model.bareDigitsOpenCitations() {
+		actions = append(actions, [2]string{"1-9", "Open a source"})
+	}
+	actions = append(actions, [2]string{"Ctrl+S", "Follow a citation"})
 	return model.renderSidebarRows(actions)
 }
 

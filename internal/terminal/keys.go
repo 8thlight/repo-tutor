@@ -2,6 +2,7 @@ package terminal
 
 import (
 	"image/color"
+	"strconv"
 	"strings"
 	"unicode"
 
@@ -67,6 +68,13 @@ func (model interfaceModel) pageActions() [][2]string {
 	switch {
 	case model.page == "source":
 		actions := [][2]string{{"Enter or Esc", "Back"}, {"T", "Teach this file"}}
+		if model.sourceCitation > 0 {
+			actions = [][2]string{{strconv.Itoa(model.sourceCitation), "Back to the lesson"}}
+			if len(model.shownCitations()) > 1 {
+				actions = append(actions, [2]string{"1-9", "Another source"})
+			}
+			actions = append(actions, [2]string{"Esc", "Back"}, [2]string{"T", "Teach this file"})
+		}
 		if isMarkdown(model.sourcePath) {
 			actions = append(actions, [2]string{"v", "Rendered or source"})
 		}
