@@ -14,7 +14,13 @@ Reads a code repository and turns it into a fast onboarding course for a new dev
 
 ## Install
 
-Download the archive for your system from the [Releases](https://github.com/8thlight/repo-tutor/releases) page. The names read `repo-tutor_<version>_<os>_<arch>.tar.gz`, for macOS or Linux on `arm64` or `amd64`. Check it, unpack it, and put the binary on your path:
+With Homebrew on macOS or Linux:
+
+```sh
+brew install 8thlight/tap/repo-tutor
+```
+
+Or download the archive for your system from the [Releases](https://github.com/8thlight/repo-tutor/releases) page. The names read `repo-tutor_<version>_<os>_<arch>.tar.gz`, for macOS or Linux on `arm64` or `amd64`. Check it, unpack it, and put the binary on your path:
 
 ```sh
 gh release download v0.1.0 --repo 8thlight/repo-tutor --pattern '*darwin_arm64*' --pattern checksums.txt
