@@ -62,6 +62,10 @@ func main() {
 		"question":    question, "assessment": assessment,
 		"feedback": feedback, "citations": []map[string]any{{"path": citedPath(), "line": line}},
 	}
+	if os.Getenv("FAKE_AGENT_SECOND_CITATION") != "" {
+		reply["explanation"] = "Execution starts at main.go:2 [1] and the project is described in README.md [2]."
+		reply["citations"] = []map[string]any{{"path": citedPath(), "line": line}, {"path": "README.md", "line": 1}}
+	}
 	if request.Message == "invent a marker" {
 		reply["explanation"] = "Execution starts at main.go:2 [5]."
 	}

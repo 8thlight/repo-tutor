@@ -649,3 +649,84 @@ func TestEveryPageUsesOnlyTheTerminalColorsAndTheirBlends(t *testing.T) {
 		})
 	}
 }
+
+func launchWithTwoCitations(t *testing.T) *tuitest.Client {
+	t.Helper()
+	terminal := launchTerminal(t, 120, 36, map[string]string{"FAKE_AGENT_SECOND_CITATION": "1"}, fixture(t), "--agent", "codex", "--state-dir", t.TempDir(), "--goal", "learn it", "--no-prefetch")
+	openCourse(t, terminal)
+	waitForText(t, terminal, "EVIDENCE · 2 sources")
+	return terminal
+}
+
+func TestADigitOpensACitationAndTheSameDigitReturnsToTheLesson(t *testing.T) {
+	terminal := launchWithTwoCitations(t)
+	waitForText(t, terminal, "main.go:2 [1] and the project is described in README.md [2]")
+	if err := terminal.Press("1"); err != nil {
+		t.Fatal(err)
+	}
+	waitForText(t, terminal, "func main()")
+	waitUntilGone(t, terminal, "EVIDENCE")
+	if err := terminal.Press("1"); err != nil {
+		t.Fatal(err)
+	}
+	waitForText(t, terminal, "EVIDENCE · 2 sources")
+}
+
+func TestAnotherDigitSwitchesCitationsAndEscapeReturns(t *testing.T) {
+	terminal := launchWithTwoCitations(t)
+	if err := terminal.Press("1"); err != nil {
+		t.Fatal(err)
+	}
+	waitForText(t, terminal, "func main()")
+	if err := terminal.Press("2"); err != nil {
+		t.Fatal(err)
+	}
+	waitForText(t, terminal, "A test repository.")
+	if err := terminal.Press("Escape"); err != nil {
+		t.Fatal(err)
+	}
+	waitForText(t, terminal, "EVIDENCE · 2 sources")
+}
+
+func TestADigitTypesWhenTheBoxHoldsTextAndCtrlSThenADigitStillOpensACitation(t *testing.T) {
+	terminal := launchWithTwoCitations(t)
+	if err := terminal.Type("how many"); err != nil {
+		t.Fatal(err)
+	}
+	if err := terminal.Press("1"); err != nil {
+		t.Fatal(err)
+	}
+	waitForText(t, terminal, "how many1")
+	if err := terminal.Press("Ctrl+S"); err != nil {
+		t.Fatal(err)
+	}
+	waitForText(t, terminal, "Follow the evidence")
+	waitForText(t, terminal, "[2]  README.md")
+	if err := terminal.Press("2"); err != nil {
+		t.Fatal(err)
+	}
+	waitForText(t, terminal, "A test repository.")
+}
+
+func TestADigitWithNoCitationSaysHowManyThereAre(t *testing.T) {
+	terminal := launchWithTwoCitations(t)
+	if err := terminal.Press("5"); err != nil {
+		t.Fatal(err)
+	}
+	waitForText(t, terminal, "This lesson cites 2 sources.")
+}
+
+func TestControlDigitOpensACitationWithADraftWhereTheTerminalReportsIt(t *testing.T) {
+	terminal := launchWithTwoCitations(t)
+	if err := terminal.Type("a draft"); err != nil {
+		t.Fatal(err)
+	}
+	if err := terminal.Press("Ctrl+2"); err != nil {
+		t.Fatal(err)
+	}
+	waitForText(t, terminal, "A test repository.")
+	if err := terminal.Press("Ctrl+2"); err != nil {
+		t.Fatal(err)
+	}
+	waitForText(t, terminal, "a draft")
+}
