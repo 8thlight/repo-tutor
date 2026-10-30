@@ -41,24 +41,24 @@ screenshots:
 build:
     CGO_ENABLED=0 go build -trimpath -ldflags "-X repo-tutor/internal/about.version=${VERSION:-}" -o output/repo-tutor ./binary
 
-dist version:
-    rm -rf output/dist
-    mkdir -p output/dist
+build-release-archives version:
+    rm -rf output/release
+    mkdir -p output/release
     for target in darwin/arm64 darwin/amd64 linux/arm64 linux/amd64; do \
         os=${target%/*}; arch=${target#*/}; \
         name=repo-tutor_{{ version }}_${os}_${arch}; \
-        mkdir -p output/dist/$name; \
-        CGO_ENABLED=0 GOOS=$os GOARCH=$arch go build -trimpath -ldflags "-X repo-tutor/internal/about.version={{ version }}" -o output/dist/$name/repo-tutor ./binary; \
-        cp LICENSE output/dist/$name/LICENSE; \
-        tar -C output/dist -czf output/dist/$name.tar.gz $name; \
-        rm -r output/dist/$name; \
+        mkdir -p output/release/$name; \
+        CGO_ENABLED=0 GOOS=$os GOARCH=$arch go build -trimpath -ldflags "-X repo-tutor/internal/about.version={{ version }}" -o output/release/$name/repo-tutor ./binary; \
+        cp LICENSE output/release/$name/LICENSE; \
+        tar -C output/release -czf output/release/$name.tar.gz $name; \
+        rm -r output/release/$name; \
     done
-    cd output/dist && shasum -a 256 *.tar.gz > checksums.txt
+    cd output/release && shasum -a 256 *.tar.gz > checksums.txt
 
-formula version:
-    go run ./internal/release/formula output/dist/checksums.txt {{ version }} > output/dist/repo-tutor.rb
+render-homebrew-formula version:
+    go run ./internal/release/formula output/release/checksums.txt {{ version }} > output/release/repo-tutor.rb
 
-tap-update version branch:
+update-homebrew-tap version branch:
     #!/usr/bin/env bash
     set -euo pipefail
     : "${TAP_DEPLOY_KEY:?set TAP_DEPLOY_KEY to the private key}"
@@ -71,7 +71,7 @@ tap-update version branch:
     cd "$work/tap"
     git checkout --quiet -B {{ branch }}
     mkdir -p Formula
-    cp "{{ justfile_directory() }}/output/dist/repo-tutor.rb" Formula/repo-tutor.rb
+    cp "{{ justfile_directory() }}/output/release/repo-tutor.rb" Formula/repo-tutor.rb
     git add Formula/repo-tutor.rb
     if git diff --cached --quiet; then echo "The tap already has this formula."; exit 0; fi
     git -c user.name="repo-tutor release" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit --quiet -m "repo-tutor {{ version }}"
