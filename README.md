@@ -79,6 +79,7 @@ Ask a question, answer one, or browse with the keyboard:
 | `Ctrl+B` | Quiz question index and goal |
 | `Ctrl+K` | Search topics |
 | `Ctrl+S` | Browse citations and every file, and open source at the cited line |
+| `1`-`9` | Open the cited source with that number when the box is empty; press the same digit to return. `Ctrl+1`-`Ctrl+9` do the same with a draft, on terminals with enhanced keys |
 | `Ctrl+P` | Progress: your goal, coverage, understanding by topic, and your latest exam |
 | `T` (in a source file) | Teach this file: start a lesson on it |
 | `Tab` / `Shift+Tab` | Switch views |
