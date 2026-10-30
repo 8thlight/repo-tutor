@@ -25,6 +25,14 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: DeterminateSystems/nix-installer-action@3138316df39ed29be04236d7ffc686fa525866aa # v23
+      - name: Require the tag to match VERSION
+        if: github.ref_type == 'tag'
+        run: |
+          expected="v$(tr -d '[:space:]' < VERSION)"
+          if [ "${VERSION}" != "${expected}" ]; then
+            echo "::error::The tag ${VERSION} does not match VERSION (${expected}). Delete the tag and use just release."
+            exit 1
+          fi
       - name: Run every check
         run: nix develop --command just check
       - name: Build the archives
