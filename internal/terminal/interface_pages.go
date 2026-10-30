@@ -27,6 +27,8 @@ Ctrl+B          Open the quiz question index and goal
 A               On the question index, show a skipped question's answer
 Ctrl+K          Browse and search topics
 Ctrl+S          Browse cited sources and open the code
+1-9             Open a cited source when the box is empty; the same digit returns
+Ctrl+1-9        Open a cited source with a draft, on a terminal with enhanced keys
 v               Switch a Markdown file between rendered and source
 T               Teach the open source file (starts a lesson on it)
 Ctrl+P          See your goal, coverage, understanding, and latest exam
@@ -119,14 +121,9 @@ func (model *interfaceModel) configurePicker(filter string) {
 	case "sources":
 		model.pageTitle = "Sources · Follow the evidence"
 		seen := map[string]bool{}
-		if len(model.application.state.Turns) > 0 {
-			turn := model.application.state.Turns[max(0, model.history)]
-			for _, citation := range turn.Reply.Citations {
-				if !seen[citation.Path] {
-					items = append(items, browserItem{citation.Path, fmt.Sprintf("Cited in this lesson · line %d", citation.Line), citation.Path, citation.Line})
-					seen[citation.Path] = true
-				}
-			}
+		for index, citation := range model.shownCitations() {
+			items = append(items, browserItem{fmt.Sprintf("[%d]  %s", index+1, citation.Path), fmt.Sprintf("Cited in this lesson · line %d", citation.Line), citation.Path, citation.Line})
+			seen[citation.Path] = true
 		}
 		prepared := tutor.Prepare(model.application.snapshot, tutor.Request{Topic: model.application.state.Topic})
 		for _, excerpt := range prepared.Excerpts {

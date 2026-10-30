@@ -187,3 +187,54 @@ func TestACitationSourceNamesItsDigitAsTheWayBack(t *testing.T) {
 		}
 	}
 }
+
+func TestHelpExplainsTheCitationDigitsAndTheKeyThatAlwaysWorks(t *testing.T) {
+	for _, expected := range []string{"1-9             Open a cited source when the box is empty", "Ctrl+1-9        Open a cited source with a draft", "Ctrl+S          Browse cited sources"} {
+		if !strings.Contains(interfaceHelp, expected) {
+			t.Fatalf("help should say %q", expected)
+		}
+	}
+}
+
+func openSources(model interfaceModel) interfaceModel {
+	pressed, _ := press(model, 's', tea.ModCtrl)
+	return pressed
+}
+
+func TestTheSourcesListNumbersEachCitationAndAdmitsTwoInOneFile(t *testing.T) {
+	model := citedFixture()
+	model.application.state.Turns[0].Reply.Citations = []repository.Location{{Path: "main.go", Line: 2}, {Path: "main.go", Line: 1}, {Path: "README.md", Line: 1}}
+	view := ansi.Strip(openSources(model).picker.View())
+	for _, expected := range []string{"[1]  main.go", "[2]  main.go", "[3]  README.md", "Cited in this lesson · line 2", "Cited in this lesson · line 1"} {
+		if !strings.Contains(view, expected) {
+			t.Fatalf("the Sources list is missing %q:\n%s", expected, view)
+		}
+	}
+}
+
+func TestADigitInTheSourcesListOpensThatCitationAndEscComesBackToTheList(t *testing.T) {
+	list := openSources(citedFixture())
+	opened := digit(list, '2')
+	if opened.page != "source" || opened.sourcePath != "README.md" {
+		t.Fatalf("2 should open README.md, got %s %s", opened.page, opened.sourcePath)
+	}
+	if back, _ := press(opened, tea.KeyEscape, 0); back.page != "sources" {
+		t.Fatalf("Esc should return to the Sources list, got %s", back.page)
+	}
+}
+
+func TestACitationDigitInTheSourcesListIgnoresWhatIsNotThere(t *testing.T) {
+	missing := digit(openSources(citedFixture()), '5')
+	if missing.page != "sources" || missing.notice != "This lesson cites 2 sources." {
+		t.Fatalf("got page %s and notice %q", missing.page, missing.notice)
+	}
+}
+
+func TestWhileFilteringTheSourcesListADigitTypesIntoTheFilter(t *testing.T) {
+	list := openSources(citedFixture())
+	filtering, _ := press(list, '/', 0)
+	typed := digit(filtering, '1')
+	if typed.page != "sources" {
+		t.Fatalf("a digit typed into the filter must not open a source, got %s", typed.page)
+	}
+}
