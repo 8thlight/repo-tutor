@@ -430,10 +430,7 @@ func turnLabel(action string) string {
 }
 
 func (model interfaceModel) evidenceBlock(citations []repository.Location) string {
-	count := fmt.Sprintf("%d sources", len(citations))
-	if len(citations) == 1 {
-		count = "1 source"
-	}
+	count := sourceCount(len(citations))
 	number := lipgloss.NewStyle().Foreground(model.palette().accent).Bold(true)
 	faint := lipgloss.NewStyle().Faint(true)
 	rows := []string{model.sectionDivider("EVIDENCE · " + count)}

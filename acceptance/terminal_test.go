@@ -369,6 +369,19 @@ func TestMarkersInTheLessonAreSavedWithTheCitationsTheyPointTo(t *testing.T) {
 	}
 }
 
+func TestPlainModeNumbersTheSourcesAndReadsACitationByNumber(t *testing.T) {
+	repository, stateDirectory := fixture(t), t.TempDir()
+	output, err := run(t, "/read 1\n/read 5\n/quit\n", repository, "--agent", "codex", "--state-dir", stateDirectory, "--plain")
+	if err != nil {
+		t.Fatalf("session failed: %v\n%s", err, output)
+	}
+	for _, expected := range []string{"Execution starts at main.go:2 [1].", "  [1]  main.go:2", "main.go:2  func main() {}", "the last answer cites 1 source"} {
+		if !strings.Contains(output, expected) {
+			t.Fatalf("missing %q in plain output:\n%s", expected, output)
+		}
+	}
+}
+
 func TestVersionPrintsBuildFactsAndCopyright(t *testing.T) {
 	output, err := run(t, "", "--version")
 	if err != nil || !strings.HasPrefix(output, "repo-tutor ") || !strings.Contains(output, "Copyright © 2026 8th Light, LLC.") || !strings.Contains(output, "https://8thlight.com") || strings.Contains(output, "Waiting for") {

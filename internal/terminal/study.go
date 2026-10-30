@@ -248,8 +248,8 @@ func (application *application) show(reply tutor.Reply) {
 		fmt.Fprintf(application.output, "\n%s\n", tutor.Plain(reply.Explanation))
 	}
 	fmt.Fprintln(application.output, "\nSources:")
-	for _, citation := range reply.Citations {
-		fmt.Fprintf(application.output, "  %s:%d\n", tutor.Plain(citation.Path), citation.Line)
+	for index, citation := range reply.Citations {
+		fmt.Fprintf(application.output, "  [%d]  %s:%d\n", index+1, tutor.Plain(citation.Path), citation.Line)
 	}
 	if reviewing(application.state) {
 		fmt.Fprintln(application.output, "\n--- End of question ---\nUse /continue when ready, or ask about this answer. /questions shows the quiz goal.")
@@ -370,6 +370,7 @@ func (application *application) command(ctx context.Context, text string) (bool,
 /progress            Show lessons and quiz outcomes
 /sources             List the excerpts available for this topic
 /read PATH[:LINE]    Show 30 source lines from the scanned snapshot
+/read N              Show the source behind citation [N] of the last answer
 /map                 Print the package dependency graph as Mermaid
 /hotspots            Show files with recent churn and branching logic
 /glossary [FILTER]   List type names and their declaration locations
@@ -501,7 +502,15 @@ func (application *application) findTopic(value string) (tutor.Topic, error) {
 func (application *application) read(argument string) error {
 	name := argument
 	line := 1
-	if colon := strings.LastIndex(argument, ":"); colon >= 0 {
+	if number, err := strconv.Atoi(argument); err == nil {
+		citations := application.latestCitations()
+		if number < 1 || number > len(citations) {
+			return fmt.Errorf("the last answer cites %s; use /read N with a number from its Sources list", sourceCount(len(citations)))
+		}
+		name, line = citations[number-1].Path, citations[number-1].Line
+		argument = ""
+	}
+	if colon := strings.LastIndex(argument, ":"); argument != "" && colon >= 0 {
 		name = argument[:colon]
 		var err error
 		line, err = strconv.Atoi(argument[colon+1:])
@@ -527,3 +536,11 @@ const (
 	settingsUnreadableNotice = "Settings could not be read. Defaults are in use."
 	settingsReadOnlyNotice   = "These settings come from a newer repo-tutor and are read-only."
 )
+
+func (application *application) latestCitations() []repository.Location {
+	turns := application.state.Turns
+	if len(turns) == 0 {
+		return nil
+	}
+	return turns[len(turns)-1].Reply.Citations
+}
