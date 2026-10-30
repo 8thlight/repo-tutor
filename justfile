@@ -55,6 +55,9 @@ dist version:
     done
     cd output/dist && shasum -a 256 *.tar.gz > checksums.txt
 
+formula version:
+    go run ./internal/release/formula output/dist/checksums.txt {{ version }} > output/dist/repo-tutor.rb
+
 install: build
     install -d {{ prefix }}/bin
     install -m 0755 output/repo-tutor {{ prefix }}/bin/repo-tutor

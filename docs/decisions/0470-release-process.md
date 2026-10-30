@@ -1,6 +1,6 @@
 # 0470. Release process
 
-Status: accepted
+Status: accepted. The release also renders the Homebrew formula and attaches it to the release. The step that commits it to the tap waits for the tap repository.
 
 ## Context
 
