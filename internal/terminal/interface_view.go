@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"image/color"
 	"path/filepath"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -107,6 +109,23 @@ func (model interfaceModel) markdown(text string) string {
 	return strings.TrimSpace(rendered)
 }
 
+const (
+	markerOpen  = "\ue000"
+	markerClose = "\ue001"
+)
+
+var placeholderMarker = regexp.MustCompile(markerOpen + `(\d)` + markerClose)
+
+func (model interfaceModel) markedMarkdown(text string, citations int) string {
+	held := tutor.ReplaceMarkers(text, citations, func(number int) string {
+		return markerOpen + strconv.Itoa(number) + markerClose
+	})
+	style := lipgloss.NewStyle().Foreground(model.palette().accent).Bold(true)
+	return placeholderMarker.ReplaceAllStringFunc(model.markdown(held), func(found string) string {
+		return style.Render("[" + placeholderMarker.FindStringSubmatch(found)[1] + "]")
+	})
+}
+
 func (model interfaceModel) lessonContent() string {
 	palette := model.palette()
 	muted := lipgloss.NewStyle().Faint(true)
@@ -135,12 +154,12 @@ func (model interfaceModel) lessonContent() string {
 	}
 	if turn.Reply.Assessment != "none" {
 		title := map[string]string{"correct": "Correct", "partial": "Partly there", "incorrect": "Let's revisit this"}[turn.Reply.Assessment]
-		blocks = append(blocks, heading.Render(title)+"\n"+model.markdown(turn.Reply.Feedback))
+		blocks = append(blocks, heading.Render(title)+"\n"+model.markedMarkdown(turn.Reply.Feedback, len(turn.Reply.Citations)))
 	} else if turn.Reply.Feedback != "" {
-		blocks = append(blocks, model.markdown(turn.Reply.Feedback))
+		blocks = append(blocks, model.markedMarkdown(turn.Reply.Feedback, len(turn.Reply.Citations)))
 	}
 	if turn.Action != "answer" || turn.Reply.Feedback == "" {
-		blocks = append(blocks, model.markdown(turn.Reply.Explanation))
+		blocks = append(blocks, model.markedMarkdown(turn.Reply.Explanation, len(turn.Reply.Citations)))
 	}
 	if turn.Action == "answer" && (turn.Reply.Assessment != "none" || turn.Reply.Question == "") {
 		blocks = append(blocks, model.sectionDivider("END OF QUESTION"))
