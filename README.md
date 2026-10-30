@@ -4,7 +4,9 @@ Reads a code repository and turns it into a fast onboarding course for a new dev
 
 ## Screenshots
 
-<kbd><a href="images/home-light.png"><picture><source media="(prefers-color-scheme: dark)" srcset="images/home-dark.png"><img src="images/home-light.png" alt="Home page with the next recommended step" width="180"></picture></a></kbd> <kbd><a href="images/course-light.png"><picture><source media="(prefers-color-scheme: dark)" srcset="images/course-dark.png"><img src="images/course-light.png" alt="A lesson with evidence citations and a question box" width="180"></picture></a></kbd> <kbd><a href="images/settings-light.png"><picture><source media="(prefers-color-scheme: dark)" srcset="images/settings-dark.png"><img src="images/settings-light.png" alt="Settings page showing tab styles, quiz length, and highlight colors" width="180"></picture></a></kbd> <kbd><a href="images/about-light.png"><picture><source media="(prefers-color-scheme: dark)" srcset="images/about-dark.png"><img src="images/about-light.png" alt="About page with the painting of a prince and his tutor" width="180"></picture></a></kbd>
+<kbd><a href="images/README.md"><picture><source media="(prefers-color-scheme: dark)" srcset="images/course-dark.png"><img src="images/course-light.png" alt="A lesson with evidence citations and a question box" width="720"></picture></a></kbd>
+
+The [gallery](images/README.md) shows more of the interface in light and dark terminals.
 
 ## Requirements
 
