@@ -122,7 +122,7 @@ func TestScreenshots(t *testing.T) {
 		if err := terminal.Press("Enter"); err != nil {
 			t.Fatal(err)
 		}
-		waitForText(t, terminal, "Every claim cites a file")
+		waitForText(t, terminal, "Every claim carries a number")
 		capture("course")
 	}
 }
