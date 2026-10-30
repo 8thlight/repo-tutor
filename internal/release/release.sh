@@ -28,8 +28,10 @@ git rev-parse --quiet --verify "refs/tags/${tag}" >/dev/null && refuse "the tag 
 current="$(tr -d '[:space:]' < VERSION)"
 newer "${version}" "${current}" || refuse "${version} is not newer than the current version ${current}"
 
-conclusion="$(gh run list --workflow check --commit "$(git rev-parse HEAD)" --limit 1 --json conclusion --jq '.[0].conclusion // "none"')"
-[[ "${conclusion}" == "success" ]] || refuse "the check workflow has not passed on $(git rev-parse --short HEAD) (${conclusion})"
+for workflow in check package; do
+  conclusion="$(gh run list --workflow "${workflow}" --commit "$(git rev-parse HEAD)" --limit 1 --json conclusion --jq '.[0].conclusion // "none"')"
+  [[ "${conclusion}" == "success" ]] || refuse "the ${workflow} workflow has not passed on $(git rev-parse --short HEAD) (${conclusion})"
+done
 
 just check
 

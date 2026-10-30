@@ -41,12 +41,16 @@ func newReleaseFixture(t *testing.T) releaseFixture {
 	gitIn(t, fixture.work, "add", ".")
 	gitIn(t, fixture.work, "commit", "--quiet", "-m", "start")
 	gitIn(t, fixture.work, "push", "--quiet", "origin", "main")
-	fixture.fakeGitHub("success")
+	fixture.fakeGitHub("check", "success")
+	fixture.fakeGitHub("package", "success")
 	return fixture
 }
 
-func (fixture releaseFixture) fakeGitHub(conclusion string) {
-	script := "#!/bin/sh\necho " + conclusion + "\n"
+func (fixture releaseFixture) fakeGitHub(workflow, conclusion string) {
+	if err := os.WriteFile(filepath.Join(fixture.tools, workflow+".conclusion"), []byte(conclusion+"\n"), 0o644); err != nil {
+		fixture.t.Fatal(err)
+	}
+	script := "#!/bin/sh\nwhile [ $# -gt 0 ]; do\n  if [ \"$1\" = --workflow ]; then cat \"" + fixture.tools + "/$2.conclusion\"; exit 0; fi\n  shift\ndone\nexit 1\n"
 	if err := os.WriteFile(filepath.Join(fixture.tools, "gh"), []byte(script), 0o755); err != nil {
 		fixture.t.Fatal(err)
 	}
@@ -115,8 +119,10 @@ func TestReleaseRefusesAndPushesNothing(t *testing.T) {
 			gitIn(f.t, other, "commit", "--quiet", "-m", "ahead")
 			gitIn(f.t, other, "push", "--quiet", "origin", "main")
 		}, "not level"},
-		"an existing tag":                     {"0.2.0", func(f releaseFixture) { gitIn(f.t, f.work, "tag", "v0.2.0") }, "already exists"},
-		"a commit whose check has not passed": {"0.2.0", func(f releaseFixture) { f.fakeGitHub("failure") }, "has not passed"},
+		"an existing tag":                       {"0.2.0", func(f releaseFixture) { gitIn(f.t, f.work, "tag", "v0.2.0") }, "already exists"},
+		"a commit whose check has not passed":   {"0.2.0", func(f releaseFixture) { f.fakeGitHub("check", "failure") }, "check workflow has not passed"},
+		"a commit whose package has not passed": {"0.2.0", func(f releaseFixture) { f.fakeGitHub("package", "failure") }, "package workflow has not passed"},
+		"a commit whose package has not run":    {"0.2.0", func(f releaseFixture) { f.fakeGitHub("package", "none") }, "package workflow has not passed"},
 	} {
 		t.Run(name, func(t *testing.T) {
 			fixture := newReleaseFixture(t)
