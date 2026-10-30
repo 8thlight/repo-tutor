@@ -10,9 +10,34 @@ Reads a code repository and turns it into a fast onboarding course for a new dev
 
 - macOS or Linux. Windows is not supported natively; use WSL.
 - Codex CLI or Claude Code, installed and signed in.
-- Nix, to build from source with `nix develop`.
+- Nix, only to build from source with `nix develop`.
 
-## Try it
+## Install
+
+Download the archive for your system from the [Releases](https://github.com/8thlight/repo-tutor/releases) page. The names read `repo-tutor_<version>_<os>_<arch>.tar.gz`, for macOS or Linux on `arm64` or `amd64`. Check it, unpack it, and put the binary on your path:
+
+```sh
+gh release download v0.1.0 --repo 8thlight/repo-tutor --pattern '*darwin_arm64*' --pattern checksums.txt
+grep ' repo-tutor_v0.1.0_darwin_arm64.tar.gz$' checksums.txt | shasum -a 256 -c
+gh attestation verify repo-tutor_v0.1.0_darwin_arm64.tar.gz --repo 8thlight/repo-tutor
+tar -xzf repo-tutor_v0.1.0_darwin_arm64.tar.gz
+install -m 0755 repo-tutor_v0.1.0_darwin_arm64/repo-tutor ~/.local/bin/repo-tutor
+```
+
+The attestation shows that the archive was built from this repository by its release workflow. On Linux, use `sha256sum -c` in place of `shasum -a 256 -c` if you prefer.
+
+The macOS binaries are not signed with an Apple Developer ID. A file you download in a browser is quarantined, and macOS refuses to open it; run `xattr -d com.apple.quarantine repo-tutor` once to clear that. Files fetched with `gh` or `curl` are not quarantined.
+
+On Windows, install inside WSL and use the Linux archive: `linux_amd64` on most PCs, `linux_arm64` on Windows on Arm. Install Codex CLI or Claude Code inside WSL too, and keep your repositories and the saved sessions in the Linux file system, not under `/mnt/c`.
+
+With Nix, run it without installing, or add it to your profile:
+
+```sh
+nix run github:8thlight/repo-tutor -- ../your-repo
+nix profile install github:8thlight/repo-tutor
+```
+
+## Build from source
 
 Run:
 
