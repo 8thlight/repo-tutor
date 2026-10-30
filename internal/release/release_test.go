@@ -43,6 +43,7 @@ func newReleaseFixture(t *testing.T) releaseFixture {
 	gitIn(t, fixture.work, "push", "--quiet", "origin", "main")
 	fixture.fakeGitHub("check", "success")
 	fixture.fakeGitHub("package", "success")
+	fixture.fakeGitHub("screenshots", "success")
 	return fixture
 }
 
@@ -122,6 +123,7 @@ func TestReleaseRefusesAndPushesNothing(t *testing.T) {
 		"an existing tag":                       {"0.2.0", func(f releaseFixture) { gitIn(f.t, f.work, "tag", "v0.2.0") }, "already exists"},
 		"a commit whose check has not passed":   {"0.2.0", func(f releaseFixture) { f.fakeGitHub("check", "failure") }, "check workflow has not passed"},
 		"a commit whose package has not passed": {"0.2.0", func(f releaseFixture) { f.fakeGitHub("package", "failure") }, "package workflow has not passed"},
+		"a commit whose screenshots are stale":  {"0.2.0", func(f releaseFixture) { f.fakeGitHub("screenshots", "failure") }, "screenshots workflow has not passed"},
 		"a commit whose package has not run":    {"0.2.0", func(f releaseFixture) { f.fakeGitHub("package", "none") }, "package workflow has not passed"},
 	} {
 		t.Run(name, func(t *testing.T) {
