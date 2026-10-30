@@ -1,6 +1,6 @@
 # 0520. Number the evidence and open it with a digit
 
-Status: proposed
+Status: accepted
 
 ## Context
 
