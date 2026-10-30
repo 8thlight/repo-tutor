@@ -44,7 +44,7 @@ func main() {
 		if request.Question == "" {
 			panic("answer without a question")
 		}
-		assessment, feedback = "partial", "Find the delegation in main.go:2."
+		assessment, feedback = "partial", "Find the delegation in main.go:2 [1]."
 		if request.Message == "that is correct" {
 			assessment = "correct"
 		}
@@ -58,9 +58,12 @@ func main() {
 		line = 9999
 	}
 	reply := map[string]any{
-		"explanation": "Execution starts at main.go:2.",
+		"explanation": "Execution starts at main.go:2 [1].",
 		"question":    question, "assessment": assessment,
 		"feedback": feedback, "citations": []map[string]any{{"path": citedPath(), "line": line}},
+	}
+	if request.Message == "invent a marker" {
+		reply["explanation"] = "Execution starts at main.go:2 [5]."
 	}
 	if os.Getenv("FAKE_AGENT_SCENARIO") == "screenshots" {
 		reply["explanation"] = screenshotLesson

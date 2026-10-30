@@ -9,7 +9,7 @@ import (
 	"repo-tutor/internal/repository"
 )
 
-const lessonFormat = 1
+const lessonFormat = 2
 
 const lessonHeaderOpen = "<!-- repo-tutor lesson "
 
