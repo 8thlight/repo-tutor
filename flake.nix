@@ -5,6 +5,7 @@
 
   outputs = { self, nixpkgs }:
     let
+      releaseVersion = nixpkgs.lib.removeSuffix "\n" (builtins.readFile ./VERSION);
       systems = [ "aarch64-darwin" "x86_64-darwin" "aarch64-linux" "x86_64-linux" ];
       forAllSystems = f: nixpkgs.lib.genAttrs systems (system: f nixpkgs.legacyPackages.${system});
     in
@@ -13,13 +14,13 @@
         go = pkgs.go;
         default = pkgs.buildGoModule {
           pname = "repo-tutor";
-          version = self.shortRev or self.dirtyShortRev or "dev";
+          version = releaseVersion;
           src = self;
           vendorHash = "sha256-DGFtp74ANqE99+u+f1/N1Nj853HfYdwX94pDxtgG4Ko=";
           subPackages = [ "binary" ];
           env.CGO_ENABLED = 0;
           doCheck = false;
-          ldflags = [ "-X repo-tutor/internal/about.version=${self.shortRev or self.dirtyShortRev or "dev"}" ];
+          ldflags = [ "-X repo-tutor/internal/about.version=v${releaseVersion}" ];
           postInstall = "mv $out/bin/binary $out/bin/repo-tutor";
           meta.mainProgram = "repo-tutor";
         };
