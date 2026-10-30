@@ -49,6 +49,16 @@ func (model interfaceModel) citationKey(pressed string) (tea.Model, tea.Cmd, boo
 			next, command := model.back()
 			return next, command, true
 		}
+	case model.page == "sources":
+		if model.picker.SettingFilter() {
+			return model, nil, false
+		}
+		if number > len(model.shownCitations()) {
+			model.notice = model.citationNotice()
+			return model, nil, true
+		}
+		next, command := model.openFile(model.shownCitations()[number-1])
+		return next, command, true
 	case model.page == "lesson" && model.askingGoal():
 		return model, nil, false
 	case model.page == "lesson":

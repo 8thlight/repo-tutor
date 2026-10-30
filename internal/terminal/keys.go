@@ -84,6 +84,9 @@ func (model interfaceModel) pageActions() [][2]string {
 		if model.page == "quiz" {
 			actions = append(actions, [2]string{"A", "Show answer"})
 		}
+		if model.page == "sources" && len(model.shownCitations()) > 0 {
+			actions = append(actions, [2]string{"1-9", "Open a cited source"})
+		}
 		return actions
 	}
 	return nil
