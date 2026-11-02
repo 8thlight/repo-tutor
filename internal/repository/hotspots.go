@@ -7,7 +7,6 @@ import (
 	"go/token"
 	"os/exec"
 	"path"
-	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -22,9 +21,6 @@ type Hotspot struct {
 	Lines    int    `json:"lines"`
 	Score    int    `json:"reading_score"`
 }
-
-var pythonBranch = regexp.MustCompile(`\b(if|elif|for|while|except|case|and|or)\b`)
-var javascriptBranch = regexp.MustCompile(`\b(if|for|while|case|catch)\b|&&|\|\||\?\?`)
 
 func ReadingHints(snapshot Snapshot, changes map[string]int) []Hotspot {
 	files := map[string]string{}
@@ -86,10 +82,11 @@ func branchPoints(file File, language string) (int, int) {
 		})
 		return count, first
 	}
-	pattern := javascriptBranch
-	if language == "Python" {
-		pattern = pythonBranch
+	analyzed, supported := analyzerNamed(language)
+	if !supported {
+		return 0, 1
 	}
+	pattern := analyzed.branches
 	for index, line := range strings.Split(file.Content, "\n") {
 		trimmed := strings.TrimSpace(line)
 		if strings.HasPrefix(trimmed, "#") || strings.HasPrefix(trimmed, "//") {

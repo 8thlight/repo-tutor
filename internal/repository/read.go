@@ -130,11 +130,11 @@ func supportedFile(name string) bool {
 	if strings.HasPrefix(name, ".") {
 		return false
 	}
-	if name == "go.mod" || name == "pyproject.toml" || name == "package.json" {
+	if name == "go.mod" || manifestFile(name) || sourceExtension(name) {
 		return true
 	}
 	switch strings.ToLower(filepath.Ext(name)) {
-	case ".go", ".py", ".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx", ".md":
+	case ".go", ".md":
 		return true
 	}
 	return false
