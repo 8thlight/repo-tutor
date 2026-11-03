@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-const javaGaps = "Java inventory uses literal imports and declaration patterns; fully qualified names without an import, reflection, dependency injection, and Maven or Gradle module links are not followed, tests outside src/test read as source, and branch counts include keywords inside comments and string literals"
+const javaGaps = "Java inventory uses literal imports and declaration patterns; fully qualified names without an import, reflection, dependency injection, and Maven or Gradle module links are not followed, tests outside src/test read as source, and branch counts include keywords inside string literals"
 
 var javaPomArtifact = regexp.MustCompile(`<artifactId>\s*([^<\s]+)\s*</artifactId>`)
 var javaPomParent = regexp.MustCompile(`(?s)<parent>.*?</parent>`)
@@ -19,14 +19,15 @@ var javaMain = regexp.MustCompile(`\bstatic\s+void\s+main\s*\(`)
 var javaBranch = regexp.MustCompile(`\b(if|for|while|case|catch)\b|&&|\|\|`)
 
 var javaAnalyzer = analyzer{
-	name:       "Java",
-	extensions: []string{".java"},
-	manifests:  []string{"pom.xml", "settings.gradle", "settings.gradle.kts"},
-	branches:   javaBranch,
-	gaps:       javaGaps,
-	manifest:   javaManifest,
-	scan:       javaScan,
-	index:      javaIndex,
+	name:        "Java",
+	extensions:  []string{".java"},
+	manifests:   []string{"pom.xml", "settings.gradle", "settings.gradle.kts"},
+	branches:    javaBranch,
+	gaps:        javaGaps,
+	uncommented: javaWithoutComments,
+	manifest:    javaManifest,
+	scan:        javaScan,
+	index:       javaIndex,
 }
 
 func javaManifest(file File) (Module, string, bool) {
@@ -110,4 +111,56 @@ func javaRegister(index map[string]string, key, identifier string) {
 		return
 	}
 	index[key] = identifier
+}
+
+func javaWithoutComments(content string) string {
+	result := []byte(content)
+	for position := 0; position < len(content); {
+		rest := content[position:]
+		switch {
+		case strings.HasPrefix(rest, "//"):
+			end := strings.Index(rest, "\n")
+			if end < 0 {
+				end = len(rest)
+			}
+			javaBlank(result, position, position+end)
+			position += end
+		case strings.HasPrefix(rest, "/*"):
+			end := len(rest)
+			if close := strings.Index(rest[2:], "*/"); close >= 0 {
+				end = close + 4
+			}
+			javaBlank(result, position, position+end)
+			position += end
+		case strings.HasPrefix(rest, `"""`):
+			position += javaLiteralLength(rest, `"""`)
+		case rest[0] == '"' || rest[0] == '\'':
+			position += javaLiteralLength(rest, rest[:1])
+		default:
+			position++
+		}
+	}
+	return string(result)
+}
+
+func javaLiteralLength(rest, quote string) int {
+	for offset := len(quote); offset < len(rest); offset++ {
+		switch {
+		case rest[offset] == '\\':
+			offset++
+		case strings.HasPrefix(rest[offset:], quote):
+			return offset + len(quote)
+		case rest[offset] == '\n' && len(quote) == 1:
+			return offset
+		}
+	}
+	return len(rest)
+}
+
+func javaBlank(result []byte, from, to int) {
+	for index := from; index < to; index++ {
+		if result[index] != '\n' && result[index] != '\r' {
+			result[index] = ' '
+		}
+	}
 }

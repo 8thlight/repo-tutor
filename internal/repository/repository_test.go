@@ -118,6 +118,15 @@ func TestJavaInventory(t *testing.T) {
 	}
 }
 
+func TestJavaBranchPointsSkipComments(t *testing.T) {
+	source := "package a;\n\n/**\n * Runs if the input is ready and while open.\n */\nclass Run {\n    boolean any = \"src/*\".isEmpty() || false;  // for each file\n    void go(boolean ok) {\n        /* if skipped */ if (ok) {}\n        String t = \"\"\"\n            /* kept as text\n            \"\"\";\n        for (;;) {}\n    }\n}\n"
+	snapshot := repository.Analyze([]repository.File{{Path: "src/main/java/a/Run.java", Content: source}})
+	hints := repository.ReadingHints(snapshot, nil)
+	if len(hints) != 1 || hints[0].Branches != 3 || hints[0].Line != 7 {
+		t.Fatalf("comments or literals changed the branch points: %+v", hints)
+	}
+}
+
 func TestReadExclusionsAndFingerprint(t *testing.T) {
 	root := t.TempDir()
 	write := func(name, content string) {

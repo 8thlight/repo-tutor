@@ -87,7 +87,11 @@ func branchPoints(file File, language string) (int, int) {
 		return 0, 1
 	}
 	pattern := analyzed.branches
-	for index, line := range strings.Split(file.Content, "\n") {
+	content := file.Content
+	if analyzed.uncommented != nil {
+		content = analyzed.uncommented(content)
+	}
+	for index, line := range strings.Split(content, "\n") {
 		trimmed := strings.TrimSpace(line)
 		if strings.HasPrefix(trimmed, "#") || strings.HasPrefix(trimmed, "//") {
 			continue

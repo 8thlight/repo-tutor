@@ -10,14 +10,15 @@ import (
 const patternWarning = "Python and JavaScript/TypeScript inventory uses literal imports and declaration patterns; dynamic imports, aliases, re-exports, and entry-point discovery may be incomplete"
 
 type analyzer struct {
-	name       string
-	extensions []string
-	manifests  []string
-	branches   *regexp.Regexp
-	gaps       string
-	manifest   func(file File) (Module, string, bool)
-	scan       func(file File) scanned
-	index      func(modules []Module, sources []File, owners map[string]string) resolver
+	name        string
+	extensions  []string
+	manifests   []string
+	branches    *regexp.Regexp
+	gaps        string
+	uncommented func(content string) string
+	manifest    func(file File) (Module, string, bool)
+	scan        func(file File) scanned
+	index       func(modules []Module, sources []File, owners map[string]string) resolver
 }
 
 type scanned struct {

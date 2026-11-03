@@ -136,7 +136,7 @@ The hints feed a course topic, "Where change happens", the last topic after the 
 
 Git history counts file appearances in at most 2,000 non-merge commits from the last 180 days. It reads local history only and does not follow renames. Missing Git history falls back to source signals. Shallow history can undercount changes.
 
-Go branch counts include conditionals, loops, non-default switch and select cases, and boolean conjunctions and disjunctions. Python, JavaScript/TypeScript, and Java counts use text patterns, which can include strings or miss syntax. Counts aggregate across a file and are not per-function cyclomatic complexity.
+Go branch counts include conditionals, loops, non-default switch and select cases, and boolean conjunctions and disjunctions. Python, JavaScript/TypeScript, and Java counts use text patterns, which can include strings or miss syntax. Java counts skip comments, as [0540](../decisions/0540-branch-counts-skip-comments.md) says. Counts aggregate across a file and are not per-function cyclomatic complexity.
 
 The reading score is `(commits + 1) * (branch points + 1)`, with path order breaking ties. Tests and generated Go files do not rank as production hotspots. The raw counts and first branch location appear beside each hint so a learner can inspect the evidence. Hints help select a reading or testing exercise; they do not establish defects or a need to refactor.
 
