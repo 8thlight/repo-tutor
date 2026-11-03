@@ -1,6 +1,6 @@
 # 0550. Test ownership and the test layer
 
-Status: accepted. The Java test directories also include `integration-test`, which a scan of a Spring MVC repository showed to be in use.
+Status: accepted. The Java test directories also include `integration-test`, which a scan of a Spring MVC repository showed to be in use. A scan of Spring Petclinic showed its `@SpringBootTest` classes sit in the application's root package, so the Java rules now treat those as system tests even though a package name matches. This is the one case where "an owner wins over a system mark" does not hold.
 
 ## Context
 
@@ -34,6 +34,7 @@ A test adds no dependency edge to a production package, as today. Moving a test 
 - A test that names one class with `@WebMvcTest(X.class)` or `@WebFluxTest(X.class)` is owned by the package that declares `X`.
 - Otherwise a test is owned by the package whose declared name matches the package the test declares. The directory does not matter. `package com.acme.app;` in a test pairs with the production package that declares `com.acme.app`. The rule names an owner only when exactly one production directory declares that package.
 - A test annotated `@SpringBootTest` that has no owner is a system test.
+- A `@SpringBootTest` in the package that declares a class annotated `@SpringBootApplication` has no owner by package name. Spring starts the whole application from that package, so the test exercises the system and not that package alone. It is a system test, and its own directory becomes a test layer. A `@SpringBootTest` in any other package keeps the owner its package name gives.
 
 Frameworks other than Spring Boot are not recognized until a repository needs them.
 

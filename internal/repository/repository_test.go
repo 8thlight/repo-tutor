@@ -218,6 +218,28 @@ func TestJavaTestLayer(t *testing.T) {
 	}
 }
 
+func TestJavaSystemTestInTheApplicationPackageFormsALayer(t *testing.T) {
+	snapshot := repository.Analyze([]repository.File{
+		{Path: "src/main/java/com/acme/App.java", Content: "package com.acme;\n@SpringBootApplication\nclass App {}\n"},
+		{Path: "src/main/java/com/acme/web/Page.java", Content: "package com.acme.web;\nclass Page {}\n"},
+		{Path: "src/test/java/com/acme/AppTests.java", Content: "package com.acme;\nimport com.acme.web.Page;\n@SpringBootTest\nclass AppTests {}\n"},
+		{Path: "src/test/java/com/acme/AppUnitTests.java", Content: "package com.acme;\nclass AppUnitTests {}\n"},
+		{Path: "src/test/java/com/acme/web/PageIT.java", Content: "package com.acme.web;\n@SpringBootTest\nclass PageIT {}\n"},
+	})
+	layer, found := snapshot.Package("java:src/test/java/com/acme")
+	if !found || !layer.TestLayer || len(layer.Files) != 0 {
+		t.Fatalf("a system test in the application package did not form a layer: %+v", layer)
+	}
+	app, _ := snapshot.Package("java:src/main/java/com/acme")
+	if !reflect.DeepEqual(app.Tests, []string{"src/test/java/com/acme/AppUnitTests.java"}) {
+		t.Fatalf("the application package took a test it does not own alone: %+v", app)
+	}
+	page, _ := snapshot.Package("java:src/main/java/com/acme/web")
+	if !reflect.DeepEqual(page.Tests, []string{"src/test/java/com/acme/web/PageIT.java"}) {
+		t.Fatalf("a system test outside the application package lost its owner: %+v", page)
+	}
+}
+
 func TestJavaBranchPointsSkipComments(t *testing.T) {
 	source := "package a;\n\n/**\n * Runs if the input is ready and while open.\n */\nclass Run {\n    boolean any = \"src/*\".isEmpty() || false;  // for each file\n    void go(boolean ok) {\n        /* if skipped */ if (ok) {}\n        String t = \"\"\"\n            /* kept as text\n            \"\"\";\n        for (;;) {}\n    }\n}\n"
 	snapshot := repository.Analyze([]repository.File{{Path: "src/main/java/a/Run.java", Content: source}})

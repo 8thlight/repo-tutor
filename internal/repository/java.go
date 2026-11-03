@@ -17,6 +17,7 @@ var javaType = regexp.MustCompile(`^\s*(?:(?:public|protected|private|abstract|s
 var javaMethod = regexp.MustCompile(`^\s*(?:(?:public|protected|private|static|final|abstract|synchronized|default|native)\s+)+(?:<[^>]+>\s+)?[\w<>\[\],.? ]+?\s+(\w+)\s*\(`)
 var javaSliceTest = regexp.MustCompile(`@(?:WebMvcTest|WebFluxTest)\s*\(\s*(?:(?:value|controllers)\s*=\s*)?(?:\{\s*)?([\w.]+)\.class\s*\}?\s*\)`)
 var javaSystemTest = regexp.MustCompile(`@SpringBootTest\b`)
+var javaApplication = regexp.MustCompile(`@SpringBootApplication\b`)
 var javaMain = regexp.MustCompile(`\bstatic\s+void\s+main\s*\(`)
 var javaTestName = regexp.MustCompile(`(?:Tests?|[a-z0-9]IT)$`)
 var javaBranch = regexp.MustCompile(`\b(if|for|while|case|catch)\b|&&|\|\|`)
@@ -88,12 +89,16 @@ func javaScan(file File) scanned {
 func javaIndex(_ []Module, sources []File, _ map[string]string) resolver {
 	classes := map[string]string{}
 	packages := map[string]string{}
+	applications := map[string]bool{}
 	for _, file := range sources {
 		name := javaPackageName(file)
 		if name == "" {
 			continue
 		}
 		identifier := packageIdentifier("Java", path.Dir(file.Path))
+		if javaApplication.MatchString(file.Content) {
+			applications[identifier] = true
+		}
 		javaRegister(classes, name+"."+strings.TrimSuffix(path.Base(file.Path), ".java"), identifier)
 		javaRegister(packages, name, identifier)
 	}
@@ -103,7 +108,11 @@ func javaIndex(_ []Module, sources []File, _ map[string]string) resolver {
 				return identifier
 			}
 		}
-		return packages[javaPackageName(test)]
+		identifier := packages[javaPackageName(test)]
+		if applications[identifier] && javaSystem(test) {
+			return ""
+		}
+		return identifier
 	}, resolve: func(_, target string) string {
 		wildcard := strings.HasSuffix(target, ".*")
 		name := strings.TrimSuffix(target, ".*")
