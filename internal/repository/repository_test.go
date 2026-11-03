@@ -118,6 +118,29 @@ func TestJavaInventory(t *testing.T) {
 	}
 }
 
+func TestJavaTestRecognition(t *testing.T) {
+	snapshot := repository.Analyze([]repository.File{
+		{Path: "src/main/java/a/Widget.java", Content: "package a;\nclass Widget {}\n"},
+		{Path: "src/main/java/a/Latest.java", Content: "package a;\nclass Latest {}\n"},
+		{Path: "src/main/java/a/GIT.java", Content: "package a;\nclass GIT {}\n"},
+		{Path: "src/main/java/a/OrderServiceTest.java", Content: "package a;\nclass OrderServiceTest {}\n"},
+		{Path: "src/main/java/a/OrderIT.java", Content: "package a;\nclass OrderIT {}\n"},
+		{Path: "src/integrationTest/java/a/Flow.java", Content: "package a;\nclass Flow {}\n"},
+		{Path: "src/androidTest/java/a/Screen.java", Content: "package a;\nclass Screen {}\n"},
+	})
+	production, _ := snapshot.Package("java:src/main/java/a")
+	wantFiles := []string{"src/main/java/a/GIT.java", "src/main/java/a/Latest.java", "src/main/java/a/Widget.java"}
+	wantTests := []string{"src/main/java/a/OrderIT.java", "src/main/java/a/OrderServiceTest.java"}
+	if !reflect.DeepEqual(production.Files, wantFiles) || !reflect.DeepEqual(production.Tests, wantTests) {
+		t.Fatalf("wrong Java test recognition: files %v tests %v", production.Files, production.Tests)
+	}
+	for _, name := range []string{"java:src/integrationTest/java/a", "java:src/androidTest/java/a"} {
+		if current, found := snapshot.Package(name); !found || len(current.Files) != 0 || len(current.Tests) != 1 {
+			t.Fatalf("Java test directory was read as source: %+v", current)
+		}
+	}
+}
+
 func TestJavaBranchPointsSkipComments(t *testing.T) {
 	source := "package a;\n\n/**\n * Runs if the input is ready and while open.\n */\nclass Run {\n    boolean any = \"src/*\".isEmpty() || false;  // for each file\n    void go(boolean ok) {\n        /* if skipped */ if (ok) {}\n        String t = \"\"\"\n            /* kept as text\n            \"\"\";\n        for (;;) {}\n    }\n}\n"
 	snapshot := repository.Analyze([]repository.File{{Path: "src/main/java/a/Run.java", Content: source}})

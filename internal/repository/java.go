@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-const javaGaps = "Java inventory uses literal imports and declaration patterns; fully qualified names without an import, reflection, dependency injection, and Maven or Gradle module links are not followed, tests outside src/test read as source, and branch counts include keywords inside string literals"
+const javaGaps = "Java inventory uses literal imports and declaration patterns; fully qualified names without an import, reflection, dependency injection, and Maven or Gradle module links are not followed, and branch counts include keywords inside string literals"
 
 var javaPomArtifact = regexp.MustCompile(`<artifactId>\s*([^<\s]+)\s*</artifactId>`)
 var javaPomParent = regexp.MustCompile(`(?s)<parent>.*?</parent>`)
@@ -16,6 +16,7 @@ var javaImport = regexp.MustCompile(`^\s*import\s+(?:static\s+)?([\w.]+(?:\.\*)?
 var javaType = regexp.MustCompile(`^\s*(?:(?:public|protected|private|abstract|static|final|sealed|non-sealed|strictfp)\s+)*(class|interface|enum|record|@interface)\s+(\w+)`)
 var javaMethod = regexp.MustCompile(`^\s*(?:(?:public|protected|private|static|final|abstract|synchronized|default|native)\s+)+(?:<[^>]+>\s+)?[\w<>\[\],.? ]+?\s+(\w+)\s*\(`)
 var javaMain = regexp.MustCompile(`\bstatic\s+void\s+main\s*\(`)
+var javaTestName = regexp.MustCompile(`(?:Tests?|[a-z0-9]IT)$`)
 var javaBranch = regexp.MustCompile(`\b(if|for|while|case|catch)\b|&&|\|\|`)
 
 var javaAnalyzer = analyzer{
@@ -24,6 +25,7 @@ var javaAnalyzer = analyzer{
 	manifests:   []string{"pom.xml", "settings.gradle", "settings.gradle.kts"},
 	branches:    javaBranch,
 	gaps:        javaGaps,
+	test:        javaTest,
 	uncommented: javaWithoutComments,
 	manifest:    javaManifest,
 	scan:        javaScan,
@@ -43,6 +45,18 @@ func javaManifest(file File) (Module, string, bool) {
 		return Module{}, "", false
 	}
 	return Module{name, path.Dir(file.Path), "Java"}, "", true
+}
+
+func javaTest(name string) bool {
+	if javaTestName.MatchString(strings.TrimSuffix(path.Base(name), ".java")) {
+		return true
+	}
+	for _, directory := range strings.Split(path.Dir(name), "/") {
+		if directory == "test" || directory == "integrationTest" || directory == "androidTest" {
+			return true
+		}
+	}
+	return false
 }
 
 func javaScan(file File) scanned {

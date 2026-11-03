@@ -15,6 +15,7 @@ type analyzer struct {
 	manifests   []string
 	branches    *regexp.Regexp
 	gaps        string
+	test        func(name string) bool
 	uncommented func(content string) string
 	manifest    func(file File) (Module, string, bool)
 	scan        func(file File) scanned
@@ -49,6 +50,13 @@ func analyzerFor(name string) (analyzer, bool) {
 		}
 	}
 	return analyzer{}, false
+}
+
+func (candidate analyzer) isTest(name string) bool {
+	if candidate.test != nil {
+		return candidate.test(name)
+	}
+	return sourceTest(name)
 }
 
 func analyzerNamed(language string) (analyzer, bool) {
@@ -129,7 +137,7 @@ func analyzeLanguages(snapshot Snapshot) Snapshot {
 			packages[identifier] = current
 		}
 		owners[file.Path] = identifier
-		if sourceTest(file.Path) {
+		if language.isTest(file.Path) {
 			current.Tests = append(current.Tests, file.Path)
 			continue
 		}
