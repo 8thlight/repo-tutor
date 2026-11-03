@@ -243,6 +243,15 @@ func TestThePromptKeepsQuestionsForQuizzesAndProbes(t *testing.T) {
 	}
 }
 
+func TestThePromptNamesEveryLanguageThatUsesTextPatterns(t *testing.T) {
+	prompt := tutor.Prepare(hotspotSnapshot(), tutor.Request{Action: "lesson", Topic: tutor.Overview}).Prompt
+	for _, expected := range []string{"Python, JavaScript/TypeScript, and Java inventory uses literal import", "Java counts are text estimates"} {
+		if !strings.Contains(prompt, expected) {
+			t.Fatalf("the prompt should say %q", expected)
+		}
+	}
+}
+
 func TestThePromptAsksForNumberedMarkersAndNotPathReferences(t *testing.T) {
 	prompt := tutor.Prepare(hotspotSnapshot(), tutor.Request{Action: "lesson", Topic: tutor.Overview}).Prompt
 	for _, expected := range []string{"mark each factual code claim with [n]", "at most nine", "Do not write path:line\nin the text"} {

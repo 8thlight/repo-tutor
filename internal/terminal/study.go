@@ -448,7 +448,7 @@ func showHotspots(output io.Writer, snapshot repository.Snapshot, limit int) {
 		fmt.Fprintf(output, "  %s:%d: %d commits, %d branch points, %d lines\n", tutor.Plain(hotspot.Path), hotspot.Line, hotspot.Commits, hotspot.Branches, hotspot.Lines)
 	}
 	fmt.Fprintln(output, "Reading score = (commits + 1) * (branch points + 1). These are reading hints, not defect predictions.")
-	fmt.Fprintln(output, "Go counts syntax nodes; Python and JavaScript/TypeScript use text estimates. Shallow history can undercount churn.")
+	fmt.Fprintln(output, "Go counts syntax nodes; Python, JavaScript/TypeScript, and Java use text estimates. Shallow history can undercount churn.")
 	fmt.Fprintln(output, "Ask about a listed file, or use /read PATH:LINE in a tutor session.")
 }
 
