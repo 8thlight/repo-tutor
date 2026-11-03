@@ -25,11 +25,11 @@ brew install 8thlight/tap/repo-tutor
 Or download the archive for your system from the [Releases](https://github.com/8thlight/repo-tutor/releases) page. The names read `repo-tutor_<version>_<os>_<arch>.tar.gz`, for macOS or Linux on `arm64` or `amd64`. Check it, unpack it, and put the binary on your path:
 
 ```sh
-gh release download v0.1.0 --repo 8thlight/repo-tutor --pattern '*darwin_arm64*' --pattern checksums.txt
-grep ' repo-tutor_v0.1.0_darwin_arm64.tar.gz$' checksums.txt | shasum -a 256 -c
-gh attestation verify repo-tutor_v0.1.0_darwin_arm64.tar.gz --repo 8thlight/repo-tutor
-tar -xzf repo-tutor_v0.1.0_darwin_arm64.tar.gz
-install -m 0755 repo-tutor_v0.1.0_darwin_arm64/repo-tutor ~/.local/bin/repo-tutor
+gh release download v0.2.0 --repo 8thlight/repo-tutor --pattern '*darwin_arm64*' --pattern checksums.txt
+grep ' repo-tutor_v0.2.0_darwin_arm64.tar.gz$' checksums.txt | shasum -a 256 -c
+gh attestation verify repo-tutor_v0.2.0_darwin_arm64.tar.gz --repo 8thlight/repo-tutor
+tar -xzf repo-tutor_v0.2.0_darwin_arm64.tar.gz
+install -m 0755 repo-tutor_v0.2.0_darwin_arm64/repo-tutor ~/.local/bin/repo-tutor
 ```
 
 The attestation shows that the archive was built from this repository by its release workflow. On Linux, use `sha256sum -c` in place of `shasum -a 256 -c` if you prefer.
