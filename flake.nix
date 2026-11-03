@@ -29,6 +29,7 @@
       devShells = forAllSystems (pkgs: {
         default = pkgs.mkShell {
           GODEBUG = "gcshrinkstackoff=1";
+          shellHook = "unset GOROOT";
           packages = [
             pkgs.go
             pkgs.gopls
