@@ -107,7 +107,7 @@ func readManifests(snapshot Snapshot) (Snapshot, []Module) {
 			if warning != "" {
 				snapshot.Warnings = append(snapshot.Warnings, warning)
 			}
-			if found {
+			if found && !slices.Contains(modules, module) {
 				modules = append(modules, module)
 			}
 		}

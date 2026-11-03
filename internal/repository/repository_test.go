@@ -240,6 +240,17 @@ func TestJavaSystemTestInTheApplicationPackageFormsALayer(t *testing.T) {
 	}
 }
 
+func TestJavaModuleListedOnceWhenMavenAndGradleNameIt(t *testing.T) {
+	snapshot := repository.Analyze([]repository.File{
+		{Path: "pom.xml", Content: "<project><artifactId>shop</artifactId></project>"},
+		{Path: "settings.gradle", Content: "rootProject.name = 'shop'\n"},
+		{Path: "src/main/java/a/A.java", Content: "package a;\nclass A {}\n"},
+	})
+	if len(snapshot.Modules) != 1 || snapshot.Modules[0].Path != "shop" {
+		t.Fatalf("a module named by two manifests was not listed once: %+v", snapshot.Modules)
+	}
+}
+
 func TestJavaBranchPointsSkipComments(t *testing.T) {
 	source := "package a;\n\n/**\n * Runs if the input is ready and while open.\n */\nclass Run {\n    boolean any = \"src/*\".isEmpty() || false;  // for each file\n    void go(boolean ok) {\n        /* if skipped */ if (ok) {}\n        String t = \"\"\"\n            /* kept as text\n            \"\"\";\n        for (;;) {}\n    }\n}\n"
 	snapshot := repository.Analyze([]repository.File{{Path: "src/main/java/a/Run.java", Content: source}})
