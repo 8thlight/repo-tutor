@@ -15,6 +15,7 @@ var javaPackage = regexp.MustCompile(`^\s*package\s+([\w.]+)\s*;`)
 var javaImport = regexp.MustCompile(`^\s*import\s+(?:static\s+)?([\w.]+(?:\.\*)?)\s*;`)
 var javaType = regexp.MustCompile(`^\s*(?:(?:public|protected|private|abstract|static|final|sealed|non-sealed|strictfp)\s+)*(class|interface|enum|record|@interface)\s+(\w+)`)
 var javaMethod = regexp.MustCompile(`^\s*(?:(?:public|protected|private|static|final|abstract|synchronized|default|native)\s+)+(?:<[^>]+>\s+)?[\w<>\[\],.? ]+?\s+(\w+)\s*\(`)
+var javaSliceTest = regexp.MustCompile(`@(?:WebMvcTest|WebFluxTest)\s*\(\s*(?:(?:value|controllers)\s*=\s*)?(?:\{\s*)?([\w.]+)\.class\s*\}?\s*\)`)
 var javaMain = regexp.MustCompile(`\bstatic\s+void\s+main\s*\(`)
 var javaTestName = regexp.MustCompile(`(?:Tests?|[a-z0-9]IT)$`)
 var javaBranch = regexp.MustCompile(`\b(if|for|while|case|catch)\b|&&|\|\|`)
@@ -91,6 +92,11 @@ func javaIndex(_ []Module, sources []File, _ map[string]string) resolver {
 		javaRegister(packages, name, identifier)
 	}
 	return resolver{owner: func(test File) string {
+		for _, candidate := range javaSliceTargets(test) {
+			if identifier := classes[candidate]; identifier != "" {
+				return identifier
+			}
+		}
 		return packages[javaPackageName(test)]
 	}, resolve: func(_, target string) string {
 		wildcard := strings.HasSuffix(target, ".*")
@@ -110,6 +116,28 @@ func javaIndex(_ []Module, sources []File, _ map[string]string) resolver {
 		}
 		return ""
 	}}
+}
+
+func javaSliceTargets(test File) []string {
+	match := javaSliceTest.FindStringSubmatch(test.Content)
+	if match == nil {
+		return nil
+	}
+	name := match[1]
+	if strings.Contains(name, ".") {
+		return []string{name}
+	}
+	targets := []string{javaPackageName(test) + "." + name}
+	for _, line := range strings.Split(test.Content, "\n") {
+		if imported := javaImport.FindStringSubmatch(line); imported != nil {
+			if wildcard, isWildcard := strings.CutSuffix(imported[1], ".*"); isWildcard {
+				targets = append(targets, wildcard+"."+name)
+			} else if strings.HasSuffix(imported[1], "."+name) {
+				targets = append(targets, imported[1])
+			}
+		}
+	}
+	return targets
 }
 
 func javaPackageName(file File) string {

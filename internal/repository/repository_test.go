@@ -163,6 +163,31 @@ func TestJavaTestOwnership(t *testing.T) {
 	}
 }
 
+func TestJavaNamedClassOwnership(t *testing.T) {
+	snapshot := repository.Analyze([]repository.File{
+		{Path: "src/main/java/com/acme/web/OrderController.java", Content: "package com.acme.web;\nclass OrderController {}\n"},
+		{Path: "src/main/java/com/acme/domain/Order.java", Content: "package com.acme.domain;\nclass Order {}\n"},
+		{Path: "src/test/java/com/acme/slices/ImportedTest.java", Content: "package com.acme.slices;\nimport com.acme.web.OrderController;\n@WebMvcTest(controllers = OrderController.class)\nclass ImportedTest {}\n"},
+		{Path: "src/test/java/com/acme/slices/QualifiedTest.java", Content: "package com.acme.slices;\n@WebFluxTest(com.acme.web.OrderController.class)\nclass QualifiedTest {}\n"},
+		{Path: "src/test/java/com/acme/slices/WildcardTest.java", Content: "package com.acme.slices;\nimport com.acme.web.*;\n@WebMvcTest(OrderController.class)\nclass WildcardTest {}\n"},
+		{Path: "src/test/java/com/acme/domain/OverriddenTest.java", Content: "package com.acme.domain;\nimport com.acme.web.OrderController;\n@WebMvcTest(OrderController.class)\nclass OverriddenTest {}\n"},
+		{Path: "src/test/java/com/acme/domain/PlainTest.java", Content: "package com.acme.domain;\nclass PlainTest {}\n"},
+		{Path: "src/test/java/com/acme/slices/ManyTest.java", Content: "package com.acme.slices;\nimport com.acme.web.OrderController;\n@WebMvcTest({OrderController.class, Other.class})\nclass ManyTest {}\n"},
+	})
+	web, _ := snapshot.Package("java:src/main/java/com/acme/web")
+	wantWeb := []string{"src/test/java/com/acme/domain/OverriddenTest.java", "src/test/java/com/acme/slices/ImportedTest.java", "src/test/java/com/acme/slices/QualifiedTest.java", "src/test/java/com/acme/slices/WildcardTest.java"}
+	if !reflect.DeepEqual(web.Tests, wantWeb) {
+		t.Fatalf("slice tests did not follow the class they name: %v", web.Tests)
+	}
+	domain, _ := snapshot.Package("java:src/main/java/com/acme/domain")
+	if !reflect.DeepEqual(domain.Tests, []string{"src/test/java/com/acme/domain/PlainTest.java"}) {
+		t.Fatalf("a test with no named class lost its package-name owner: %v", domain.Tests)
+	}
+	if many, found := snapshot.Package("java:src/test/java/com/acme/slices"); !found || !reflect.DeepEqual(many.Tests, []string{"src/test/java/com/acme/slices/ManyTest.java"}) {
+		t.Fatalf("a test naming several classes was guessed an owner: %+v", many)
+	}
+}
+
 func TestJavaBranchPointsSkipComments(t *testing.T) {
 	source := "package a;\n\n/**\n * Runs if the input is ready and while open.\n */\nclass Run {\n    boolean any = \"src/*\".isEmpty() || false;  // for each file\n    void go(boolean ok) {\n        /* if skipped */ if (ok) {}\n        String t = \"\"\"\n            /* kept as text\n            \"\"\";\n        for (;;) {}\n    }\n}\n"
 	snapshot := repository.Analyze([]repository.File{{Path: "src/main/java/a/Run.java", Content: source}})
