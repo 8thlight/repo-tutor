@@ -3,6 +3,7 @@ package repository
 import (
 	"path"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 )
@@ -31,6 +32,12 @@ type scanned struct {
 type resolver struct {
 	resolve     func(from, target string) string
 	entryPoints func(files []File, packages map[string]*Package) []Location
+	owner       func(test File) string
+}
+
+type directoryTest struct {
+	file      File
+	directory string
 }
 
 type importSite struct {
@@ -122,6 +129,7 @@ func analyzeLanguages(snapshot Snapshot) Snapshot {
 	packages := map[string]*Package{}
 	owners := map[string]string{}
 	sources := map[string][]File{}
+	tests := map[string][]directoryTest{}
 	sites := map[string][]importSite{}
 	present := map[string]bool{}
 	for _, file := range snapshot.Files {
@@ -139,6 +147,7 @@ func analyzeLanguages(snapshot Snapshot) Snapshot {
 		owners[file.Path] = identifier
 		if language.isTest(file.Path) {
 			current.Tests = append(current.Tests, file.Path)
+			tests[language.name] = append(tests[language.name], directoryTest{file, identifier})
 			continue
 		}
 		current.Files = append(current.Files, file.Path)
@@ -156,6 +165,7 @@ func analyzeLanguages(snapshot Snapshot) Snapshot {
 	for _, language := range analyzers {
 		resolvers[language.name] = language.index(modules, sources[language.name], owners)
 	}
+	moveTestsToOwners(packages, tests, resolvers)
 	for identifier, current := range packages {
 		current.Imports = unique(current.Imports)
 		resolved := resolvers[current.Language]
@@ -184,6 +194,35 @@ func analyzeLanguages(snapshot Snapshot) Snapshot {
 	snapshot.EntryPoints = append(registered, snapshot.EntryPoints...)
 	sort.Slice(snapshot.Packages, func(i, j int) bool { return snapshot.Packages[i].Path < snapshot.Packages[j].Path })
 	return snapshot
+}
+
+func moveTestsToOwners(packages map[string]*Package, tests map[string][]directoryTest, resolvers map[string]resolver) {
+	adopted := map[string]bool{}
+	for language, candidates := range tests {
+		owner := resolvers[language].owner
+		if owner == nil {
+			continue
+		}
+		for _, test := range candidates {
+			target := owner(test.file)
+			production, found := packages[target]
+			if !found || target == test.directory {
+				continue
+			}
+			origin := packages[test.directory]
+			origin.Tests = slices.DeleteFunc(origin.Tests, func(name string) bool { return name == test.file.Path })
+			production.Tests = append(production.Tests, test.file.Path)
+			adopted[target] = true
+		}
+	}
+	for identifier := range adopted {
+		sort.Strings(packages[identifier].Tests)
+	}
+	for identifier, current := range packages {
+		if len(current.Files) == 0 && len(current.Tests) == 0 {
+			delete(packages, identifier)
+		}
+	}
 }
 
 func sourceTest(name string) bool {

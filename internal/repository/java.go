@@ -90,7 +90,9 @@ func javaIndex(_ []Module, sources []File, _ map[string]string) resolver {
 		javaRegister(classes, name+"."+strings.TrimSuffix(path.Base(file.Path), ".java"), identifier)
 		javaRegister(packages, name, identifier)
 	}
-	return resolver{resolve: func(_, target string) string {
+	return resolver{owner: func(test File) string {
+		return packages[javaPackageName(test)]
+	}, resolve: func(_, target string) string {
 		wildcard := strings.HasSuffix(target, ".*")
 		name := strings.TrimSuffix(target, ".*")
 		for attempt := 0; attempt < 3; attempt++ {

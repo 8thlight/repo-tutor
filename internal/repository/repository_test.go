@@ -99,8 +99,8 @@ func TestJavaInventory(t *testing.T) {
 	if !found || !reflect.DeepEqual(app.Dependencies, []string{"java:src/main/java/com/acme/values"}) {
 		t.Fatalf("Java imports not resolved to repository packages: %+v", app)
 	}
-	if tested, found := snapshot.Package("java:src/test/java/com/acme/app"); !found || len(tested.Tests) != 1 || len(tested.Files) != 0 {
-		t.Fatalf("Java test was read as source: %+v", tested)
+	if !reflect.DeepEqual(app.Tests, []string{"src/test/java/com/acme/app/MainTest.java"}) || !reflect.DeepEqual(app.Files, []string{"src/main/java/com/acme/app/Main.java"}) {
+		t.Fatalf("Java test was read as source: %+v", app)
 	}
 	values, _ := snapshot.Package("java:src/main/java/com/acme/values")
 	if len(values.Symbols) != 2 || values.Symbols[0].Name != "Name" || values.Symbols[1] != (repository.Symbol{Name: "of", Kind: "function", Location: repository.Location{Path: "src/main/java/com/acme/values/Name.java", Line: 4}}) {
@@ -130,13 +130,35 @@ func TestJavaTestRecognition(t *testing.T) {
 	})
 	production, _ := snapshot.Package("java:src/main/java/a")
 	wantFiles := []string{"src/main/java/a/GIT.java", "src/main/java/a/Latest.java", "src/main/java/a/Widget.java"}
-	wantTests := []string{"src/main/java/a/OrderIT.java", "src/main/java/a/OrderServiceTest.java"}
+	wantTests := []string{"src/androidTest/java/a/Screen.java", "src/integrationTest/java/a/Flow.java", "src/main/java/a/OrderIT.java", "src/main/java/a/OrderServiceTest.java"}
 	if !reflect.DeepEqual(production.Files, wantFiles) || !reflect.DeepEqual(production.Tests, wantTests) {
 		t.Fatalf("wrong Java test recognition: files %v tests %v", production.Files, production.Tests)
 	}
-	for _, name := range []string{"java:src/integrationTest/java/a", "java:src/androidTest/java/a"} {
-		if current, found := snapshot.Package(name); !found || len(current.Files) != 0 || len(current.Tests) != 1 {
-			t.Fatalf("Java test directory was read as source: %+v", current)
+}
+
+func TestJavaTestOwnership(t *testing.T) {
+	snapshot := repository.Analyze([]repository.File{
+		{Path: "src/main/java/com/acme/app/Main.java", Content: "package com.acme.app;\nclass Main {}\n"},
+		{Path: "src/test/java/com/acme/app/MainTest.java", Content: "package com.acme.app;\nclass MainTest {}\n"},
+		{Path: "src/integrationTest/java/com/acme/app/FlowTest.java", Content: "package com.acme.app;\nclass FlowTest {}\n"},
+		{Path: "src/main/java/com/acme/dup/A.java", Content: "package com.acme.dup;\nclass A {}\n"},
+		{Path: "src/other/java/com/acme/dup/B.java", Content: "package com.acme.dup;\nclass B {}\n"},
+		{Path: "src/test/java/com/acme/dup/DupTest.java", Content: "package com.acme.dup;\nclass DupTest {}\n"},
+		{Path: "src/test/java/com/acme/loose/LooseTest.java", Content: "package com.acme.loose;\nclass LooseTest {}\n"},
+	})
+	app, _ := snapshot.Package("java:src/main/java/com/acme/app")
+	want := []string{"src/integrationTest/java/com/acme/app/FlowTest.java", "src/test/java/com/acme/app/MainTest.java"}
+	if !reflect.DeepEqual(app.Tests, want) {
+		t.Fatalf("tests were not moved to the package they test: %v", app.Tests)
+	}
+	for _, name := range []string{"java:src/test/java/com/acme/app", "java:src/integrationTest/java/com/acme/app"} {
+		if _, found := snapshot.Package(name); found {
+			t.Fatalf("emptied test package %s was kept", name)
+		}
+	}
+	for _, name := range []string{"java:src/test/java/com/acme/dup", "java:src/test/java/com/acme/loose"} {
+		if current, found := snapshot.Package(name); !found || len(current.Tests) != 1 {
+			t.Fatalf("unowned test left its own package: %s %+v", name, current)
 		}
 	}
 }
