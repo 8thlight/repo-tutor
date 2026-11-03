@@ -1,6 +1,6 @@
 # 0550. Test ownership and the test layer
 
-Status: accepted. The Java test directories also include `integration-test`, which a scan of a Spring MVC repository showed to be in use. A scan of Spring Petclinic showed its `@SpringBootTest` classes sit in the application's root package, so the Java rules now treat those as system tests even though a package name matches. This is the one case where "an owner wins over a system mark" does not hold.
+Status: accepted. [0560](0560-python-and-javascript-test-rules.md) supersedes the "Other languages" section. The Java test directories also include `integration-test`, which a scan of a Spring MVC repository showed to be in use. A scan of Spring Petclinic showed its `@SpringBootTest` classes sit in the application's root package, so the Java rules now treat those as system tests even though a package name matches. This is the one case where "an owner wins over a system mark" does not hold.
 
 ## Context
 
