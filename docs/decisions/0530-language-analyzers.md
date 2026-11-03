@@ -1,6 +1,6 @@
 # 0530. Language analyzers
 
-Status: accepted
+Status: accepted. Branch counts skip comments under [0540](0540-branch-counts-skip-comments.md).
 
 ## Context
 
