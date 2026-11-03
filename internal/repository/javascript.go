@@ -16,6 +16,7 @@ var javascriptAnalyzer = analyzer{
 	extensions: []string{".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx"},
 	manifests:  []string{"package.json"},
 	branches:   javascriptBranch,
+	gaps:       patternWarning,
 	manifest:   javascriptManifest,
 	scan:       javascriptScan,
 	index:      javascriptIndex,

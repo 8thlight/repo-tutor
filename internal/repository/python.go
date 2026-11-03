@@ -19,6 +19,7 @@ var pythonAnalyzer = analyzer{
 	extensions: []string{".py"},
 	manifests:  []string{"pyproject.toml"},
 	branches:   pythonBranch,
+	gaps:       patternWarning,
 	manifest:   pythonManifest,
 	scan:       pythonScan,
 	index:      pythonIndex,

@@ -14,6 +14,7 @@ type analyzer struct {
 	extensions []string
 	manifests  []string
 	branches   *regexp.Regexp
+	gaps       string
 	manifest   func(file File) (Module, string, bool)
 	scan       func(file File) scanned
 	index      func(modules []Module, sources []File, owners map[string]string) resolver
@@ -113,7 +114,7 @@ func analyzeLanguages(snapshot Snapshot) Snapshot {
 	owners := map[string]string{}
 	sources := map[string][]File{}
 	sites := map[string][]importSite{}
-	present := false
+	present := map[string]bool{}
 	for _, file := range snapshot.Files {
 		language, supported := analyzerFor(file.Path)
 		if !supported {
@@ -133,7 +134,7 @@ func analyzeLanguages(snapshot Snapshot) Snapshot {
 		}
 		current.Files = append(current.Files, file.Path)
 		sources[language.name] = append(sources[language.name], file)
-		present = true
+		present[language.name] = true
 		found := language.scan(file)
 		for _, target := range found.imports {
 			current.Imports = append(current.Imports, target)
@@ -158,8 +159,12 @@ func analyzeLanguages(snapshot Snapshot) Snapshot {
 		current.Dependencies = unique(current.Dependencies)
 		snapshot.Packages = append(snapshot.Packages, *current)
 	}
-	if present {
-		snapshot.Warnings = append(snapshot.Warnings, patternWarning)
+	var disclosed []string
+	for _, language := range analyzers {
+		if present[language.name] && !contains(disclosed, language.gaps) {
+			disclosed = append(disclosed, language.gaps)
+			snapshot.Warnings = append(snapshot.Warnings, language.gaps)
+		}
 	}
 	var registered []Location
 	for _, language := range analyzers {
