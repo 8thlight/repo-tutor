@@ -104,7 +104,7 @@ func Read(ctx context.Context, directory string) (Snapshot, error) {
 	result.Fingerprint = fmt.Sprintf("%x", fingerprint.Sum(nil))
 	result.Warnings = append(warnings, result.Warnings...)
 	if len(result.Packages) == 0 {
-		return result, fmt.Errorf("no readable Go, Python, JavaScript, or TypeScript source found in %s", root)
+		return result, fmt.Errorf("no readable Go, Python, JavaScript, TypeScript, or Java source found in %s", root)
 	}
 	changes, available := readChanges(ctx, root)
 	if err := ctx.Err(); err != nil {

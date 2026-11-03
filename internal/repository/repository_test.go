@@ -83,6 +83,41 @@ func TestMixedLanguageInventory(t *testing.T) {
 	}
 }
 
+func TestJavaInventory(t *testing.T) {
+	snapshot := repository.Analyze([]repository.File{
+		{Path: "pom.xml", Content: "<project><parent><artifactId>parent</artifactId></parent><artifactId>course</artifactId></project>"},
+		{Path: "src/main/java/com/acme/app/Main.java", Content: "package com.acme.app;\n\nimport com.acme.values.Name;\nimport com.acme.util.*;\nimport java.util.List;\nimport static com.acme.values.Name.of;\n\npublic class Main {\n    public static void main(String[] args) {\n        if (args.length > 0 && args[0] != null) {}\n    }\n}\n"},
+		{Path: "src/main/java/com/acme/values/Name.java", Content: "package com.acme.values;\n\npublic record Name(String value) {\n    public static Name of(String value) {\n        return new Name(value);\n    }\n}\n"},
+		{Path: "src/main/java/com/acme/util/Text.java", Content: "package com.acme.util;\n\nfinal class Text {}\n"},
+		{Path: "src/main/java/com/acme/other/Text.java", Content: "package com.acme.util;\n\nfinal class Text {}\n"},
+		{Path: "src/test/java/com/acme/app/MainTest.java", Content: "package com.acme.app;\n\nclass MainTest {}\n"},
+	})
+	if len(snapshot.Modules) != 1 || snapshot.Modules[0].Path != "course" {
+		t.Fatalf("parent artifact was taken as the module: %+v", snapshot.Modules)
+	}
+	app, found := snapshot.Package("java:src/main/java/com/acme/app")
+	if !found || !reflect.DeepEqual(app.Dependencies, []string{"java:src/main/java/com/acme/values"}) {
+		t.Fatalf("Java imports not resolved to repository packages: %+v", app)
+	}
+	if tested, found := snapshot.Package("java:src/test/java/com/acme/app"); !found || len(tested.Tests) != 1 || len(tested.Files) != 0 {
+		t.Fatalf("Java test was read as source: %+v", tested)
+	}
+	values, _ := snapshot.Package("java:src/main/java/com/acme/values")
+	if len(values.Symbols) != 2 || values.Symbols[0].Name != "Name" || values.Symbols[1] != (repository.Symbol{Name: "of", Kind: "function", Location: repository.Location{Path: "src/main/java/com/acme/values/Name.java", Line: 4}}) {
+		t.Fatalf("wrong Java declarations: %+v", values.Symbols)
+	}
+	if !reflect.DeepEqual(snapshot.EntryPoints, []repository.Location{{Path: "src/main/java/com/acme/app/Main.java", Line: 9}}) {
+		t.Fatalf("main method not located: %+v", snapshot.EntryPoints)
+	}
+	if len(snapshot.Warnings) != 1 || !strings.Contains(snapshot.Warnings[0], "Java inventory") {
+		t.Fatalf("Java gaps were not disclosed: %v", snapshot.Warnings)
+	}
+	hints := repository.ReadingHints(snapshot, nil)
+	if len(hints) != 1 || hints[0].Branches != 2 || hints[0].Line != 10 {
+		t.Fatalf("wrong Java branch points: %+v", hints)
+	}
+}
+
 func TestReadExclusionsAndFingerprint(t *testing.T) {
 	root := t.TempDir()
 	write := func(name, content string) {

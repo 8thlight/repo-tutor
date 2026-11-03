@@ -36,11 +36,11 @@ Every page that opens from a key closes with that key. Ctrl+K, Ctrl+S, Ctrl+B, C
 
 ## Repository snapshot
 
-The reader walks the selected directory without following symlinks. It includes Go, Python, JavaScript, TypeScript, Markdown, and the `go.mod`, `pyproject.toml`, and `package.json` manifests. Hidden directories, dependencies, fixtures, and generated output directories are excluded. Git ignore rules apply when Git is available. Generated Go source is excluded from package analysis.
+The reader walks the selected directory without following symlinks. It includes Go, Python, JavaScript, TypeScript, Java, Markdown, and the `go.mod`, `pyproject.toml`, `package.json`, `pom.xml`, and `settings.gradle` manifests. Hidden directories, dependencies, fixtures, and generated output directories are excluded. Git ignore rules apply when Git is available. Generated Go source is excluded from package analysis.
 
 Files over 512 KiB or containing non-text data are skipped with a warning. The total source budget is 64 MiB. Read errors and an empty supported source inventory fail the scan with an explanation. The scanner does not execute the target's code, fetch dependencies, or contact a remote service.
 
-Go packages use syntax trees across all build tags. Nested Go modules use their nearest `go.mod`. Test files are indexed separately and do not add production dependency edges. Python and JavaScript/TypeScript use conservative text patterns for imports and declarations. Python script registrations and main guards supply entry locations. JavaScript entry discovery is incomplete. Relative imports and a subset of local workspace imports can resolve; aliases, dynamic imports, and re-exports may be absent.
+Go packages use syntax trees across all build tags. Nested Go modules use their nearest `go.mod`. Test files are indexed separately and do not add production dependency edges. Python and JavaScript/TypeScript use conservative text patterns for imports and declarations. Python script registrations and main guards supply entry locations. JavaScript entry discovery is incomplete. Relative imports and a subset of local workspace imports can resolve; aliases, dynamic imports, and re-exports may be absent. Java reads `package` and `import` lines. An import resolves to the directory that holds its class only when exactly one source directory declares that class, so ambiguous names and fully qualified names used without an import are absent. A `main` method supplies an entry location.
 
 Topics begin with an overview, followed by source directories with their known dependencies first. Import cycles use a deterministic traversal; no order can place every edge of a cycle after its dependency. The map represents imports, not runtime calls.
 
@@ -136,7 +136,7 @@ The hints feed a course topic, "Where change happens", the last topic after the 
 
 Git history counts file appearances in at most 2,000 non-merge commits from the last 180 days. It reads local history only and does not follow renames. Missing Git history falls back to source signals. Shallow history can undercount changes.
 
-Go branch counts include conditionals, loops, non-default switch and select cases, and boolean conjunctions and disjunctions. Python and JavaScript/TypeScript counts use text patterns, which can include strings or miss syntax. Counts aggregate across a file and are not per-function cyclomatic complexity.
+Go branch counts include conditionals, loops, non-default switch and select cases, and boolean conjunctions and disjunctions. Python, JavaScript/TypeScript, and Java counts use text patterns, which can include strings or miss syntax. Counts aggregate across a file and are not per-function cyclomatic complexity.
 
 The reading score is `(commits + 1) * (branch points + 1)`, with path order breaking ties. Tests and generated Go files do not rank as production hotspots. The raw counts and first branch location appear beside each hint so a learner can inspect the evidence. Hints help select a reading or testing exercise; they do not establish defects or a need to refactor.
 

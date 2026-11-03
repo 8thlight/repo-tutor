@@ -36,7 +36,7 @@ type importSite struct {
 	target string
 }
 
-var analyzers = []analyzer{pythonAnalyzer, javascriptAnalyzer}
+var analyzers = []analyzer{pythonAnalyzer, javascriptAnalyzer, javaAnalyzer}
 
 func analyzerFor(name string) (analyzer, bool) {
 	extension := strings.ToLower(path.Ext(name))

@@ -138,7 +138,7 @@ The first time you open a repository, the tutor asks what you want to learn. Pre
 
 Scanning and source browsing run locally. Tutor turns send selected source excerpts to your installed agent CLI. The tutor does not call a model API or edit the repository being studied.
 
-Go analysis uses the standard Go parser. Python and JavaScript/TypeScript analysis recognizes literal imports and declaration patterns. It can miss dynamic imports, aliases, and re-exports. Dependency order is a reading aid; the scan does not build or type-check the target.
+Go analysis uses the standard Go parser. Python, JavaScript/TypeScript, and Java analysis recognizes literal imports and declaration patterns. It can miss dynamic imports, aliases, and re-exports. Dependency order is a reading aid; the scan does not build or type-check the target.
 
 Hotspots combine recent local Git changes and branch counts. The counts help choose what to read and test. They do not predict defects. Git is optional, and shallow history can undercount churn.
 
@@ -161,7 +161,7 @@ If a request fails, its reply and assessment are not recorded. Check the reporte
 
 ## Status
 
-Initial terminal tutor for Go, Python, and JavaScript/TypeScript repositories, on macOS and Linux. Diagrams and the type index are available in the terminal. Further work includes generated study guides and richer progress scheduling. See [architecture](docs/architecture/README.md), [decisions](docs/decisions), and [stack](docs/stack/README.md).
+Initial terminal tutor for Go, Python, JavaScript/TypeScript, and Java repositories, on macOS and Linux. Diagrams and the type index are available in the terminal. Further work includes generated study guides and richer progress scheduling. See [architecture](docs/architecture/README.md), [decisions](docs/decisions), and [stack](docs/stack/README.md).
 
 ## Development
 
