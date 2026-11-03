@@ -188,6 +188,35 @@ func TestJavaNamedClassOwnership(t *testing.T) {
 	}
 }
 
+func TestJavaTestLayer(t *testing.T) {
+	snapshot := repository.Analyze([]repository.File{
+		{Path: "src/main/java/com/acme/app/Main.java", Content: "package com.acme.app;\nimport com.acme.values.Name;\nclass Main {}\n"},
+		{Path: "src/main/java/com/acme/values/Name.java", Content: "package com.acme.values;\nclass Name {}\n"},
+		{Path: "src/test/java/com/acme/integration/FlowTest.java", Content: "package com.acme.integration;\nimport com.acme.app.Main;\nimport com.acme.values.Name;\nimport org.junit.jupiter.api.Test;\n@SpringBootTest\nclass FlowTest {}\n"},
+		{Path: "src/test/java/com/acme/app/AppIT.java", Content: "package com.acme.app;\n@SpringBootTest\nclass AppIT {}\n"},
+		{Path: "src/test/java/com/acme/loose/LooseTest.java", Content: "package com.acme.loose;\nclass LooseTest {}\n"},
+	})
+	layer, found := snapshot.Package("java:src/test/java/com/acme/integration")
+	wantDependencies := []string{"java:src/main/java/com/acme/app", "java:src/main/java/com/acme/values"}
+	if !found || !layer.TestLayer || len(layer.Files) != 0 || len(layer.Tests) != 1 || !reflect.DeepEqual(layer.Dependencies, wantDependencies) {
+		t.Fatalf("system test did not form a test layer: %+v", layer)
+	}
+	if loose, _ := snapshot.Package("java:src/test/java/com/acme/loose"); loose.TestLayer {
+		t.Fatal("a test that does not start the system formed a layer")
+	}
+	app, _ := snapshot.Package("java:src/main/java/com/acme/app")
+	if app.TestLayer || !reflect.DeepEqual(app.Tests, []string{"src/test/java/com/acme/app/AppIT.java"}) || !reflect.DeepEqual(app.Dependencies, []string{"java:src/main/java/com/acme/values"}) {
+		t.Fatalf("an owned system test or a layer changed its production package: %+v", app)
+	}
+	positions := map[string]int{}
+	for index, current := range repository.Foundations(snapshot) {
+		positions[current.Path] = index
+	}
+	if positions[layer.Path] < positions["java:src/main/java/com/acme/app"] || positions[layer.Path] < positions["java:src/main/java/com/acme/values"] {
+		t.Fatalf("the test layer preceded the code it exercises: %v", positions)
+	}
+}
+
 func TestJavaBranchPointsSkipComments(t *testing.T) {
 	source := "package a;\n\n/**\n * Runs if the input is ready and while open.\n */\nclass Run {\n    boolean any = \"src/*\".isEmpty() || false;  // for each file\n    void go(boolean ok) {\n        /* if skipped */ if (ok) {}\n        String t = \"\"\"\n            /* kept as text\n            \"\"\";\n        for (;;) {}\n    }\n}\n"
 	snapshot := repository.Analyze([]repository.File{{Path: "src/main/java/a/Run.java", Content: source}})

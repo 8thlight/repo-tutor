@@ -17,6 +17,7 @@ type analyzer struct {
 	branches    *regexp.Regexp
 	gaps        string
 	test        func(name string) bool
+	system      func(test File) bool
 	uncommented func(content string) string
 	manifest    func(file File) (Module, string, bool)
 	scan        func(file File) scanned
@@ -166,6 +167,8 @@ func analyzeLanguages(snapshot Snapshot) Snapshot {
 		resolvers[language.name] = language.index(modules, sources[language.name], owners)
 	}
 	moveTestsToOwners(packages, tests, resolvers)
+	markTestLayers(packages, tests)
+	readLayerImports(packages, tests, sites)
 	for identifier, current := range packages {
 		current.Imports = unique(current.Imports)
 		resolved := resolvers[current.Language]
@@ -221,6 +224,37 @@ func moveTestsToOwners(packages map[string]*Package, tests map[string][]director
 	for identifier, current := range packages {
 		if len(current.Files) == 0 && len(current.Tests) == 0 {
 			delete(packages, identifier)
+		}
+	}
+}
+
+func markTestLayers(packages map[string]*Package, tests map[string][]directoryTest) {
+	for language, candidates := range tests {
+		analyzed, _ := analyzerNamed(language)
+		if analyzed.system == nil {
+			continue
+		}
+		for _, test := range candidates {
+			current := packages[test.directory]
+			if current != nil && len(current.Files) == 0 && slices.Contains(current.Tests, test.file.Path) && analyzed.system(test.file) {
+				current.TestLayer = true
+			}
+		}
+	}
+}
+
+func readLayerImports(packages map[string]*Package, tests map[string][]directoryTest, sites map[string][]importSite) {
+	for language, candidates := range tests {
+		analyzed, _ := analyzerNamed(language)
+		for _, test := range candidates {
+			current := packages[test.directory]
+			if current == nil || !current.TestLayer || !slices.Contains(current.Tests, test.file.Path) {
+				continue
+			}
+			for _, target := range analyzed.scan(test.file).imports {
+				current.Imports = append(current.Imports, target)
+				sites[test.directory] = append(sites[test.directory], importSite{test.file.Path, target})
+			}
 		}
 	}
 }

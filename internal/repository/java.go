@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-const javaGaps = "Java inventory uses literal imports and declaration patterns; fully qualified names without an import, reflection, dependency injection, and Maven or Gradle module links are not followed, and branch counts include keywords inside string literals"
+const javaGaps = "Java inventory uses literal imports and declaration patterns; fully qualified names without an import, reflection, dependency injection, and Maven or Gradle module links are not followed, tests that start the whole system with a framework other than Spring Boot are not grouped, and branch counts include keywords inside string literals"
 
 var javaPomArtifact = regexp.MustCompile(`<artifactId>\s*([^<\s]+)\s*</artifactId>`)
 var javaPomParent = regexp.MustCompile(`(?s)<parent>.*?</parent>`)
@@ -16,6 +16,7 @@ var javaImport = regexp.MustCompile(`^\s*import\s+(?:static\s+)?([\w.]+(?:\.\*)?
 var javaType = regexp.MustCompile(`^\s*(?:(?:public|protected|private|abstract|static|final|sealed|non-sealed|strictfp)\s+)*(class|interface|enum|record|@interface)\s+(\w+)`)
 var javaMethod = regexp.MustCompile(`^\s*(?:(?:public|protected|private|static|final|abstract|synchronized|default|native)\s+)+(?:<[^>]+>\s+)?[\w<>\[\],.? ]+?\s+(\w+)\s*\(`)
 var javaSliceTest = regexp.MustCompile(`@(?:WebMvcTest|WebFluxTest)\s*\(\s*(?:(?:value|controllers)\s*=\s*)?(?:\{\s*)?([\w.]+)\.class\s*\}?\s*\)`)
+var javaSystemTest = regexp.MustCompile(`@SpringBootTest\b`)
 var javaMain = regexp.MustCompile(`\bstatic\s+void\s+main\s*\(`)
 var javaTestName = regexp.MustCompile(`(?:Tests?|[a-z0-9]IT)$`)
 var javaBranch = regexp.MustCompile(`\b(if|for|while|case|catch)\b|&&|\|\|`)
@@ -27,6 +28,7 @@ var javaAnalyzer = analyzer{
 	branches:    javaBranch,
 	gaps:        javaGaps,
 	test:        javaTest,
+	system:      javaSystem,
 	uncommented: javaWithoutComments,
 	manifest:    javaManifest,
 	scan:        javaScan,
@@ -58,6 +60,10 @@ func javaTest(name string) bool {
 		}
 	}
 	return false
+}
+
+func javaSystem(test File) bool {
+	return javaSystemTest.MatchString(test.Content)
 }
 
 func javaScan(file File) scanned {

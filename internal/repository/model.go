@@ -37,6 +37,7 @@ type Package struct {
 	Imports      []string `json:"imports,omitempty"`
 	Dependencies []string `json:"dependencies,omitempty"`
 	Symbols      []Symbol `json:"symbols,omitempty"`
+	TestLayer    bool     `json:"test_layer,omitempty"`
 }
 
 type Module struct {

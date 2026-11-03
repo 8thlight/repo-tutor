@@ -96,6 +96,9 @@ declarations, and how the rest of the repository uses it, citing its own lines.
 For topic hotspots, explain what the reading hints show about where change concentrates in this
 repository, trace what the highest-ranked file is responsible for in the sources, and say that
 the hints are reading priorities and not defects.
+A topic whose package in the inventory has test_layer true is a test layer: tests that start the
+whole system and reach several packages. Explain how the system is tested end to end: what the
+tests set up, which packages they reach, and how a failure would read, citing the test lines.
 For action probe, ask one short question that tests whether the learner already knows what this
 topic does, without teaching it; use explanation for one framing sentence and assessment none.
 For action quiz, ask one practical question about this topic without giving away its answer;

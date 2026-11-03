@@ -21,7 +21,7 @@ type Topic struct {
 func Course(snapshot repository.Snapshot) []Topic {
 	result := []Topic{{Overview, "Repository overview"}}
 	for _, current := range repository.Foundations(snapshot) {
-		if len(current.Files) > 0 {
+		if len(current.Files) > 0 || current.TestLayer {
 			result = append(result, Topic{current.Path, current.Directory + " (" + current.Name + ")"})
 		}
 	}
