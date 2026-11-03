@@ -83,6 +83,50 @@ func TestMixedLanguageInventory(t *testing.T) {
 	}
 }
 
+func TestNestedTestDirectoryBelongsToItsPackage(t *testing.T) {
+	snapshot := repository.Analyze([]repository.File{
+		{Path: "src/app/models.py", Content: "class Order:\n    pass\n"},
+		{Path: "src/app/tests/test_models.py", Content: "def test_order():\n    pass\n"},
+		{Path: "src/app/tests/unit/test_deep.py", Content: "def test_deep():\n    pass\n"},
+		{Path: "web/view.ts", Content: "export const view = 1\n"},
+		{Path: "web/__tests__/view.js", Content: "test('view', () => {})\n"},
+		{Path: "service.py", Content: "def run():\n    pass\n"},
+		{Path: "tests/test_service.py", Content: "def test_run():\n    pass\n"},
+		{Path: "lib/helper.py", Content: "def help():\n    pass\n"},
+		{Path: "lib/tests/__init__.py", Content: ""},
+	})
+	app, _ := snapshot.Package("python:src/app")
+	want := []string{"src/app/tests/test_models.py", "src/app/tests/unit/test_deep.py"}
+	if !reflect.DeepEqual(app.Tests, want) {
+		t.Fatalf("nested tests were not moved to their package: %v", app.Tests)
+	}
+	web, _ := snapshot.Package("javascript/typescript:web")
+	if !reflect.DeepEqual(web.Tests, []string{"web/__tests__/view.js"}) {
+		t.Fatalf("JavaScript nested test was not moved: %v", web.Tests)
+	}
+	for _, name := range []string{"python:src/app/tests", "python:src/app/tests/unit", "javascript/typescript:web/__tests__"} {
+		if _, found := snapshot.Package(name); found {
+			t.Fatalf("emptied test package %s was kept", name)
+		}
+	}
+	if root, _ := snapshot.Package("python:."); len(root.Tests) != 0 {
+		t.Fatalf("a repository-root package took a mirror test: %v", root.Tests)
+	}
+	if mirror, found := snapshot.Package("python:tests"); !found || len(mirror.Tests) != 1 {
+		t.Fatalf("a top-level mirror test left its own package: %+v", mirror)
+	}
+}
+
+func TestJavaTestInNestedTestDirectoryKeepsJavaRules(t *testing.T) {
+	snapshot := repository.Analyze([]repository.File{
+		{Path: "src/main/java/com/acme/app/Main.java", Content: "package com.acme.app;\nclass Main {}\n"},
+		{Path: "src/main/java/com/acme/app/test/Odd.java", Content: "package com.acme.app.test;\nclass Odd {}\n"},
+	})
+	if app, _ := snapshot.Package("java:src/main/java/com/acme/app"); len(app.Tests) != 0 {
+		t.Fatalf("Java took the nested directory rule: %v", app.Tests)
+	}
+}
+
 func TestJavaInventory(t *testing.T) {
 	snapshot := repository.Analyze([]repository.File{
 		{Path: "pom.xml", Content: "<project><parent><artifactId>parent</artifactId></parent><artifactId>course</artifactId></project>"},

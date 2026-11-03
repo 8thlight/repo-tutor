@@ -15,14 +15,15 @@ var pythonMain = regexp.MustCompile(`^\s*if\s+__name__\s*==\s*["']__main__["']\s
 var pythonBranch = regexp.MustCompile(`\b(if|elif|for|while|except|case|and|or)\b`)
 
 var pythonAnalyzer = analyzer{
-	name:       "Python",
-	extensions: []string{".py"},
-	manifests:  []string{"pyproject.toml"},
-	branches:   pythonBranch,
-	gaps:       patternWarning,
-	manifest:   pythonManifest,
-	scan:       pythonScan,
-	index:      pythonIndex,
+	name:        "Python",
+	extensions:  []string{".py"},
+	manifests:   []string{"pyproject.toml"},
+	branches:    pythonBranch,
+	gaps:        patternWarning,
+	nestedTests: true,
+	manifest:    pythonManifest,
+	scan:        pythonScan,
+	index:       pythonIndex,
 }
 
 func pythonManifest(file File) (Module, string, bool) {

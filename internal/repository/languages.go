@@ -17,6 +17,7 @@ type analyzer struct {
 	branches    *regexp.Regexp
 	gaps        string
 	test        func(name string) bool
+	nestedTests bool
 	system      func(test File) bool
 	uncommented func(content string) string
 	manifest    func(file File) (Module, string, bool)
@@ -45,6 +46,8 @@ type importSite struct {
 	from   string
 	target string
 }
+
+var testDirectories = []string{"test", "tests", "__tests__"}
 
 var analyzers = []analyzer{pythonAnalyzer, javascriptAnalyzer, javaAnalyzer}
 
@@ -202,12 +205,19 @@ func analyzeLanguages(snapshot Snapshot) Snapshot {
 func moveTestsToOwners(packages map[string]*Package, tests map[string][]directoryTest, resolvers map[string]resolver) {
 	adopted := map[string]bool{}
 	for language, candidates := range tests {
+		analyzed, _ := analyzerNamed(language)
 		owner := resolvers[language].owner
-		if owner == nil {
+		if owner == nil && !analyzed.nestedTests {
 			continue
 		}
 		for _, test := range candidates {
-			target := owner(test.file)
+			target := ""
+			if analyzed.nestedTests {
+				target = nestingPackage(language, test.file.Path, packages)
+			}
+			if target == "" && owner != nil {
+				target = owner(test.file)
+			}
 			production, found := packages[target]
 			if !found || target == test.directory {
 				continue
@@ -226,6 +236,20 @@ func moveTestsToOwners(packages map[string]*Package, tests map[string][]director
 			delete(packages, identifier)
 		}
 	}
+}
+
+func nestingPackage(language, name string, packages map[string]*Package) string {
+	segments := strings.Split(path.Dir(name), "/")
+	for index := len(segments) - 1; index > 0; index-- {
+		if !contains(testDirectories, segments[index]) {
+			continue
+		}
+		parent := packageIdentifier(language, strings.Join(segments[:index], "/"))
+		if current, found := packages[parent]; found && len(current.Files) > 0 {
+			return parent
+		}
+	}
+	return ""
 }
 
 func markTestLayers(packages map[string]*Package, tests map[string][]directoryTest) {

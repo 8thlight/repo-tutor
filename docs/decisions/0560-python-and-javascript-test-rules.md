@@ -12,7 +12,7 @@ The principle is settled. What each language needs is the evidence a text patter
 
 Python and JavaScript and TypeScript supply the same two ownership rules, in this order, and each supplies its own recognition and system-test signals.
 
-**Directory rule.** A test directory nested inside a production package belongs to that package. A directory named `test`, `tests`, or `__tests__` whose parent directory is a production package gives its tests to the parent. Django's `app/tests/` and a `src/__tests__/` follow it.
+**Directory rule.** A test directory nested inside a production package belongs to that package. A directory named `test`, `tests`, or `__tests__` whose parent directory is a production package gives its tests to the parent. Django's `app/tests/` and a `src/__tests__/` follow it. A directory at the repository root is a mirror of the whole tree and not nested in a package, so its tests go to the import rule. The parent must hold production files of the same language.
 
 **Import rule.** Otherwise a test is owned by the production package that all its resolved local imports reach, when they reach exactly one. Imports of a test-only package, such as a fixtures directory, do not count. A test that imports two production packages, or none, has no owner. A test that imports many packages is as likely a unit test of a helper as an end-to-end test, so the number of imports is not a signal.
 

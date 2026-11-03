@@ -12,14 +12,15 @@ var javascriptDeclaration = regexp.MustCompile(`^(?:export\s+)?(?:default\s+)?(?
 var javascriptBranch = regexp.MustCompile(`\b(if|for|while|case|catch)\b|&&|\|\||\?\?`)
 
 var javascriptAnalyzer = analyzer{
-	name:       "JavaScript/TypeScript",
-	extensions: []string{".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx"},
-	manifests:  []string{"package.json"},
-	branches:   javascriptBranch,
-	gaps:       patternWarning,
-	manifest:   javascriptManifest,
-	scan:       javascriptScan,
-	index:      javascriptIndex,
+	name:        "JavaScript/TypeScript",
+	extensions:  []string{".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx"},
+	manifests:   []string{"package.json"},
+	branches:    javascriptBranch,
+	gaps:        patternWarning,
+	nestedTests: true,
+	manifest:    javascriptManifest,
+	scan:        javascriptScan,
+	index:       javascriptIndex,
 }
 
 func javascriptManifest(file File) (Module, string, bool) {
