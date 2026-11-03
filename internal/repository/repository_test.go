@@ -126,11 +126,12 @@ func TestJavaTestRecognition(t *testing.T) {
 		{Path: "src/main/java/a/OrderServiceTest.java", Content: "package a;\nclass OrderServiceTest {}\n"},
 		{Path: "src/main/java/a/OrderIT.java", Content: "package a;\nclass OrderIT {}\n"},
 		{Path: "src/integrationTest/java/a/Flow.java", Content: "package a;\nclass Flow {}\n"},
+		{Path: "src/integration-test/java/a/Wired.java", Content: "package a;\nclass Wired {}\n"},
 		{Path: "src/androidTest/java/a/Screen.java", Content: "package a;\nclass Screen {}\n"},
 	})
 	production, _ := snapshot.Package("java:src/main/java/a")
 	wantFiles := []string{"src/main/java/a/GIT.java", "src/main/java/a/Latest.java", "src/main/java/a/Widget.java"}
-	wantTests := []string{"src/androidTest/java/a/Screen.java", "src/integrationTest/java/a/Flow.java", "src/main/java/a/OrderIT.java", "src/main/java/a/OrderServiceTest.java"}
+	wantTests := []string{"src/androidTest/java/a/Screen.java", "src/integration-test/java/a/Wired.java", "src/integrationTest/java/a/Flow.java", "src/main/java/a/OrderIT.java", "src/main/java/a/OrderServiceTest.java"}
 	if !reflect.DeepEqual(production.Files, wantFiles) || !reflect.DeepEqual(production.Tests, wantTests) {
 		t.Fatalf("wrong Java test recognition: files %v tests %v", production.Files, production.Tests)
 	}

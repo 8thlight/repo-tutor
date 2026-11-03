@@ -1,6 +1,6 @@
 # 0550. Test ownership and the test layer
 
-Status: accepted
+Status: accepted. The Java test directories also include `integration-test`, which a scan of a Spring MVC repository showed to be in use.
 
 ## Context
 

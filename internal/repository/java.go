@@ -55,7 +55,7 @@ func javaTest(name string) bool {
 		return true
 	}
 	for _, directory := range strings.Split(path.Dir(name), "/") {
-		if directory == "test" || directory == "integrationTest" || directory == "androidTest" {
+		if directory == "test" || directory == "integrationTest" || directory == "integration-test" || directory == "androidTest" {
 			return true
 		}
 	}
