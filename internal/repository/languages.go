@@ -18,6 +18,7 @@ type analyzer struct {
 	gaps        string
 	test        func(name string) bool
 	nestedTests bool
+	importOwned bool
 	system      func(test File) bool
 	uncommented func(content string) string
 	manifest    func(file File) (Module, string, bool)
@@ -207,7 +208,7 @@ func moveTestsToOwners(packages map[string]*Package, tests map[string][]director
 	for language, candidates := range tests {
 		analyzed, _ := analyzerNamed(language)
 		owner := resolvers[language].owner
-		if owner == nil && !analyzed.nestedTests {
+		if owner == nil && !analyzed.nestedTests && !analyzed.importOwned {
 			continue
 		}
 		for _, test := range candidates {
@@ -217,6 +218,9 @@ func moveTestsToOwners(packages map[string]*Package, tests map[string][]director
 			}
 			if target == "" && owner != nil {
 				target = owner(test.file)
+			}
+			if target == "" && analyzed.importOwned {
+				target = importedPackage(analyzed, resolvers[language], test.file, packages)
 			}
 			production, found := packages[target]
 			if !found || target == test.directory {
@@ -248,6 +252,23 @@ func nestingPackage(language, name string, packages map[string]*Package) string 
 		if current, found := packages[parent]; found && len(current.Files) > 0 {
 			return parent
 		}
+	}
+	return ""
+}
+
+func importedPackage(analyzed analyzer, resolved resolver, test File, packages map[string]*Package) string {
+	reached := map[string]bool{}
+	for _, target := range analyzed.scan(test).imports {
+		identifier := resolved.resolve(test.Path, target)
+		if current, found := packages[identifier]; found && len(current.Files) > 0 {
+			reached[identifier] = true
+		}
+	}
+	if len(reached) != 1 {
+		return ""
+	}
+	for identifier := range reached {
+		return identifier
 	}
 	return ""
 }

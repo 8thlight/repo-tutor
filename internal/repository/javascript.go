@@ -18,6 +18,7 @@ var javascriptAnalyzer = analyzer{
 	branches:    javascriptBranch,
 	gaps:        patternWarning,
 	nestedTests: true,
+	importOwned: true,
 	manifest:    javascriptManifest,
 	scan:        javascriptScan,
 	index:       javascriptIndex,

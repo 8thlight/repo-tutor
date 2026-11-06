@@ -21,6 +21,7 @@ var pythonAnalyzer = analyzer{
 	branches:    pythonBranch,
 	gaps:        patternWarning,
 	nestedTests: true,
+	importOwned: true,
 	manifest:    pythonManifest,
 	scan:        pythonScan,
 	index:       pythonIndex,

@@ -117,6 +117,39 @@ func TestNestedTestDirectoryBelongsToItsPackage(t *testing.T) {
 	}
 }
 
+func TestMirroredTestIsOwnedByTheOnePackageItImports(t *testing.T) {
+	snapshot := repository.Analyze([]repository.File{
+		{Path: "src/shop/__init__.py", Content: ""},
+		{Path: "src/shop/cart.py", Content: "def add():\n    pass\n"},
+		{Path: "src/pay/__init__.py", Content: ""},
+		{Path: "src/pay/charge.py", Content: "def charge():\n    pass\n"},
+		{Path: "tests/test_cart.py", Content: "from shop.cart import add\nimport pytest\nfrom helpers import build\n"},
+		{Path: "tests/test_both.py", Content: "import shop\nimport pay\n"},
+		{Path: "tests/test_none.py", Content: "import pytest\n"},
+		{Path: "tests/helpers.py", Content: "import shop\n"},
+		{Path: "web/view.ts", Content: "export const view = 1\n"},
+		{Path: "core/model.ts", Content: "export const model = 1\n"},
+		{Path: "test/view.js", Content: "const view = require('../web/view')\nconst fs = require('fs')\n"},
+		{Path: "test/mixed.js", Content: "require('../web/view')\nrequire('../core/model')\n"},
+		{Path: "web/view.test.ts", Content: "import { view } from './view'\nimport { model } from '../core/model'\n"},
+	})
+	shop, _ := snapshot.Package("python:src/shop")
+	if !reflect.DeepEqual(shop.Tests, []string{"tests/helpers.py", "tests/test_cart.py"}) {
+		t.Fatalf("Python tests were not moved to the package they import: %v", shop.Tests)
+	}
+	mirror, _ := snapshot.Package("python:tests")
+	if !reflect.DeepEqual(mirror.Tests, []string{"tests/test_both.py", "tests/test_none.py"}) {
+		t.Fatalf("a test with two or no packages left its directory: %v", mirror.Tests)
+	}
+	web, _ := snapshot.Package("javascript/typescript:web")
+	if !reflect.DeepEqual(web.Tests, []string{"test/view.js", "web/view.test.ts"}) {
+		t.Fatalf("JavaScript tests were not placed by import: %v", web.Tests)
+	}
+	if mixed, _ := snapshot.Package("javascript/typescript:test"); !reflect.DeepEqual(mixed.Tests, []string{"test/mixed.js"}) {
+		t.Fatalf("a test that imports two packages was moved: %v", mixed.Tests)
+	}
+}
+
 func TestJavaTestInNestedTestDirectoryKeepsJavaRules(t *testing.T) {
 	snapshot := repository.Analyze([]repository.File{
 		{Path: "src/main/java/com/acme/app/Main.java", Content: "package com.acme.app;\nclass Main {}\n"},
