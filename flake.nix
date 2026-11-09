@@ -6,7 +6,7 @@
   outputs = { self, nixpkgs }:
     let
       releaseVersion = nixpkgs.lib.removeSuffix "\n" (builtins.readFile ./VERSION);
-      systems = [ "aarch64-darwin" "x86_64-darwin" "aarch64-linux" "x86_64-linux" ];
+      systems = [ "aarch64-darwin" "aarch64-linux" "x86_64-linux" ];
       forAllSystems = f: nixpkgs.lib.genAttrs systems (system: f nixpkgs.legacyPackages.${system});
     in
     {
