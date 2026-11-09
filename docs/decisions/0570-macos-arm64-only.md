@@ -14,7 +14,7 @@ The Homebrew formula offers macOS only on `arm64`, and it declares that dependen
 
 The flake drops `x86_64-darwin` from its systems, so `packages.default` and the dev shell exist for `aarch64-darwin`, `aarch64-linux`, and `x86_64-linux`.
 
-The README says an Intel Mac builds from source with `just install`. The build uses no C bindings, so it needs no cross toolchain.
+The README says an Intel Mac builds from source with Go and `just install`, outside the Nix shell, which no longer supports it. The build uses no C bindings, so it needs no other toolchain.
 
 Intel Mac support returns when the project has users who need it. That change adds the target to `build-release-archives`, the block to the formula, and the system to the flake. It supersedes this record.
 
