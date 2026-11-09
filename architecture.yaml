@@ -1,0 +1,45 @@
+components_root: internal
+model: null
+contracts_root: contracts
+entry_point: binary
+
+naming:
+  component_path: "<noun>"
+  segment_pattern: "^[a-z][a-z0-9]*$"
+
+banned_in_core:
+  - filesystem
+  - network
+  - process
+  - terminal
+  - clock
+  - randomness
+  - environment
+
+drivers:
+  - agent
+  - session
+  - terminal
+
+components:
+  - name: about
+    position: 1
+    depends_on: []
+  - name: repository
+    position: 1
+    depends_on: []
+  - name: settings
+    position: 1
+    depends_on: []
+  - name: tutor
+    position: 2
+    depends_on: [repository]
+  - name: agent
+    position: 3
+    depends_on: [tutor]
+  - name: session
+    position: 3
+    depends_on: [settings, tutor]
+  - name: terminal
+    position: 4
+    depends_on: [about, agent, repository, session, settings, tutor]
