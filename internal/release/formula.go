@@ -11,8 +11,8 @@ const repositoryURL = "https://github.com/8thlight/repo-tutor"
 type archive struct{ URL, Checksum string }
 
 type formulaFields struct {
-	Version                                      string
-	DarwinARM, DarwinIntel, LinuxARM, LinuxIntel archive
+	Version                         string
+	DarwinARM, LinuxARM, LinuxIntel archive
 }
 
 var formulaTemplate = template.Must(template.New("formula").Parse(`class RepoTutor < Formula
@@ -22,14 +22,9 @@ var formulaTemplate = template.Must(template.New("formula").Parse(`class RepoTut
   license "GPL-3.0-or-later"
 
   on_macos do
-    on_arm do
-      url "{{ .DarwinARM.URL }}"
-      sha256 "{{ .DarwinARM.Checksum }}"
-    end
-    on_intel do
-      url "{{ .DarwinIntel.URL }}"
-      sha256 "{{ .DarwinIntel.Checksum }}"
-    end
+    depends_on arch: :arm64
+    url "{{ .DarwinARM.URL }}"
+    sha256 "{{ .DarwinARM.Checksum }}"
   end
 
   on_linux do
@@ -74,7 +69,7 @@ func Formula(tag, checksums string) (string, error) {
 		return archive{URL: fmt.Sprintf("%s/releases/download/%s/%s", repositoryURL, tag, name), Checksum: checksum}, nil
 	}
 	fields := formulaFields{Version: strings.TrimPrefix(tag, "v")}
-	for system, target := range map[string]*archive{"darwin_arm64": &fields.DarwinARM, "darwin_amd64": &fields.DarwinIntel, "linux_arm64": &fields.LinuxARM, "linux_amd64": &fields.LinuxIntel} {
+	for system, target := range map[string]*archive{"darwin_arm64": &fields.DarwinARM, "linux_arm64": &fields.LinuxARM, "linux_amd64": &fields.LinuxIntel} {
 		found, err := find(system)
 		if err != nil {
 			return "", err

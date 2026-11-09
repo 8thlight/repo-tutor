@@ -5,8 +5,7 @@ import (
 	"testing"
 )
 
-const sampleChecksums = `1111111111111111111111111111111111111111111111111111111111111111  repo-tutor_v0.1.0_darwin_amd64.tar.gz
-2222222222222222222222222222222222222222222222222222222222222222  repo-tutor_v0.1.0_darwin_arm64.tar.gz
+const sampleChecksums = `2222222222222222222222222222222222222222222222222222222222222222  repo-tutor_v0.1.0_darwin_arm64.tar.gz
 3333333333333333333333333333333333333333333333333333333333333333  repo-tutor_v0.1.0_linux_amd64.tar.gz
 4444444444444444444444444444444444444444444444444444444444444444  repo-tutor_v0.1.0_linux_arm64.tar.gz
 `
@@ -21,8 +20,6 @@ func TestFormulaNamesEveryArchiveWithItsChecksum(t *testing.T) {
 		`license "GPL-3.0-or-later"`,
 		`url "https://github.com/8thlight/repo-tutor/releases/download/v0.1.0/repo-tutor_v0.1.0_darwin_arm64.tar.gz"`,
 		`sha256 "2222222222222222222222222222222222222222222222222222222222222222"`,
-		`url "https://github.com/8thlight/repo-tutor/releases/download/v0.1.0/repo-tutor_v0.1.0_darwin_amd64.tar.gz"`,
-		`sha256 "1111111111111111111111111111111111111111111111111111111111111111"`,
 		`url "https://github.com/8thlight/repo-tutor/releases/download/v0.1.0/repo-tutor_v0.1.0_linux_arm64.tar.gz"`,
 		`sha256 "4444444444444444444444444444444444444444444444444444444444444444"`,
 		`url "https://github.com/8thlight/repo-tutor/releases/download/v0.1.0/repo-tutor_v0.1.0_linux_amd64.tar.gz"`,
@@ -45,6 +42,20 @@ func TestFormulaPlacesEachChecksumUnderItsOwnPlatform(t *testing.T) {
 	}
 	if strings.Index(formula, "on_macos") > strings.Index(formula, "on_linux") {
 		t.Fatal("the macOS block should come first")
+	}
+}
+
+func TestFormulaOffersMacOSOnlyOnArm(t *testing.T) {
+	formula, err := Formula("v0.1.0", sampleChecksums)
+	if err != nil {
+		t.Fatal(err)
+	}
+	macOS := formula[strings.Index(formula, "on_macos"):strings.Index(formula, "on_linux")]
+	if !strings.Contains(macOS, "depends_on arch: :arm64") {
+		t.Fatalf("the macOS block should require arm64:\n%s", macOS)
+	}
+	if strings.Contains(formula, "darwin_amd64") {
+		t.Fatalf("the formula should not name an Intel Mac archive:\n%s", formula)
 	}
 }
 
