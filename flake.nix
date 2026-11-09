@@ -1,16 +1,22 @@
 {
   description = "repo-tutor development environment";
 
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+  inputs.threnos.url = "github:8thlight-daveloper/threnos";
+  inputs.nixpkgs.follows = "threnos/nixpkgs";
 
-  outputs = { self, nixpkgs }:
+  outputs = { self, threnos, ... }:
     let
-      releaseVersion = nixpkgs.lib.removeSuffix "\n" (builtins.readFile ./VERSION);
-      systems = [ "aarch64-darwin" "aarch64-linux" "x86_64-linux" ];
-      forAllSystems = f: nixpkgs.lib.genAttrs systems (system: f nixpkgs.legacyPackages.${system});
+      releaseVersion = builtins.replaceStrings [ "\n" ] [ "" ] (builtins.readFile ./VERSION);
     in
-    {
-      packages = forAllSystems (pkgs: {
+    threnos.lib.projectOutputs {
+      src = self;
+      recipes = [ "check" "mutate" "mutate-plan" "mutate-summary" "mutate-report" ];
+      devShell = pkgs: {
+        packages = [ pkgs.go pkgs.gopls ];
+        env.GODEBUG = "gcshrinkstackoff=1";
+        shellHook = "unset GOROOT";
+      };
+      packages = pkgs: {
         go = pkgs.go;
         default = pkgs.buildGoModule {
           pname = "repo-tutor";
@@ -24,27 +30,6 @@
           postInstall = "mv $out/bin/binary $out/bin/repo-tutor";
           meta.mainProgram = "repo-tutor";
         };
-      });
-
-      devShells = forAllSystems (pkgs: {
-        default = pkgs.mkShell {
-          GODEBUG = "gcshrinkstackoff=1";
-          shellHook = "unset GOROOT";
-          packages = [
-            pkgs.go
-            pkgs.gopls
-            pkgs.just
-            pkgs.gh
-            pkgs.lychee
-            pkgs.markdownlint-cli2
-            pkgs.vale
-            (pkgs.python3.withPackages (ps: [
-              ps.mdformat
-              ps.mdformat-gfm
-              ps.mdformat-frontmatter
-            ]))
-          ];
-        };
-      });
+      };
     };
 }
