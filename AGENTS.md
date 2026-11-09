@@ -13,6 +13,7 @@ The skills came from a sibling project. Some paths and ADR numbers they cite do 
 | Folder | Holds | Pace |
 | -- | -- | -- |
 | `docs/decisions/` | ADRs: what we chose and why | Slowest. A new ADR supersedes an old one |
+| `docs/reference/` | Exact definitions of formats, with worked examples | Changes with the format |
 | `docs/architecture/` | Views of the current system | Changes as components change |
 | `docs/stack/` | Language and tooling | Fastest |
 
