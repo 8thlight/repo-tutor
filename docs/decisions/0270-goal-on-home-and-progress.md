@@ -1,6 +1,11 @@
-# 0270. Where the goal shows
+---
+category: ux
+status: accepted
+approval: person
+affects: [terminal]
+---
 
-Status: accepted
+# 0270. Where the goal shows
 
 ## Context
 

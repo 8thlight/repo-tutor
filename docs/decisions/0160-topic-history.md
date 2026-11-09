@@ -1,6 +1,11 @@
-# 0160. History by topic
+---
+category: behavior
+status: accepted
+approval: person
+affects: [session, terminal]
+---
 
-Status: accepted
+# 0160. History by topic
 
 ## Context
 

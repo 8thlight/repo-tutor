@@ -1,6 +1,14 @@
+---
+category: ux
+status: accepted
+approval: person
+affects: [terminal]
+partly-superseded-by: ['0390']
+---
+
 # 0110. Page origin
 
-Status: accepted. During a quiz or probe on the lesson page, `Ctrl+L` leaves it after a second press under [0390](0390-leave-a-quiz.md).
+During a quiz or probe on the lesson page, `Ctrl+L` leaves it after a second press under [0390](0390-leave-a-quiz.md).
 
 ## Context
 

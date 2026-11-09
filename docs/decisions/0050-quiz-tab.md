@@ -1,6 +1,14 @@
+---
+category: ux
+status: accepted
+approval: person
+affects: [terminal]
+partly-superseded-by: ['0190']
+---
+
 # 0050. Quiz tab
 
-Status: accepted. The tab set is now Home, Course, Quiz, and Progress under [0190](0190-course-and-quiz-tabs.md); the activity rule stands.
+The tab set is now Home, Course, Quiz, and Progress under [0190](0190-course-and-quiz-tabs.md); the activity rule stands.
 
 ## Context
 

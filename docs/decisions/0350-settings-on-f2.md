@@ -1,6 +1,12 @@
-# 0350. Where settings and about open
+---
+category: ux
+status: accepted
+approval: person
+affects: [terminal]
+partly-supersedes: ['0100', '0230', '0310']
+---
 
-Status: accepted
+# 0350. Where settings and about open
 
 ## Context
 

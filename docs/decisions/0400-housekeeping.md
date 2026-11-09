@@ -1,6 +1,11 @@
-# 0400. Housekeeping
+---
+category: behavior
+status: accepted
+approval: person
+affects: [session, terminal]
+---
 
-Status: accepted
+# 0400. Housekeeping
 
 ## Context
 

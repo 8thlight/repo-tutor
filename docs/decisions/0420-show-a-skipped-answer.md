@@ -1,6 +1,12 @@
-# 0420. Show a skipped answer
+---
+category: ux
+status: accepted
+approval: person
+affects: [terminal]
+partly-supersedes: ['0060']
+---
 
-Status: accepted
+# 0420. Show a skipped answer
 
 ## Context
 

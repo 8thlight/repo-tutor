@@ -1,6 +1,12 @@
-# 0200. Enter closes a source file
+---
+category: ux
+status: accepted
+approval: person
+affects: [terminal]
+partly-supersedes: ['0190']
+---
 
-Status: accepted
+# 0200. Enter closes a source file
 
 ## Context
 

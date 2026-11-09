@@ -1,6 +1,10 @@
-# 0010. Agent driver
+---
+category: architecture
+status: accepted
+approval: person
+---
 
-Status: accepted
+# 0010. Agent driver
 
 ## Context
 

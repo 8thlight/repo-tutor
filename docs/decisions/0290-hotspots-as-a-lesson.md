@@ -1,6 +1,15 @@
+---
+category: behavior
+status: accepted
+approval: person
+affects: [terminal, tutor]
+partly-supersedes: ['0190']
+partly-superseded-by: ['0320']
+---
+
 # 0290. Hotspots as a lesson
 
-Status: accepted. `/hotspots` is removed from the full-screen interface under [0320](0320-no-slash-commands-in-the-interface.md), and the lesson is in the Topics list.
+`/hotspots` is removed from the full-screen interface under [0320](0320-no-slash-commands-in-the-interface.md), and the lesson is in the Topics list.
 
 ## Context
 

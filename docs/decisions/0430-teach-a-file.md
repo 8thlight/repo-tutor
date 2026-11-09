@@ -1,6 +1,12 @@
-# 0430. Teach a file
+---
+category: behavior
+status: accepted
+approval: person
+affects: [terminal, tutor]
+partly-supersedes: ['0090']
+---
 
-Status: accepted
+# 0430. Teach a file
 
 ## Context
 

@@ -1,6 +1,13 @@
+---
+category: operations
+status: accepted
+approval: person
+partly-superseded-by: ['0490']
+---
+
 # 0480. Test the full-screen interface in a real terminal
 
-Status: accepted. Screenshots are no longer deferred, under [0490](0490-screenshots-and-contrast.md). Recordings stay deferred.
+Screenshots are no longer deferred, under [0490](0490-screenshots-and-contrast.md). Recordings stay deferred.
 
 ## Context
 

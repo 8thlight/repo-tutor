@@ -1,6 +1,10 @@
-# 0460. Session format policy
+---
+category: architecture
+status: accepted
+approval: person
+---
 
-Status: accepted
+# 0460. Session format policy
 
 ## Context
 

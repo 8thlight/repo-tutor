@@ -1,6 +1,14 @@
+---
+category: ux
+status: accepted
+approval: person
+affects: [session, settings, terminal]
+partly-superseded-by: ['0300', '0350']
+---
+
 # 0230. Settings page
 
-Status: accepted. Settings moves to `F2` under [0350](0350-settings-on-f2.md). A Quiz length group is added under [0300](0300-course-flow.md).
+Settings moves to `F2` under [0350](0350-settings-on-f2.md). A Quiz length group is added under [0300](0300-course-flow.md).
 
 ## Context
 

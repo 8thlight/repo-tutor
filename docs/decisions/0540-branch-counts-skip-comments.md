@@ -1,6 +1,12 @@
-# 0540. Branch counts skip comments
+---
+category: behavior
+status: accepted
+approval: person
+affects: [repository]
+partly-supersedes: ['0530']
+---
 
-Status: accepted
+# 0540. Branch counts skip comments
 
 ## Context
 

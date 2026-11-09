@@ -1,6 +1,14 @@
+---
+category: behavior
+status: accepted
+approval: person
+affects: [repository]
+partly-superseded-by: ['0540', '0550']
+---
+
 # 0530. Language analyzers
 
-Status: accepted. Branch counts skip comments under [0540](0540-branch-counts-skip-comments.md), and tests move to the package they test under [0550](0550-test-ownership-and-layer.md).
+Branch counts skip comments under [0540](0540-branch-counts-skip-comments.md), and tests move to the package they test under [0550](0550-test-ownership-and-layer.md).
 
 ## Context
 

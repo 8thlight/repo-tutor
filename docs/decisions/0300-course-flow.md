@@ -1,6 +1,15 @@
+---
+category: behavior
+status: accepted
+approval: person
+affects: [settings, terminal, tutor]
+partly-supersedes: ['0030', '0140', '0230']
+partly-superseded-by: ['0320', '0360']
+---
+
 # 0300. Course flow
 
-Status: accepted. `Ctrl+N` asks the next quiz question under [0360](0360-next-and-more.md). `/extend` is `Ctrl+F` in the full-screen interface under [0320](0320-no-slash-commands-in-the-interface.md).
+`Ctrl+N` asks the next quiz question under [0360](0360-next-and-more.md). `/extend` is `Ctrl+F` in the full-screen interface under [0320](0320-no-slash-commands-in-the-interface.md).
 
 ## Context
 

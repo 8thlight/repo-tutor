@@ -1,6 +1,15 @@
+---
+category: ux
+status: accepted
+approval: person
+affects: [terminal]
+partly-supersedes: ['0020', '0040', '0080', '0290', '0300']
+partly-superseded-by: ['0360']
+---
+
 # 0320. No slash commands in the interface
 
-Status: accepted. `Ctrl+N` asks the next quiz question under [0360](0360-next-and-more.md).
+`Ctrl+N` asks the next quiz question under [0360](0360-next-and-more.md).
 
 ## Context
 

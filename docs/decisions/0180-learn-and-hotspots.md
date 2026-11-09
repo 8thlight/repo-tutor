@@ -1,6 +1,13 @@
-# 0180. Learn and Hotspots tabs
+---
+category: ux
+status: superseded
+approval: person
+affects: [terminal]
+supersedes: ['0170']
+superseded-by: ['0190']
+---
 
-Status: superseded by [0190](0190-course-and-quiz-tabs.md)
+# 0180. Learn and Hotspots tabs
 
 ## Context
 

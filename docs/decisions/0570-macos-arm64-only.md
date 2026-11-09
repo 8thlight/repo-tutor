@@ -1,6 +1,13 @@
+---
+category: operations
+status: accepted
+approval: person
+partly-supersedes: ['0470']
+---
+
 # 0570. Build macOS for arm64 only
 
-Status: accepted. It replaces the macOS targets in the "Builds" paragraph, the macOS platforms in the "Homebrew" paragraph, and the "four systems" in the "Nix" paragraph of [0470](0470-release-process.md). The rest of 0470 stands.
+It replaces the macOS targets in the "Builds" paragraph, the macOS platforms in the "Homebrew" paragraph, and the "four systems" in the "Nix" paragraph of [0470](0470-release-process.md). The rest of 0470 stands.
 
 ## Context
 

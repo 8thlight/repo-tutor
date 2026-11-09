@@ -1,6 +1,12 @@
-# 0390. Leave a quiz
+---
+category: ux
+status: accepted
+approval: person
+affects: [terminal]
+partly-supersedes: ['0110']
+---
 
-Status: accepted
+# 0390. Leave a quiz
 
 ## Context
 

@@ -1,6 +1,14 @@
+---
+category: ux
+status: accepted
+approval: person
+affects: [settings, terminal]
+partly-superseded-by: ['0510']
+---
+
 # 0250. Joined tab styles
 
-Status: accepted. Tab colors follow [0510](0510-derive-tab-colors-from-the-terminal.md).
+Tab colors follow [0510](0510-derive-tab-colors-from-the-terminal.md).
 
 ## Context
 

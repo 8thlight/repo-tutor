@@ -1,6 +1,12 @@
-# 0120. Markdown opens rendered
+---
+category: ux
+status: accepted
+approval: person
+affects: [terminal]
+partly-supersedes: ['0090']
+---
 
-Status: accepted
+# 0120. Markdown opens rendered
 
 ## Context
 

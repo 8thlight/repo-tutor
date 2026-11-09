@@ -1,6 +1,12 @@
-# 0240. Highlight colors
+---
+category: ux
+status: superseded
+approval: person
+affects: [settings, terminal]
+superseded-by: ['0500']
+---
 
-Status: superseded by [0500](0500-use-the-terminal-colors.md)
+# 0240. Highlight colors
 
 ## Context
 

@@ -1,6 +1,10 @@
-# 0005. Self-contained binary
+---
+category: architecture
+status: accepted
+approval: person
+---
 
-Status: accepted
+# 0005. Self-contained binary
 
 ## Decision
 

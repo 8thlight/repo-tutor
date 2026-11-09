@@ -1,6 +1,13 @@
+---
+category: operations
+status: accepted
+approval: person
+partly-superseded-by: ['0570']
+---
+
 # 0470. Release process
 
-Status: accepted. [0570](0570-macos-arm64-only.md) drops the Intel Mac target from the builds, the formula, and the Nix systems. The release also renders the Homebrew formula and attaches it to the release. The tap is updated with a deploy key and not a token, a person cuts a release with `just release`, and the `package` workflow replaces any manual dry run, as the last Decision paragraphs say.
+[0570](0570-macos-arm64-only.md) drops the Intel Mac target from the builds, the formula, and the Nix systems. The release also renders the Homebrew formula and attaches it to the release. The tap is updated with a deploy key and not a token, a person cuts a release with `just release`, and the `package` workflow replaces any manual dry run, as the last Decision paragraphs say.
 
 ## Context
 

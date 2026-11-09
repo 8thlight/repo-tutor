@@ -1,6 +1,13 @@
+---
+category: architecture
+status: accepted
+approval: person
+partly-superseded-by: ['0150', '0320']
+---
+
 # 0020. Interactive terminal
 
-Status: accepted. One foreground turn plus one cancellable background turn, under [0150](0150-prefetch-next-lesson.md). The full-screen interface does not parse slash commands under [0320](0320-no-slash-commands-in-the-interface.md).
+One foreground turn plus one cancellable background turn, under [0150](0150-prefetch-next-lesson.md). The full-screen interface does not parse slash commands under [0320](0320-no-slash-commands-in-the-interface.md).
 
 ## Context
 

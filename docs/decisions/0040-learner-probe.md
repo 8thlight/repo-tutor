@@ -1,6 +1,14 @@
+---
+category: behavior
+status: accepted
+approval: person
+affects: [terminal, tutor]
+partly-superseded-by: ['0320']
+---
+
 # 0040. Learner probe
 
-Status: accepted. The probe is the Check what you know entry on Home in the full-screen interface, and `/probe` in plain mode, under [0320](0320-no-slash-commands-in-the-interface.md).
+The probe is the Check what you know entry on Home in the full-screen interface, and `/probe` in plain mode, under [0320](0320-no-slash-commands-in-the-interface.md).
 
 ## Context
 

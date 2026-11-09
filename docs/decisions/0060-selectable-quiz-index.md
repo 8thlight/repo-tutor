@@ -1,6 +1,15 @@
+---
+category: ux
+status: accepted
+approval: person
+affects: [terminal, tutor]
+partly-supersedes: ['0030']
+partly-superseded-by: ['0420']
+---
+
 # 0060. Selectable quiz index
 
-Status: accepted. `A` on a skipped row shows its answer under [0420](0420-show-a-skipped-answer.md).
+`A` on a skipped row shows its answer under [0420](0420-show-a-skipped-answer.md).
 
 ## Context
 

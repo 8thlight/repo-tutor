@@ -1,6 +1,15 @@
+---
+category: ux
+status: accepted
+approval: person
+affects: [terminal]
+builds-on: ['0260']
+partly-supersedes: ['0250', '0500']
+---
+
 # 0510. Derive tab colors from the terminal's colors
 
-Status: accepted. The 35% ceiling of the joined styles is lowered on themes with little contrast, as the last Decision paragraph describes.
+The 35% ceiling of the joined styles is lowered on themes with little contrast, as the last Decision paragraph describes.
 
 ## Context
 

@@ -1,6 +1,11 @@
-# 0130. Plain cursor movement
+---
+category: ux
+status: accepted
+approval: person
+affects: [terminal]
+---
 
-Status: accepted
+# 0130. Plain cursor movement
 
 ## Context
 

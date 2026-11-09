@@ -1,6 +1,17 @@
+---
+category: ux
+status: accepted
+approval: person
+affects: [about, settings, terminal]
+builds-on: ['0220', '0250', '0490']
+supersedes: ['0240']
+partly-supersedes: ['0100', '0210']
+partly-superseded-by: ['0510']
+---
+
 # 0500. Use the terminal's colors
 
-Status: accepted. Tab fills and the tab rule follow [0510](0510-derive-tab-colors-from-the-terminal.md), which replaces the sentence on the joined styles under Roles and allows blends of the reported background and foreground.
+Tab fills and the tab rule follow [0510](0510-derive-tab-colors-from-the-terminal.md), which replaces the sentence on the joined styles under Roles and allows blends of the reported background and foreground.
 
 ## Context
 

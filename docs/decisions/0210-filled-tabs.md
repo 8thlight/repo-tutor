@@ -1,6 +1,14 @@
+---
+category: ux
+status: accepted
+approval: person
+affects: [terminal]
+partly-superseded-by: ['0260', '0310', '0500']
+---
+
 # 0210. Filled tabs
 
-Status: accepted. Tab colors follow [0500](0500-use-the-terminal-colors.md). The filled block is the Block tab style. The default style is None under [0260](0260-tab-rule.md). The key hints on the tab line are reduced to `Tab Next` under [0310](0310-controls-and-notices.md).
+Tab colors follow [0500](0500-use-the-terminal-colors.md). The filled block is the Block tab style. The default style is None under [0260](0260-tab-rule.md). The key hints on the tab line are reduced to `Tab Next` under [0310](0310-controls-and-notices.md).
 
 ## Context
 

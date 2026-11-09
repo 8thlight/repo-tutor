@@ -1,6 +1,12 @@
-# 0260. Tab rule
+---
+category: ux
+status: accepted
+approval: person
+affects: [settings, terminal]
+partly-supersedes: ['0210']
+---
 
-Status: accepted
+# 0260. Tab rule
 
 ## Context
 

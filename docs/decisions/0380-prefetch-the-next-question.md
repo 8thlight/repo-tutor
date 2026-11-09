@@ -1,6 +1,12 @@
-# 0380. Prefetch the next question
+---
+category: behavior
+status: accepted
+approval: person
+affects: [terminal]
+partly-supersedes: ['0150']
+---
 
-Status: accepted
+# 0380. Prefetch the next question
 
 ## Context
 

@@ -1,6 +1,15 @@
+---
+category: behavior
+status: accepted
+approval: person
+affects: [session, terminal, tutor]
+partly-supersedes: ['0020']
+partly-superseded-by: ['0380']
+---
+
 # 0150. Prefetch the next lesson
 
-Status: accepted. Quiz questions are prefetched too under [0380](0380-prefetch-the-next-question.md).
+Quiz questions are prefetched too under [0380](0380-prefetch-the-next-question.md).
 
 ## Context
 

@@ -1,6 +1,12 @@
-# 0330. Input frame
+---
+category: ux
+status: accepted
+approval: person
+affects: [terminal]
+partly-supersedes: ['0310']
+---
 
-Status: accepted
+# 0330. Input frame
 
 ## Context
 

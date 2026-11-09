@@ -1,6 +1,11 @@
-# 0280. Ask for the goal
+---
+category: ux
+status: accepted
+approval: person
+affects: [session, terminal, tutor]
+---
 
-Status: accepted
+# 0280. Ask for the goal
 
 ## Context
 

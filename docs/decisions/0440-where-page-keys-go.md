@@ -1,6 +1,11 @@
-# 0440. Where page keys go
+---
+category: ux
+status: accepted
+approval: person
+affects: [terminal]
+---
 
-Status: accepted
+# 0440. Where page keys go
 
 ## Context
 

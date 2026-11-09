@@ -1,6 +1,12 @@
-# 0170. Tab groups
+---
+category: ux
+status: superseded
+approval: person
+affects: [terminal]
+superseded-by: ['0180']
+---
 
-Status: superseded by [0180](0180-learn-and-hotspots.md)
+# 0170. Tab groups
 
 ## Context
 

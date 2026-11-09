@@ -1,6 +1,15 @@
+---
+category: behavior
+status: accepted
+approval: person
+affects: [repository]
+builds-on: ['0460', '0530']
+partly-supersedes: ['0550']
+---
+
 # 0560. Python and JavaScript test rules
 
-Status: accepted. It supersedes the "Other languages" section of [0550](0550-test-ownership-and-layer.md).
+It supersedes the "Other languages" section of [0550](0550-test-ownership-and-layer.md).
 
 ## Context
 

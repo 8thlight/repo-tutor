@@ -1,6 +1,14 @@
+---
+category: behavior
+status: accepted
+approval: person
+affects: [terminal]
+partly-superseded-by: ['0300']
+---
+
 # 0140. Resume a topic
 
-Status: accepted. A topic resumes into its latest lesson, never a quiz, probe, or reply turn, under [0300](0300-course-flow.md).
+A topic resumes into its latest lesson, never a quiz, probe, or reply turn, under [0300](0300-course-flow.md).
 
 ## Context
 

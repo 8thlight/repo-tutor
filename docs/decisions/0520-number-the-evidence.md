@@ -1,6 +1,12 @@
-# 0520. Number the evidence and open it with a digit
+---
+category: ux
+status: accepted
+approval: person
+affects: [terminal, tutor]
+builds-on: ['0460']
+---
 
-Status: accepted
+# 0520. Number the evidence and open it with a digit
 
 ## Context
 

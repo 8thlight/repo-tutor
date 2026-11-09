@@ -26,7 +26,7 @@ Only ADRs are numbered, by tens.
 - The binary never calls a model API. It runs an agent CLI headless through a driver. See `docs/decisions/0010-agent-driver.md`.
 - Name a unit for what it acts on and what it does. Spell words out. Follow the linter.
 - A comment is a smell. Run `comments-review` before you commit.
-- Decide behavior in an ADR before you code it. A new ADR supersedes an old one; add a status note to the old record instead of rewriting it.
+- Decide behavior in an ADR before you code it. A new ADR supersedes an old one; list the replacement in the front matter of both records, as `docs/reference/decision-record-front-matter.md` says, instead of rewriting the old one.
 - Follow the "Interaction rules" in `docs/architecture/terminal-tutor.md`: one meaning per key, a key that opens a page closes it, offer only what can act now, and a costly action needs a second press.
 - A change to the session file shape raises its version with no migration, as 0460 says, while the tool has one user.
 - Put each message where its purpose says, as listed in the "Where messages go" table of `docs/architecture/terminal-tutor.md`. Help that stays true while a page is open never goes in a notice.

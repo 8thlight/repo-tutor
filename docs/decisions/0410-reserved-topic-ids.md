@@ -1,6 +1,11 @@
-# 0410. Reserved topic ids
+---
+category: behavior
+status: accepted
+approval: person
+affects: [tutor]
+---
 
-Status: accepted
+# 0410. Reserved topic ids
 
 ## Context
 

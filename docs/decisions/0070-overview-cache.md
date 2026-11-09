@@ -1,6 +1,11 @@
-# 0070. Overview cache
+---
+category: behavior
+status: accepted
+approval: person
+affects: [session, terminal, tutor]
+---
 
-Status: accepted
+# 0070. Overview cache
 
 ## Context
 

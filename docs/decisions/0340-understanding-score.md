@@ -1,6 +1,14 @@
+---
+category: behavior
+status: accepted
+approval: person
+affects: [terminal, tutor]
+partly-superseded-by: ['0450']
+---
+
 # 0340. Understanding score
 
-Status: accepted. An exam gives a separate score under [0450](0450-exam.md).
+An exam gives a separate score under [0450](0450-exam.md).
 
 ## Context
 

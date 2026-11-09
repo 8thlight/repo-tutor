@@ -1,6 +1,15 @@
+---
+category: ux
+status: accepted
+approval: person
+affects: [terminal]
+partly-supersedes: ['0300', '0320']
+partly-superseded-by: ['0370']
+---
+
 # 0360. Next and more
 
-Status: accepted. `Ctrl+N` on an open question skips it after a second press under [0370](0370-skip-with-confirmation.md).
+`Ctrl+N` on an open question skips it after a second press under [0370](0370-skip-with-confirmation.md).
 
 ## Context
 

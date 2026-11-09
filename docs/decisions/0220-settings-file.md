@@ -1,6 +1,10 @@
-# 0220. Settings file
+---
+category: architecture
+status: accepted
+approval: person
+---
 
-Status: accepted
+# 0220. Settings file
 
 ## Context
 

@@ -1,6 +1,12 @@
-# 0370. Skip with confirmation
+---
+category: ux
+status: accepted
+approval: person
+affects: [terminal, tutor]
+partly-supersedes: ['0360']
+---
 
-Status: accepted
+# 0370. Skip with confirmation
 
 ## Context
 
