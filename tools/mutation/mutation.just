@@ -10,7 +10,7 @@ gomu_version := "v0.3.0"
 # Mutation-test one component against its contract, for example `just mutate plan/encoder`. It runs gomu over an overlay, so it never changes a source file and can run beside `just check`. One mutant at a time by default, with Go limited to two parallel jobs. Survivors are gaps in the contract, except those a person accepted in the accepted folder. Pass `--workers 2` to go faster.
 mutate component *flags:
     mkdir -p .direnv/bin
-    test -x .direnv/bin/gomu || GOBIN="$(pwd)/.direnv/bin" go install github.com/sivchari/gomu/cmd/gomu@{{ gomu_version }}
+    stamp="{{ gomu_version }} $(go env GOVERSION)"; if [ ! -x .direnv/bin/gomu ] || [ "$(cat .direnv/bin/gomu.stamp 2>/dev/null)" != "$stamp" ]; then GOBIN="$(pwd)/.direnv/bin" go install github.com/sivchari/gomu/cmd/gomu@{{ gomu_version }} && echo "$stamp" > .direnv/bin/gomu.stamp; fi
     go run ./tools/mutation/gomurun --components {{ components_dir }} --contracts {{ contracts_dir }} --accepted {{ accepted_dir }} --gomu-version {{ gomu_version }} {{ flags }} {{ component }}
 
 # Print a JSON array of the components to mutate, from the changes since a Git revision. An empty or unknown revision plans every component.
