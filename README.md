@@ -10,7 +10,7 @@ The [gallery](images/README.md) shows more of the interface in light and dark te
 
 ## Requirements
 
-- macOS or Linux. Windows is not supported natively; use WSL.
+- macOS on Apple silicon, or Linux. Windows is not supported natively; use WSL.
 - Codex CLI or Claude Code, installed and signed in.
 - Nix, only to build from source with `nix develop`.
 
@@ -22,7 +22,7 @@ With Homebrew on macOS or Linux:
 brew install 8thlight/tap/repo-tutor
 ```
 
-Or download the archive for your system from the [Releases](https://github.com/8thlight/repo-tutor/releases) page. The names read `repo-tutor_<version>_<os>_<arch>.tar.gz`, for macOS or Linux on `arm64` or `amd64`. Check it, unpack it, and put the binary on your path:
+Or download the archive for your system from the [Releases](https://github.com/8thlight/repo-tutor/releases) page. The names read `repo-tutor_<version>_<os>_<arch>.tar.gz`, for macOS on `arm64` or Linux on `arm64` or `amd64`. Check it, unpack it, and put the binary on your path:
 
 ```sh
 gh release download v0.2.0 --repo 8thlight/repo-tutor --pattern '*darwin_arm64*' --pattern checksums.txt
@@ -56,6 +56,8 @@ just build
 ```
 
 To put `repo-tutor` on your path, run `just install`. It copies the binary to `~/.local/bin`; set `PREFIX` to use another prefix.
+
+There is no Intel Mac download, and the Nix shell does not support Intel Macs. On one, install Go and `just`, then run `just install`.
 
 Use `--agent claude` for Claude Code. Without `--agent`, the tutor chooses Codex when it is installed, then Claude. `just run ../repowise` also starts a session. Omit the path to study the current directory.
 
