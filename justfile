@@ -73,7 +73,7 @@ release version:
 build-release-archives version:
     rm -rf output/release
     mkdir -p output/release
-    for target in darwin/arm64 darwin/amd64 linux/arm64 linux/amd64; do \
+    for target in darwin/arm64 linux/arm64 linux/amd64; do \
         os=${target%/*}; arch=${target#*/}; \
         name=repo-tutor_{{ version }}_${os}_${arch}; \
         mkdir -p output/release/$name; \
