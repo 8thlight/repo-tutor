@@ -1,12 +1,15 @@
 ---
 category: behavior
-status: accepted
+status: superseded
 approval: person
 affects: [repository, tutor, agent, session, terminal]
+superseded-by: ['0610']
 builds-on: ['0010', '0030', '0040', '0340', '0370', '0460', '0500', '0520']
 ---
 
 # 0580. Product principles
+
+The principles now live in `docs/reference/product-principles.md`, under [0610](0610-product-principles-live-in-a-file.md). This record holds the first wording and its reasons.
 
 ## Context
 

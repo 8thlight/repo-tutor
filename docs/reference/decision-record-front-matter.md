@@ -24,6 +24,7 @@ partly-supersedes: ['0340', '0350']
 | `approval` | Yes once accepted | `person`, `agent`, or `unrecorded` for a record that never said. A person who delegated the call to an agent gives `agent`, and the `note` says so |
 | `note` | No | One sentence that limits the status, such as "Accepted for experimental use." |
 | `affects` | Behavior and ux records | Component ids from `architecture.yaml`. Optional on `architecture`. Not allowed on process records, and never `all` |
+| `principle` | No | `none` only, on a `behavior` record, when no principle in `docs/reference/product-principles.md` should cite it. Without the file, the field is unused |
 | `builds-on` | No | Record numbers this one depends on, as quoted four-digit strings |
 | `supersedes`, `superseded-by` | No | Whole replacement, in both directions |
 | `partly-supersedes`, `partly-superseded-by` | No | Replacement of one part, in both directions |
@@ -71,6 +72,17 @@ use Nix can run it with Python and PyYAML. It reports:
 - `affects` on a process record, or a missing `affects` on a `behavior` or `ux` record;
 - a contract that cites a product record missing from its `affects`. A citation is `[0360]`, a path such as
   `decisions/0360-`, or `ADR 0360`. A bare four-digit number is not one, because file modes such as 0640 look the same.
+
+When the project has `docs/reference/product-principles.md`, the check also reads it. The file starts with `approval`
+(`person` or `agent`) and `reviewed` (a date). Each `### P` heading ends with a `Records:` line of four-digit numbers,
+or `none`. It reports:
+
+- a cited record that is missing, superseded, or withdrawn;
+- a principle with no `Records:` line;
+- an accepted `behavior` record that no principle cites and that does not say `principle: none`;
+- an `approval` that is not in the project's `approvals.principles` list in `.threnos/config.toml`, which defaults to
+  `["person"]`. The check reads the project file and never `.threnos/local.toml`, so it judges the way CI does. A person
+  ratifies an agent's edit by reading it and setting `approval: person`.
 
 Every project needs an `architecture.yaml`. A project without one fails, and the message names the expected path, so a
 misnamed or missing file cannot hide behind a skipped check. A project with no `docs/decisions/` folder passes the
