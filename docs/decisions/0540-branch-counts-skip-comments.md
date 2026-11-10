@@ -2,7 +2,7 @@
 category: behavior
 status: accepted
 approval: person
-affects: [repository]
+affects: [repository/analyzer]
 partly-supersedes: ['0530']
 ---
 
