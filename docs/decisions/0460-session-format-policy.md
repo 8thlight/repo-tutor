@@ -2,9 +2,12 @@
 category: architecture
 status: accepted
 approval: person
+partly-superseded-by: ['0620']
 ---
 
 # 0460. Session format policy
+
+A session with a newer version is not refused with the message to use `--new` under [0620](0620-a-newer-session-is-never-replaced.md).
 
 ## Context
 

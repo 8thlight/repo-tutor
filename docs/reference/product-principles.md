@@ -51,7 +51,7 @@ Records: 0005, 0010, 0500
 
 While one person uses the tool, a format change raises a version and asks them to start over, with no migration. Record each such deferral in an ADR so it can return when users do. This does not permit an agent to defer a protection without a person's approval, or to apply the shortcut to data a learner cannot recreate.
 
-Records: 0460
+Records: 0460, 0620
 
 ### P7. Never touch the learner's repository
 
