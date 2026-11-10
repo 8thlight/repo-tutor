@@ -14,4 +14,4 @@ The binary scans a repository, orders topics, and runs tutor turns through an ag
 | `internal/terminal` | Run the Bubble Tea workspace or the plain loop, parse plain-mode commands, display lessons and quizzes, and browse sources |
 | `binary` | Connect standard streams and cancellation to the terminal driver |
 
-`analyzer.Build`, `analyzer.ReadingHints`, `settings.Decode`, and the functions in `internal/tutor` perform no input or output. Filesystem, Git, process, clock, and terminal operations stay in drivers. See [terminal tutor behavior](terminal-tutor.md) for the acceptance boundaries and limits.
+`analyzer.Build`, `analyzer.ReadingHints`, `settings.Decode`, and the functions in `internal/tutor` perform no input or output. Filesystem, Git, process, clock, and terminal operations stay in drivers. [Components](components.md) lists what each one reads and writes. See [terminal tutor behavior](terminal-tutor.md) for the acceptance boundaries and limits.
