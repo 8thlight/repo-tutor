@@ -1,4 +1,4 @@
-package repository
+package reader
 
 import (
 	"context"
@@ -18,15 +18,7 @@ import (
 const maximumFileBytes = 512 * 1024
 const maximumSnapshotBytes = 64 * 1024 * 1024
 
-func Read(ctx context.Context, directory string) (analyzer.Snapshot, error) {
-	source, err := readSource(ctx, directory)
-	if err != nil {
-		return analyzer.Snapshot{}, err
-	}
-	return analyzer.Build(source)
-}
-
-func readSource(ctx context.Context, directory string) (analyzer.Source, error) {
+func Read(ctx context.Context, directory string) (analyzer.Source, error) {
 	root, err := filepath.Abs(directory)
 	if err != nil {
 		return analyzer.Source{}, err

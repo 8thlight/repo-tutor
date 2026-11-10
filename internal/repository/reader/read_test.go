@@ -1,17 +1,19 @@
-package repository_test
+package reader_test
 
 import (
 	"context"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
-	"repo-tutor/internal/repository"
+	"repo-tutor/internal/repository/analyzer"
+	"repo-tutor/internal/repository/reader"
 )
 
-func TestReadExclusionsAndFingerprint(t *testing.T) {
+func TestReadExclusionsAndSizeLimits(t *testing.T) {
 	root := t.TempDir()
 	write := func(name, content string) {
 		t.Helper()
@@ -37,21 +39,21 @@ func TestReadExclusionsAndFingerprint(t *testing.T) {
 		t.Fatal(err)
 	}
 	write("large.md", strings.Repeat("x", 512*1024+1))
-	first, err := repository.Read(context.Background(), root)
+	first, err := reader.Read(context.Background(), root)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(first.Files) != 3 || len(first.Warnings) != 1 {
-		t.Fatalf("excluded files entered the snapshot: %+v", first)
+		t.Fatalf("excluded files entered the source: %+v", first)
 	}
-	second, err := repository.Read(context.Background(), root)
-	if err != nil || first.Fingerprint != second.Fingerprint {
-		t.Fatalf("unchanged source produced a different fingerprint: %v", err)
+	second, err := reader.Read(context.Background(), root)
+	if err != nil || !reflect.DeepEqual(first, second) {
+		t.Fatalf("unchanged source was read differently: %v", err)
 	}
 	write("main.go", "package main\nfunc main() { println(1) }\n")
-	third, err := repository.Read(context.Background(), root)
-	if err != nil || first.Fingerprint == third.Fingerprint {
-		t.Fatalf("changed source did not invalidate the fingerprint: %v", err)
+	third, err := reader.Read(context.Background(), root)
+	if err != nil || reflect.DeepEqual(first, third) {
+		t.Fatalf("changed source was read as before: %v", err)
 	}
 }
 
@@ -74,12 +76,12 @@ func TestGitIgnoredFilesAreNotRead(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	snapshot, err := repository.Read(context.Background(), root)
+	source, err := reader.Read(context.Background(), root)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(snapshot.Files) != 1 || snapshot.Files[0].Path != "main.py" {
-		t.Fatalf("Git ignored source was included: %v", snapshot.Files)
+	if len(source.Files) != 1 || source.Files[0].Path != "main.py" {
+		t.Fatalf("Git ignored source was included: %v", source.Files)
 	}
 }
 
@@ -109,7 +111,11 @@ func TestHistoryCountsLocalCommits(t *testing.T) {
 	}
 	git("add", ".")
 	git("commit", "-qm", "change alpha")
-	snapshot, err := repository.Read(context.Background(), root)
+	source, err := reader.Read(context.Background(), root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	snapshot, err := analyzer.Build(source)
 	if err != nil {
 		t.Fatal(err)
 	}

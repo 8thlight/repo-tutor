@@ -17,8 +17,8 @@ import (
 
 	"repo-tutor/internal/about"
 	"repo-tutor/internal/agent"
-	"repo-tutor/internal/repository"
 	"repo-tutor/internal/repository/analyzer"
+	"repo-tutor/internal/repository/reader"
 	"repo-tutor/internal/session"
 	"repo-tutor/internal/tutor"
 )
@@ -133,7 +133,7 @@ func scan(ctx context.Context, arguments []string, output, diagnostics io.Writer
 	if *asJSON && *asMap {
 		return fmt.Errorf("choose one of --json and --map")
 	}
-	snapshot, err := repository.Read(ctx, directory)
+	snapshot, err := readSnapshot(ctx, directory)
 	if err != nil {
 		return err
 	}
@@ -222,7 +222,7 @@ func study(ctx context.Context, arguments []string, input io.Reader, output, dia
 	if *timeout <= 0 {
 		return fmt.Errorf("--timeout must be positive")
 	}
-	snapshot, err := repository.Read(ctx, directory)
+	snapshot, err := readSnapshot(ctx, directory)
 	if err != nil {
 		return err
 	}
@@ -322,4 +322,12 @@ func interactiveStreams(input io.Reader, output io.Writer) bool {
 	reader, inputIsFile := input.(*os.File)
 	writer, outputIsFile := output.(*os.File)
 	return inputIsFile && outputIsFile && os.Getenv("TERM") != "dumb" && term.IsTerminal(reader.Fd()) && term.IsTerminal(writer.Fd())
+}
+
+func readSnapshot(ctx context.Context, directory string) (analyzer.Snapshot, error) {
+	source, err := reader.Read(ctx, directory)
+	if err != nil {
+		return analyzer.Snapshot{}, err
+	}
+	return analyzer.Build(source)
 }
