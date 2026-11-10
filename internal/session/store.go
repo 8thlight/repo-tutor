@@ -1,6 +1,7 @@
 package session
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
@@ -108,8 +109,18 @@ func (store *Store) Load() (State, bool, error) {
 		return State{}, false, err
 	}
 	defer file.Close()
+	data, err := io.ReadAll(io.LimitReader(file, 16*1024*1024))
+	if err != nil {
+		return State{}, false, err
+	}
+	var saved struct {
+		Version int `json:"version"`
+	}
+	if json.Unmarshal(data, &saved) == nil && saved.Version > Version {
+		return State{}, false, fmt.Errorf("saved session comes from a newer repo-tutor (version %d; this one reads %d); update repo-tutor to continue it, or use --new to archive it and start again", saved.Version, Version)
+	}
 	var state State
-	decoder := json.NewDecoder(io.LimitReader(file, 16*1024*1024))
+	decoder := json.NewDecoder(bytes.NewReader(data))
 	if err := decoder.Decode(&state); err != nil {
 		return State{}, false, fmt.Errorf("read saved session: %w (use --new to archive it and start again)", err)
 	}

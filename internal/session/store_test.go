@@ -1,9 +1,11 @@
 package session_test
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 
 	"repo-tutor/internal/session"
@@ -106,5 +108,53 @@ func TestBaseSourceNamesWhatChoseTheDirectory(t *testing.T) {
 	t.Setenv("XDG_STATE_HOME", "")
 	if source := session.BaseSource(""); source != "the user configuration directory" {
 		t.Fatalf("the default should be named, got %s", source)
+	}
+}
+
+func TestNewerSessionIsLeftAloneAndTheMessageSaysToUpdate(t *testing.T) {
+	store, err := session.Open(t.TempDir(), "/repository")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+	path := filepath.Join(store.Directory, "session.json")
+	newer := []byte(fmt.Sprintf(`{"version": %d, "unknown": {"shape": [1, 2]}}`, session.Version+1))
+	if err := os.WriteFile(path, newer, 0600); err != nil {
+		t.Fatal(err)
+	}
+	_, found, err := store.Load()
+	if found || err == nil {
+		t.Fatalf("a newer session must not load: %v", err)
+	}
+	for _, expected := range []string{"newer repo-tutor", fmt.Sprintf("version %d", session.Version+1), fmt.Sprintf("reads %d", session.Version), "update", "--new"} {
+		if !strings.Contains(err.Error(), expected) {
+			t.Fatalf("the message should say %q: %v", expected, err)
+		}
+	}
+	if strings.Index(err.Error(), "update") > strings.Index(err.Error(), "--new") {
+		t.Fatalf("the message should offer the update before --new: %v", err)
+	}
+	if after, _ := os.ReadFile(path); string(after) != string(newer) {
+		t.Fatalf("loading changed the session file: %s", after)
+	}
+}
+
+func TestOlderAndDamagedSessionsKeepTheMessageToStartAgain(t *testing.T) {
+	for name, content := range map[string]string{
+		"older":   fmt.Sprintf(`{"version": %d, "repository": "/r", "topic": "t", "agent": "codex"}`, session.Version-1),
+		"damaged": `{"version": `,
+	} {
+		store, err := session.Open(t.TempDir(), "/repository")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(store.Directory, "session.json"), []byte(content), 0600); err != nil {
+			t.Fatal(err)
+		}
+		_, _, err = store.Load()
+		store.Close()
+		if err == nil || !strings.Contains(err.Error(), "use --new to archive it and start again") || strings.Contains(err.Error(), "newer") {
+			t.Fatalf("%s session should keep the old message: %v", name, err)
+		}
 	}
 }
