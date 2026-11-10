@@ -30,11 +30,11 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1794252573,
-        "narHash": "sha256-mRUxuBH4S1qk7LiNPlQeZa0w8MDUsbEGM0B9GOKJy/8=",
+        "lastModified": 1794318907,
+        "narHash": "sha256-1gvdQv3d/H+baUHawEsXSPMGSP+BfFp0q0vkgBIWQ90=",
         "owner": "8thlight-daveloper",
         "repo": "threnos",
-        "rev": "52c98931be21ab84f1f903e3074f65e2a292329b",
+        "rev": "6f8999dee424a6c42c7c1a6a6253ad80253ddc13",
         "type": "github"
       },
       "original": {

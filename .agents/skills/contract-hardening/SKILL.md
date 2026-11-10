@@ -14,9 +14,8 @@ It was worked out on onboard-kit's plan decoder, a YAML file reader. That run fo
 agent runs and some hours, so use it for a component whose input is large and fiddly, such as a file format. A small
 component needs only the first two steps.
 
-Commands below use the check command and the mutation command in the project settings of `AGENTS.md`. The template
-defaults are `just check` and `just mutate <component>`. The mutation cadence setting decides who runs the mutation
-tool, as step 2 describes.
+Commands below are `just check` and `just mutate <component>`. The `rules.mutation_cadence` setting in
+`.threnos/config.toml` decides who runs the mutation tool, as step 2 describes.
 
 ## Rules
 
@@ -54,9 +53,9 @@ tool, as step 2 describes.
 
 1. Build the component in a worktree as the build issue says. Run the tests against a stub first. Every test that
    exercises the output must fail.
-1. Get the mutation result for the component. When the project's mutation cadence is `nightly`, read the latest CI
-   result, and run the mutation command only if a person asks. When it is `local`, run the mutation command. A survivor
-   is a mutant that no test killed. Look at each one:
+1. Get the mutation result for the component. When `rules.mutation_cadence` is `nightly`, read the latest CI result, and
+   run `just mutate <component>` only if a person asks. When it is `local`, run it. A survivor is a mutant that no test
+   killed. Look at each one:
    - Equivalent: the code means the same after the change, such as a loop bound on a list that always has an even
      length, a value that is thrown away, or a number-parsing bit size the language treats the same. Prove it before you
      accept it. Apply the mutation in a scratch copy that holds everything the tests read, check that the tests pass on

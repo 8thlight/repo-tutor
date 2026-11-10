@@ -1,0 +1,21 @@
+[rules]
+regenerative = "on"
+repository_context = "off"
+mutation_cadence = "local"
+
+[seeds]
+skip = [
+  ".github/workflows/mutate.yml",
+  "acceptance/scenarios/example-command.yaml.example",
+  "acceptance/scenarios/example-protocol.yaml.example",
+  "docs/decisions/README.md",
+  "docs/reference/acceptance-scenarios.md",
+  "docs/reference/templates/accepted-survivors.txt",
+  "docs/reference/templates/adr.md",
+  "docs/reference/templates/contract/cases.json",
+  "docs/reference/templates/contract/contract.md",
+  "docs/reference/templates/issue-sizing.md",
+  "docs/reference/templates/product-principles.md",
+  "docs/reference/templates/stack-topic.md",
+  "docs/stack/osv-scanner.md",
+]

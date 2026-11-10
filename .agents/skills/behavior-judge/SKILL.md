@@ -10,16 +10,17 @@ skill is a development workflow, not a model dependency in the shipped product.
 
 ## Read the authority
 
-Read `README.md`, `AGENTS.md`, the shared rules it imports, and the project's product principles record. The project
-settings in `AGENTS.md` name that record. Read the further behavior rules those settings list and any rules the record
+Read `README.md`, `AGENTS.md`, the shared rules it imports, and the project's product principles file. The project
+pointers in `AGENTS.md` name that file. Read the further behavior rules those pointers list and any rules the file
 points to, then the project's architecture docs in `docs/architecture/`, the contracts, and the accepted decisions
 relevant to the question. The architecture views hold interaction and layout rules that bear on behavior calls. Resolve
 paths from the repository root or this skill's canonical directory, not from a process's working directory.
 Vendor-specific discovery paths may be symlinks to this directory.
 
-The project's record holds the product principles. This skill holds the delegated authority below. Do not expand either
-through a skill edit. The person may authorize a narrower trial; label trial outcomes as trial judgments, not adopted
-policy or human approval.
+The project's file holds the product principles, each with the records it comes from. Read it, not every behavior
+record. Open a cited record only when a case needs the reasoning behind a principle. This skill holds the delegated
+authority below. Do not expand either through a skill edit. The person may authorize a narrower trial; label trial
+outcomes as trial judgments, not adopted policy or human approval.
 
 The principles are not points in a score. Privacy, correctness, ownership, and explicit commitments constrain
 convenience. Within those constraints, reduce avoidable work and uncertainty, then prefer a smaller and more reversible
@@ -42,7 +43,7 @@ requirement. A person still approves protected contract and test changes and add
 choice separates product judgment from evidence and implementation. Contract conflicts are reported, not repaired. A
 plausible test does not justify inventing behavior without product authority.
 
-If the project has no product principles record yet, or the `AGENTS.md` row for it still holds a placeholder or names a
+If the project has no product principles file yet, or the `AGENTS.md` row for it still holds a placeholder or names a
 missing file, stop and say so. Offer to draft one for a person to approve. Do not judge from principles you invented.
 
 ## Make the call
@@ -83,3 +84,16 @@ This skill does not grant permission to change contracts, tests, implementation,
 rules. Follow the task's authorization and the repository's protected-artifact rules. Define expected behavior before
 implementing it, and verify it with observable examples. Keep test and implementation authorship separate. Report
 contract conflicts rather than silently repairing them. Never mark a judge's decision as a person's approval.
+
+### Editing the principles file
+
+When a ruling generalizes into a new principle, or sharpens one, propose the edit with the records it comes from. Who
+may approve the edit is the `principles` list under `[approvals]` in `.threnos/config.toml`. When `.threnos/local.toml`
+exists, its list replaces the project's for this person's work. Absent both, only a person may approve.
+
+- **The list holds `person` only.** Propose the edit and wait. Do not write it to the file.
+- **The list holds `agent`.** Make the edit, set `approval: agent` and today's date as `reviewed` in the file's front
+  matter, and say in the report that the edit awaits a person's ratification when the project's own list is `person`
+  only. Never set `approval: person` on an edit that no person approved.
+- **Either way,** an edit never widens the delegated authority above. A new privacy, security, ownership, destructive,
+  stored-format, or hash-compatibility consequence, and a conflict between principles, still go to a person.

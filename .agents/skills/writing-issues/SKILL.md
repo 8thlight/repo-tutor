@@ -49,8 +49,8 @@ mechanics of creating one, such as the templates and `gh` flags, are in the Issu
 
 Size is the review surface: what a person has to read to accept the work. It is not a time estimate and not a count of
 code lines, because nobody reads the regenerated code. A build takes the size of the contract it builds. The calibration
-column comes from onboard-kit, the first project built this way. A project keeps its own examples in the issue sizing
-doc that the project settings in `AGENTS.md` name, and those replace this column.
+column comes from onboard-kit, the first project built this way. If the project keeps its own examples in the issue
+sizing doc that the pointers in `AGENTS.md` name, those replace this column.
 
 | Size | A leaf issue of this size is                                                                                                                                                                            | Calibration                                                                                                                        |
 | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |

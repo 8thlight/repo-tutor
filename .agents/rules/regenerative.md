@@ -1,12 +1,15 @@
 # Regenerative rules
 
 The shared rules for an agent working on a regenerative project. A project keeps this file read-only and changes it only
-by taking a new version from its source. `AGENTS.md` holds the project's settings and its own rules.
+by taking a new version from its source. `AGENTS.md` holds the project's document pointers and its own rules.
 
 A project may add rules. It may not relax these. When a project rule conflicts with a rule here, stop and ask a person.
 
-Settings appear in this file by name, such as "the components folder". Each is defined in the "Project settings" table
-in `AGENTS.md`.
+Settings live in files, not in prose. `architecture.yaml` holds the components folder (`components_root`), the model
+folder (`model`), and the dependency and acceptance rules. `.threnos/config.toml` holds how the project takes these
+rules, including `mutation_cadence` and who may approve each gate under `[approvals]`. `.threnos/local.toml`, when it
+exists, replaces a person's `[approvals]` lists for their own work and nothing else. `AGENTS.md` points to the documents
+a person chooses. When a rule names a setting, read it from that file.
 
 ## Shared skills
 
@@ -15,7 +18,7 @@ folder, such as `.claude/skills/<name>`, links to the matching shared skill. Edi
 `CLAUDE.md` imports `AGENTS.md` and this file.
 
 Use the behavior judge for open product behavior choices in the assigned task. Its bounded authority is in the skill,
-and its principles are in the project's product principles record. It does not waive the human approval or independent
+and its principles are in the project's product principles file. It does not waive the human approval or independent
 authorship rules below.
 
 ## Where docs go
@@ -47,25 +50,25 @@ material; do not copy client identities, private system names, or real tickets f
 
 Name a unit for what it acts on and what it does: noun, then role. A name that needs "and" is two units. In docs, write
 plain spaced words, for example "section selector". In code, the parent folder carries the noun and the module carries
-the role, for example `section/selector` under the components folder. Follow the linter, with no exceptions. Spell words
-out or use a common short form such as `config`. Do not coin abbreviations.
+the role, for example `section/selector` under the components folder (`components_root`). Follow the linter, with no
+exceptions. Spell words out or use a common short form such as `config`. Do not coin abbreviations.
 
 ## Components
 
-- A component is one module under the components folder. Rebuilding a component means deleting its folder and
-  regenerating it from its contract, its architecture doc, and the dependency rules in `architecture.yaml`.
+- A component is one module under the components folder (`components_root`). Rebuilding a component means deleting its
+  folder and regenerating it from its contract, its architecture doc, and the dependency rules in `architecture.yaml`.
 - A rebuild touches only that component's folder.
-- Never edit `contracts/`, `acceptance/`, `architecture.yaml`, or the domain model in the model folder as part of a
-  rebuild. Stop and ask a person.
+- Never edit `contracts/`, `acceptance/`, `architecture.yaml`, or the domain model in the model folder (`model`) as part
+  of a rebuild. Stop and ask a person.
 - Never write or change the tests that judge your own build.
 - When you find that a contract conflicts with another document, is incomplete, or looks wrong, stop and report it. Do
   not edit the contract unless a person authorizes that specific change.
 - When building a component, first run its contract tests against a stub and confirm that every test that exercises the
   output fails. Tests of properties, such as determinism, may pass against a stub that returns nothing.
-- The mutation cadence is a project setting. When it is `nightly`, mutation runs in CI. Read the latest result for the
-  component and report surviving mutants as contract gaps. Run the mutation command only when a person asks. When it is
-  `local`, run the mutation command after the contract tests pass and report surviving mutants as contract gaps. Under
-  either cadence, do not edit the contract.
+- Read `rules.mutation_cadence` in `.threnos/config.toml`. When it is `nightly`, mutation runs in CI. Read the latest
+  result for the component and report surviving mutants as contract gaps. Run `just mutate <component>` only when a
+  person asks. When it is `local`, run `just mutate <component>` after the contract tests pass and report surviving
+  mutants as contract gaps. Under either cadence, do not edit the contract.
 - A survivor listed in `tools/mutation/accepted/<component>.txt` is skipped. Never add a line to that list. A person
   adds one after checking the reason.
 - When asked to draft a contract, write all four parts, cite the source of each fixture, list plausible wrong
@@ -99,8 +102,8 @@ low priority. Stop if the load average climbs past the number of cores.
 
 ## Checks
 
-Run the check command before you commit. Do not write ad hoc scripts to check links or formatting, because the check
-already does. Never skip a failing check or edit a tool config to make one pass without asking a person.
+Run `just check` before you commit. Do not write ad hoc scripts to check links or formatting, because the check already
+does. Never skip a failing check or edit a tool config to make one pass without asking a person.
 
 ## Comments
 
