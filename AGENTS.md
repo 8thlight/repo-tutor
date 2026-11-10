@@ -12,8 +12,8 @@ The documents a person chooses. The shared rules and skills read them from here.
 | -- | -- |
 | Product principles | `docs/reference/product-principles.md` |
 | Further behavior rules | The "Interaction rules" and "Where messages go" sections of `docs/architecture/terminal-tutor.md` |
-| Testing stack doc | none yet |
-| Issue sizing examples | none yet |
+| Testing stack doc | `docs/stack/testing.md` |
+| Issue sizing examples | `docs/reference/issue-sizing.md` |
 
 ## Shared skills
 
