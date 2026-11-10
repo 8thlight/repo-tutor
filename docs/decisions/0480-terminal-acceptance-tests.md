@@ -2,12 +2,12 @@
 category: operations
 status: accepted
 approval: person
-partly-superseded-by: ['0490']
+partly-superseded-by: ['0490', '0640']
 ---
 
 # 0480. Test the full-screen interface in a real terminal
 
-Screenshots are no longer deferred, under [0490](0490-screenshots-and-contrast.md). Recordings stay deferred.
+Screenshots are no longer deferred, under [0490](0490-screenshots-and-contrast.md). Recordings stay deferred. The tests no longer sit in `acceptance/` as one set, and acceptance is now data that every front shares, under [0640](0640-acceptance-judges-behavior-that-survives-any-rebuild.md).
 
 ## Context
 
