@@ -105,16 +105,16 @@ func branchPoints(file File, language string) (int, int) {
 	return count, first
 }
 
-func readChanges(ctx context.Context, root string) (map[string]int, bool) {
+func readChanges(ctx context.Context, root string) (string, bool) {
 	bounded, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	command := exec.CommandContext(bounded, "git", "log", "--relative", "--since=180.days", "--max-count=2000", "--no-merges", "--format=", "--name-only", "-z", "--no-renames", "--", ".")
 	command.Dir = root
 	data, err := command.Output()
 	if err != nil {
-		return nil, false
+		return "", false
 	}
-	return ChangeCounts(string(data)), true
+	return string(data), true
 }
 
 func ChangeCounts(history string) map[string]int {

@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"crypto/sha256"
 	"fmt"
 	"io"
 	"io/fs"
@@ -18,17 +17,25 @@ const maximumFileBytes = 512 * 1024
 const maximumSnapshotBytes = 64 * 1024 * 1024
 
 func Read(ctx context.Context, directory string) (Snapshot, error) {
-	root, err := filepath.Abs(directory)
+	source, err := readSource(ctx, directory)
 	if err != nil {
 		return Snapshot{}, err
 	}
+	return Build(source)
+}
+
+func readSource(ctx context.Context, directory string) (Source, error) {
+	root, err := filepath.Abs(directory)
+	if err != nil {
+		return Source{}, err
+	}
 	root, err = filepath.EvalSymlinks(root)
 	if err != nil {
-		return Snapshot{}, fmt.Errorf("open repository: %w", err)
+		return Source{}, fmt.Errorf("open repository: %w", err)
 	}
 	information, err := os.Stat(root)
 	if err != nil || !information.IsDir() {
-		return Snapshot{}, fmt.Errorf("repository must be a directory: %s", root)
+		return Source{}, fmt.Errorf("repository must be a directory: %s", root)
 	}
 	var names []string
 	var warnings []string
@@ -56,7 +63,7 @@ func Read(ctx context.Context, directory string) (Snapshot, error) {
 		return nil
 	})
 	if err != nil {
-		return Snapshot{}, fmt.Errorf("scan repository: %w", err)
+		return Source{}, fmt.Errorf("scan repository: %w", err)
 	}
 	if ignored, err := ignoredFiles(ctx, root, names); err == nil {
 		var included []string
@@ -70,22 +77,21 @@ func Read(ctx context.Context, directory string) (Snapshot, error) {
 	sort.Strings(names)
 	var files []File
 	total := 0
-	fingerprint := sha256.New()
 	for _, name := range names {
 		if err := ctx.Err(); err != nil {
-			return Snapshot{}, err
+			return Source{}, err
 		}
 		file, err := os.Open(filepath.Join(root, filepath.FromSlash(name)))
 		if err != nil {
-			return Snapshot{}, fmt.Errorf("read %s: %w", name, err)
+			return Source{}, fmt.Errorf("read %s: %w", name, err)
 		}
 		data, readError := io.ReadAll(io.LimitReader(file, maximumFileBytes+1))
 		closeError := file.Close()
 		if readError != nil {
-			return Snapshot{}, fmt.Errorf("read %s: %w", name, readError)
+			return Source{}, fmt.Errorf("read %s: %w", name, readError)
 		}
 		if closeError != nil {
-			return Snapshot{}, closeError
+			return Source{}, closeError
 		}
 		if len(data) > maximumFileBytes || !utf8.Valid(data) || strings.ContainsRune(string(data), 0) {
 			warnings = append(warnings, name+": skipped oversized or non-text file")
@@ -93,26 +99,15 @@ func Read(ctx context.Context, directory string) (Snapshot, error) {
 		}
 		total += len(data)
 		if total > maximumSnapshotBytes {
-			return Snapshot{}, fmt.Errorf("repository source exceeds the 64 MiB scan limit; choose a smaller module directory")
+			return Source{}, fmt.Errorf("repository source exceeds the 64 MiB scan limit; choose a smaller module directory")
 		}
 		files = append(files, File{name, string(data)})
-		fmt.Fprintf(fingerprint, "%d:%s:%d:", len(name), name, len(data))
-		fingerprint.Write(data)
 	}
-	result := Analyze(files)
-	result.Root = root
-	result.Fingerprint = fmt.Sprintf("%x", fingerprint.Sum(nil))
-	result.Warnings = append(warnings, result.Warnings...)
-	if len(result.Packages) == 0 {
-		return result, fmt.Errorf("no readable Go, Python, JavaScript, TypeScript, or Java source found in %s", root)
-	}
-	changes, available := readChanges(ctx, root)
+	changeLog, history := readChanges(ctx, root)
 	if err := ctx.Err(); err != nil {
-		return Snapshot{}, err
+		return Source{}, err
 	}
-	result.History = available
-	result.Hotspots = ReadingHints(result, changes)
-	return result, nil
+	return Source{Root: root, Files: files, Warnings: warnings, ChangeLog: changeLog, History: history}, nil
 }
 
 func excludedDirectory(name string) bool {
