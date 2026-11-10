@@ -3,12 +3,12 @@ category: ux
 status: accepted
 approval: person
 affects: [about, terminal]
-partly-superseded-by: ['0350', '0500']
+partly-superseded-by: ['0350', '0500', '0590']
 ---
 
 # 0100. About page and version output
 
-About moves to `F3` under [0350](0350-settings-on-f2.md). The `LICENSE` file is now the GPL, replacing the all rights reserved wording below, and the page and `--version` name the license after the copyright line. The painting draws on its own black background under [0500](0500-use-the-terminal-colors.md).
+About moves to `F3` under [0350](0350-settings-on-f2.md). The `LICENSE` file is now the GPL, replacing the all rights reserved wording below, and the page and `--version` name the license after the copyright line. The painting draws on its own black background under [0500](0500-use-the-terminal-colors.md). The facts also include the state directory under [0590](0590-the-tool-never-writes-to-your-repository.md).
 
 ## Context
 
