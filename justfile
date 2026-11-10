@@ -11,7 +11,7 @@ default:
     @just --list
 
 # Everything CI runs.
-check: fmt-check lint-md lint-links lint-prose lint-go test
+check: fmt-check lint-md lint-links lint-prose lint-go lint-acceptance test
 
 fmt:
     mdformat {{ md_paths }}
@@ -30,6 +30,9 @@ lint-prose:
 
 lint-go:
     test -z "$(gofmt -l .)" && go vet ./...
+
+lint-acceptance:
+    python3 tools/acceptance-imports/check.py
 
 test:
     go test -race -count=1 ./...

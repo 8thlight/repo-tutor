@@ -7,6 +7,10 @@ naming:
   component_path: "<noun>"
   segment_pattern: "^[a-z][a-z0-9]*$"
 
+acceptance:
+  scenarios: code
+  may_import: [github.com/microsoft/tui-test]
+
 banned_in_core:
   - filesystem
   - network
