@@ -1,19 +1,30 @@
 # Agent instructions
 
-Read first: `README.md`, `docs/architecture/README.md`, `docs/stack/README.md`, and the ADRs in `docs/decisions/`.
+Read first: `README.md`, `docs/architecture/README.md`, `docs/stack/README.md`, the ADRs in `docs/decisions/`, and `.agents/rules/regenerative.md`.
+
+The rules in `.agents/rules/regenerative.md` are part of these instructions and apply to every task. This file adds the project's document pointers and its own rules. It may add to those rules and may not relax them.
+
+## Document pointers
+
+The documents a person chooses. The shared rules and skills read them from here. Values that a tool reads live in `architecture.yaml` and `.threnos/config.toml`, not in this table.
+
+| Document | Path |
+| -- | -- |
+| Product principles | `docs/reference/product-principles.md` |
+| Further behavior rules | The "Interaction rules" and "Where messages go" sections of `docs/architecture/terminal-tutor.md` |
+| Testing stack doc | none yet |
+| Issue sizing examples | none yet |
 
 ## Shared skills
 
-Repository skills live in `.agents/skills/`. Keep their instructions independent of an agent vendor. `.claude/skills/<name>` links to the matching shared skill. Edit the canonical files, not a second copy. `CLAUDE.md` imports this file.
-
-The skills came from a sibling project. Some paths and ADR numbers they cite do not exist here yet. Adapt a skill when it first meets this repo, and report the change.
+The skills in `.agents/skills/` and the rules in `.agents/rules/` come from Threnos. `nix run .#sync` installs them read-only and records them in `.threnos/owned`. Do not edit them here. Change them in Threnos, or set one to `ejected` in `.threnos/config.toml` to own it. `.claude/skills/<name>` links to the matching skill. `CLAUDE.md` imports this file and the shared rules.
 
 ## Where docs go
 
 | Folder | Holds | Pace |
 | -- | -- | -- |
 | `docs/decisions/` | ADRs: what we chose and why | Slowest. A new ADR supersedes an old one |
-| `docs/reference/` | Exact definitions of formats, with worked examples | Changes with the format |
+| `docs/reference/` | Exact definitions of formats, with worked examples, and the product principles | Changes with the format |
 | `docs/architecture/` | Views of the current system | Changes as components change |
 | `docs/stack/` | Language and tooling | Fastest |
 
