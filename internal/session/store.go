@@ -64,6 +64,16 @@ func Base(base string) (string, error) {
 	return filepath.Join(base, "repo-tutor"), nil
 }
 
+func BaseSource(base string) string {
+	if base != "" {
+		return "--state-dir"
+	}
+	if os.Getenv("XDG_STATE_HOME") != "" {
+		return "XDG_STATE_HOME"
+	}
+	return "the user configuration directory"
+}
+
 func Open(base string, repository string) (*Store, error) {
 	base, err := Base(base)
 	if err != nil {

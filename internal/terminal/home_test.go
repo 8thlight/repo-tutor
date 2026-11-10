@@ -3,6 +3,7 @@ package terminal
 import (
 	"context"
 	"errors"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -411,5 +412,31 @@ func TestHomeOffersReviewOnlyWhenATopicIsWeak(t *testing.T) {
 	defer reviewing.cancel()
 	if !reviewing.busy || reviewing.intent.topic != core.ID || reviewing.intent.message != tutor.ReviewMessage {
 		t.Fatalf("the entry should start a review lesson on %s: %+v", core.ID, reviewing.intent)
+	}
+}
+
+func TestAboutListsEveryPlaceTheToolUses(t *testing.T) {
+	model := interfaceFixture()
+	base := t.TempDir()
+	store, err := session.Open(base, model.application.snapshot.Root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+	model.application.store = store
+	model.application.settingsBase = base
+	resized, _ := model.Update(tea.WindowSizeMsg{Width: 200, Height: 60})
+	content := ansi.Strip(resized.(interfaceModel).aboutText())
+	for _, expected := range []string{
+		"DATA LOCATIONS", "CREDITS",
+		"Your repository  read only", "/work/repowise",
+		"State directory  read and write", base, "Chosen by --state-dir.",
+		"session folder  read and write", store.Directory,
+		"working folder  read and write", filepath.Join(store.Directory, "agent"),
+		"Your agent CLI keeps its own conversation history",
+	} {
+		if !strings.Contains(content, expected) {
+			t.Fatalf("about page is missing %q:\n%s", expected, content)
+		}
 	}
 }

@@ -14,6 +14,7 @@ import (
 
 	"repo-tutor/internal/about"
 	"repo-tutor/internal/repository"
+	"repo-tutor/internal/session"
 	"repo-tutor/internal/tutor"
 )
 
@@ -339,16 +340,57 @@ func (model interfaceModel) showsSplash() bool {
 }
 
 func (model interfaceModel) aboutText() string {
+	palette := model.palette()
+	heading := lipgloss.NewStyle().Foreground(palette.accent).Bold(true)
+	muted := lipgloss.NewStyle().Faint(true)
 	state := model.application.state
 	modelName := state.Model
 	if modelName == "" {
 		modelName = "default model"
 	}
-	text := about.Read().Text() + fmt.Sprintf("\nThis session uses %s (%s).\nBuilt with Bubble Tea, Bubbles, Lip Gloss, Glamour, and Chroma, which are MIT licensed.\nrepo-tutor --version --notices prints every third-party license.\n", state.Agent, modelName)
+	facts := about.Read().Lines()
+	facts[0] = lipgloss.NewStyle().Bold(true).Render(facts[0])
+	text := strings.Join(facts, "\n") + "\n\n" + fmt.Sprintf("This session uses %s (%s).", state.Agent, modelName) + "\n\n" +
+		heading.Render("DATA LOCATIONS") + "\n\n" +
+		model.placesView() +
+		muted.Render(ansi.Wrap(about.AgentHistoryNote, model.bodyWidth(), "")) + "\n\n" +
+		heading.Render("CREDITS") + "\n" + muted.Render("Built with Bubble Tea, Bubbles, Lip Gloss, Glamour, and Chroma, which are MIT licensed.\nrepo-tutor --version --notices prints every third-party license.") + "\n"
 	if !model.showsSplash() {
 		return text
 	}
 	return about.Splash() + "\x1b[0m\n" + ansi.Wrap(about.SplashCaption, about.SplashWidth, "") + "\n\n" + text
+}
+
+func (model interfaceModel) placesView() string {
+	palette := model.palette()
+	name := lipgloss.NewStyle().Bold(true)
+	access := lipgloss.NewStyle().Foreground(palette.accent)
+	muted := lipgloss.NewStyle().Faint(true)
+	indent := "  "
+	width := max(1, model.bodyWidth()-len(indent))
+	indented := func(text, breakpoints string) string {
+		return indent + strings.ReplaceAll(ansi.Wrap(text, width, breakpoints), "\n", "\n"+indent)
+	}
+	var view strings.Builder
+	for _, place := range model.aboutPlaces() {
+		fmt.Fprintf(&view, "%s  %s\n%s\n%s\n\n", name.Render(place.Name), access.Render(string(place.Access)), indented(place.Path, "/"), muted.Render(indented(place.Holds, "")))
+	}
+	return view.String()
+}
+
+func (model interfaceModel) aboutPlaces() []about.Place {
+	application := model.application
+	places := []about.Place{{Name: "Your repository", Path: application.snapshot.Root, Holds: "The source being studied. repo-tutor reads its files and runs git log and git check-ignore in it.", Access: about.ReadOnly}}
+	if application.store == nil {
+		return places
+	}
+	folder := application.store.Directory
+	base := filepath.Dir(folder)
+	return append(places,
+		about.Place{Name: "State directory", Path: base, Holds: "Your settings and one folder per repository. Chosen by " + session.BaseSource(application.settingsBase) + ".", Access: about.ReadWrite},
+		about.Place{Name: "This repository's session folder", Path: folder, Holds: "The saved session, one archived session, cached lessons, and a lock file.", Access: about.ReadWrite},
+		about.Place{Name: "The agent's working folder", Path: filepath.Join(folder, "agent"), Holds: "Where the agent CLI starts. It holds only the reply schema.", Access: about.ReadWrite},
+	)
 }
 
 func (model interfaceModel) progressText() string {

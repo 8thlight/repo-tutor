@@ -94,3 +94,17 @@ func TestBaseDirectoryPrefersTheFlagThenXDGStateHome(t *testing.T) {
 		t.Fatalf("XDG_STATE_HOME should hold a repo-tutor folder, got %s", base)
 	}
 }
+
+func TestBaseSourceNamesWhatChoseTheDirectory(t *testing.T) {
+	t.Setenv("XDG_STATE_HOME", "/state")
+	if source := session.BaseSource("/chosen"); source != "--state-dir" {
+		t.Fatalf("a flag should be named, got %s", source)
+	}
+	if source := session.BaseSource(""); source != "XDG_STATE_HOME" {
+		t.Fatalf("the environment should be named, got %s", source)
+	}
+	t.Setenv("XDG_STATE_HOME", "")
+	if source := session.BaseSource(""); source != "the user configuration directory" {
+		t.Fatalf("the default should be named, got %s", source)
+	}
+}
