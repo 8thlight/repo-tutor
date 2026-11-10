@@ -16,3 +16,10 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@3138316df39ed29be04236d7ffc686fa525866aa # v23
       - name: Require the committed screenshots to be current
         run: nix develop --command just check-screenshots
+      - name: Keep the captured screenshots when the check fails
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: captured-screenshots
+          path: output/screenshots
+          retention-days: 7
