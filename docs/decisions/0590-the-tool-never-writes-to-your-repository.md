@@ -5,9 +5,12 @@ approval: person
 affects: [agent, session, terminal, about]
 builds-on: ['0010', '0220', '0400', '0460']
 partly-supersedes: ['0100']
+partly-superseded-by: ['0600']
 ---
 
 # 0590. The tool never writes to your repository
+
+About lists every place the tool uses, and `--version` does not name the state directory, under [0600](0600-about-lists-the-places-the-tool-uses.md).
 
 ## Context
 
