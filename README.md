@@ -8,6 +8,12 @@ Reads a code repository and turns it into a fast onboarding course for a new dev
 
 The [gallery](images/README.md) shows more of the interface in light and dark terminals.
 
+## Your repository is safe
+
+The tutor reads your repository and never writes to it. It creates no file there and changes none. The agent it starts runs in a read-only sandbox (Codex) or with no tools (Claude), so it cannot change your code either.
+
+Everything the tutor saves, your sessions, cached lessons, progress, and settings, lives in one folder outside your repository. See [Saved sessions](#saved-sessions) for where. The About page, `F3`, lists the exact paths and whether the tutor reads or writes each. To delete your data, delete that folder. Your agent CLI keeps its own conversation history, which you manage with that CLI.
+
 ## Requirements
 
 - macOS on Apple silicon, or Linux. Windows is not supported natively; use WSL.
