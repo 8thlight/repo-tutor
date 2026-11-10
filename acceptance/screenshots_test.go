@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"testing"
+	"time"
 
 	tuitest "github.com/microsoft/tui-test/bindings/go"
 	"github.com/microsoft/tui-test/bindings/go/tuitesttest"
@@ -82,6 +83,23 @@ func withoutWindowFrame(t *testing.T, source, target string, background color.Co
 	}
 }
 
+func waitUntilSettled(t *testing.T, terminal *tuitest.Client) {
+	t.Helper()
+	var screen string
+	unchanged := 0
+	for deadline := time.Now().Add(5 * time.Second); time.Now().Before(deadline); time.Sleep(50 * time.Millisecond) {
+		current, _ := terminal.Screenshot("", tuitest.ScreenshotOptions{})
+		if current != screen {
+			screen, unchanged = current, 0
+			continue
+		}
+		if unchanged++; unchanged >= 3 {
+			return
+		}
+	}
+	t.Fatalf("the screen never settled:\n%s", screen)
+}
+
 func TestScreenshots(t *testing.T) {
 	directory := os.Getenv("REPO_TUTOR_SCREENSHOTS")
 	if directory == "" {
@@ -100,6 +118,7 @@ func TestScreenshots(t *testing.T) {
 		waitForText(t, terminal, "Lesson ready")
 		capture := func(name string) {
 			t.Helper()
+			waitUntilSettled(t, terminal)
 			raw := filepath.Join(t.TempDir(), name+".png")
 			if _, err := terminal.Screenshot(raw, tuitest.ScreenshotOptions{Transparent: true}); err != nil {
 				t.Fatal(err)
