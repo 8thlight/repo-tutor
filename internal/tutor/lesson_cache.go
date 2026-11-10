@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"repo-tutor/internal/repository"
+	"repo-tutor/internal/repository/analyzer"
 )
 
 const lessonFormat = 2
@@ -23,12 +23,12 @@ type SavedLesson struct {
 }
 
 type lessonHeader struct {
-	Format      int                   `json:"format"`
-	Fingerprint string                `json:"fingerprint"`
-	Goal        string                `json:"goal"`
-	Topic       string                `json:"topic"`
-	Question    string                `json:"question"`
-	Citations   []repository.Location `json:"citations"`
+	Format      int                 `json:"format"`
+	Fingerprint string              `json:"fingerprint"`
+	Goal        string              `json:"goal"`
+	Topic       string              `json:"topic"`
+	Question    string              `json:"question"`
+	Citations   []analyzer.Location `json:"citations"`
 }
 
 func GoalKey(goal string) string {

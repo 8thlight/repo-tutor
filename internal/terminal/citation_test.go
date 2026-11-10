@@ -7,12 +7,12 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/x/ansi"
 
-	"repo-tutor/internal/repository"
+	"repo-tutor/internal/repository/analyzer"
 )
 
 func citedFixture() interfaceModel {
 	model := interfaceFixture()
-	model.application.state.Turns[0].Reply.Citations = []repository.Location{{Path: "main.go", Line: 2}, {Path: "README.md", Line: 1}}
+	model.application.state.Turns[0].Reply.Citations = []analyzer.Location{{Path: "main.go", Line: 2}, {Path: "README.md", Line: 1}}
 	model.application.state.Question = ""
 	model.application.settings.MarkdownOpensRendered = false
 	model.rebuildContent()
@@ -131,7 +131,7 @@ func TestDigitsAreHeldWhileARequestMovesToAnotherTopic(t *testing.T) {
 func TestADigitOnAnEarlierStepOpensThatStepsCitation(t *testing.T) {
 	model := citedFixture()
 	later := model.application.state.Turns[0]
-	later.Reply.Citations = []repository.Location{{Path: "go.mod", Line: 1}}
+	later.Reply.Citations = []analyzer.Location{{Path: "go.mod", Line: 1}}
 	model.application.state.Turns = append(model.application.state.Turns, later)
 	model.history = 0
 	if opened := digit(model, '1'); opened.sourcePath != "main.go" {
@@ -145,7 +145,7 @@ func TestADigitOnAnEarlierStepOpensThatStepsCitation(t *testing.T) {
 
 func TestDigitsOnAFileOpenedFromSourcesDoNotToggle(t *testing.T) {
 	model := citedFixture()
-	opened, _ := model.openFile(repository.Location{Path: "main.go", Line: 1})
+	opened, _ := model.openFile(analyzer.Location{Path: "main.go", Line: 1})
 	file := opened.(interfaceModel)
 	if file.sourceCitation != 0 {
 		t.Fatalf("a file opened from Sources has no citation number, got %d", file.sourceCitation)
@@ -203,7 +203,7 @@ func openSources(model interfaceModel) interfaceModel {
 
 func TestTheSourcesListNumbersEachCitationAndAdmitsTwoInOneFile(t *testing.T) {
 	model := citedFixture()
-	model.application.state.Turns[0].Reply.Citations = []repository.Location{{Path: "main.go", Line: 2}, {Path: "main.go", Line: 1}, {Path: "README.md", Line: 1}}
+	model.application.state.Turns[0].Reply.Citations = []analyzer.Location{{Path: "main.go", Line: 2}, {Path: "main.go", Line: 1}, {Path: "README.md", Line: 1}}
 	view := ansi.Strip(openSources(model).picker.View())
 	for _, expected := range []string{"[1]  main.go", "[2]  main.go", "[3]  README.md", "Cited in this lesson · line 2", "Cited in this lesson · line 1"} {
 		if !strings.Contains(view, expected) {

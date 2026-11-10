@@ -4,11 +4,11 @@ import (
 	"strings"
 	"testing"
 
-	"repo-tutor/internal/repository"
+	"repo-tutor/internal/repository/analyzer"
 )
 
 func TestLessonRoundTripsAsMarkdownAndRejectsDamage(t *testing.T) {
-	reply := Reply{Explanation: "# Map\n\nThe CLI starts at main.go:2. A note about --> in text.", Question: "What starts it?", Assessment: "none", Citations: []repository.Location{{Path: "main.go", Line: 2}}}
+	reply := Reply{Explanation: "# Map\n\nThe CLI starts at main.go:2. A note about --> in text.", Question: "What starts it?", Assessment: "none", Citations: []analyzer.Location{{Path: "main.go", Line: 2}}}
 	overview := SavedLesson{Fingerprint: "abc", Goal: GoalKey("Trace the entry point"), Topic: "core", Reply: reply}
 	data := EncodeLesson(overview)
 	if !strings.HasSuffix(string(data), "A note about --> in text.\n") {

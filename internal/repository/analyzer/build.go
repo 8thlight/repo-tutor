@@ -1,4 +1,4 @@
-package repository
+package analyzer
 
 import (
 	"crypto/sha256"

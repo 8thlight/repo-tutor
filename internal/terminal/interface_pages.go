@@ -13,7 +13,7 @@ import (
 	"github.com/charmbracelet/x/ansi"
 
 	"repo-tutor/internal/about"
-	"repo-tutor/internal/repository"
+	"repo-tutor/internal/repository/analyzer"
 	"repo-tutor/internal/session"
 	"repo-tutor/internal/tutor"
 )
@@ -133,7 +133,7 @@ func (model *interfaceModel) configurePicker(filter string) {
 				seen[excerpt.Path] = true
 			}
 		}
-		files := append([]repository.File(nil), model.application.snapshot.Files...)
+		files := append([]analyzer.File(nil), model.application.snapshot.Files...)
 		sort.Slice(files, func(first, second int) bool { return files[first].Path < files[second].Path })
 		for _, file := range files {
 			if !seen[file.Path] && file.Content != "" {
@@ -189,14 +189,14 @@ func (model interfaceModel) selectItem() (tea.Model, tea.Cmd) {
 	if model.page == "quiz" {
 		return model.selectQuizSlot(item.line)
 	}
-	return model.openFile(repository.Location{Path: item.value, Line: item.line})
+	return model.openFile(analyzer.Location{Path: item.value, Line: item.line})
 }
 
-func (model interfaceModel) openSource(location repository.Location) (tea.Model, tea.Cmd) {
+func (model interfaceModel) openSource(location analyzer.Location) (tea.Model, tea.Cmd) {
 	return model.openFile(location)
 }
 
-func (model interfaceModel) openFile(location repository.Location) (tea.Model, tea.Cmd) {
+func (model interfaceModel) openFile(location analyzer.Location) (tea.Model, tea.Cmd) {
 	model.sourceCitation, model.lessonReturn = 0, nil
 	switch model.page {
 	case "sources":
@@ -216,7 +216,7 @@ func (model interfaceModel) openFile(location repository.Location) (tea.Model, t
 	return model.showSource(file, location)
 }
 
-func (model interfaceModel) showSource(file repository.File, location repository.Location) (tea.Model, tea.Cmd) {
+func (model interfaceModel) showSource(file analyzer.File, location analyzer.Location) (tea.Model, tea.Cmd) {
 	lines := strings.Split(strings.TrimSuffix(file.Content, "\n"), "\n")
 	if location.Line < 1 || location.Line > len(lines) {
 		model.notice = fmt.Sprintf("Choose a line between 1 and %d.", len(lines))
@@ -268,7 +268,7 @@ func (model interfaceModel) rememberMarkdownView(path string, rendered bool) int
 	return model
 }
 
-func (model interfaceModel) markdownPage(file repository.File, line int) (string, int, bool) {
+func (model interfaceModel) markdownPage(file analyzer.File, line int) (string, int, bool) {
 	rendered := model.markdown(file.Content)
 	rows := strings.Split(rendered, "\n")
 	row, found := renderedRow(strings.Split(file.Content, "\n"), line, rendered)
@@ -295,7 +295,7 @@ func firstTextRow(rows []string) int {
 	return 0
 }
 
-func (model interfaceModel) showRendered(file repository.File, line int) (tea.Model, tea.Cmd) {
+func (model interfaceModel) showRendered(file analyzer.File, line int) (tea.Model, tea.Cmd) {
 	page, row, found := model.markdownPage(file, line)
 	model, command := model.document("source", file.Path+" · rendered", page)
 	model.sourcePath, model.sourceLine, model.sourceRendered = file.Path, line, true
@@ -314,7 +314,7 @@ func (model interfaceModel) toggleMarkdownView() (tea.Model, tea.Cmd) {
 	}
 	if model.sourceRendered {
 		model = model.rememberMarkdownView(file.Path, false)
-		return model.showSource(file, repository.Location{Path: file.Path, Line: max(1, model.sourceLine)})
+		return model.showSource(file, analyzer.Location{Path: file.Path, Line: max(1, model.sourceLine)})
 	}
 	model = model.rememberMarkdownView(file.Path, true)
 	return model.showRendered(file, model.sourceLine)

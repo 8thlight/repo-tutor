@@ -11,14 +11,14 @@ import (
 	"time"
 
 	"repo-tutor/internal/agent"
-	"repo-tutor/internal/repository"
+	"repo-tutor/internal/repository/analyzer"
 	"repo-tutor/internal/session"
 	"repo-tutor/internal/settings"
 	"repo-tutor/internal/tutor"
 )
 
 type application struct {
-	snapshot    repository.Snapshot
+	snapshot    analyzer.Snapshot
 	course      []tutor.Topic
 	state       session.State
 	store       *session.Store
@@ -395,7 +395,7 @@ Each lesson is saved before it is displayed. Ctrl-C exits; completed turns remai
 		showHotspots(application.output, application.snapshot, 15)
 	case "/glossary":
 		shown, total := 0, 0
-		for _, current := range repository.Foundations(application.snapshot) {
+		for _, current := range analyzer.Foundations(application.snapshot) {
 			for _, symbol := range current.Symbols {
 				if symbol.Kind == "type" && strings.Contains(strings.ToLower(symbol.Name+" "+symbol.Path), strings.ToLower(argument)) {
 					total++
@@ -437,7 +437,7 @@ Each lesson is saved before it is displayed. Ctrl-C exits; completed turns remai
 	return false, nil
 }
 
-func showHotspots(output io.Writer, snapshot repository.Snapshot, limit int) {
+func showHotspots(output io.Writer, snapshot analyzer.Snapshot, limit int) {
 	fmt.Fprintln(output, "\nReading hints: recent changes and branching logic")
 	if snapshot.History {
 		fmt.Fprintln(output, "Git window: last 180 days, at most 2000 non-merge commits; renames are not followed.")
@@ -537,7 +537,7 @@ const (
 	settingsReadOnlyNotice   = "These settings come from a newer repo-tutor and are read-only."
 )
 
-func (application *application) latestCitations() []repository.Location {
+func (application *application) latestCitations() []analyzer.Location {
 	turns := application.state.Turns
 	if len(turns) == 0 {
 		return nil

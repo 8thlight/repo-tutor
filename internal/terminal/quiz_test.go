@@ -10,7 +10,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/x/ansi"
 
-	"repo-tutor/internal/repository"
+	"repo-tutor/internal/repository/analyzer"
 	"repo-tutor/internal/session"
 	"repo-tutor/internal/tutor"
 )
@@ -286,7 +286,7 @@ func TestFirstLessonLoadsSavedOverviewWithoutAgentAndMarksStaleness(t *testing.T
 
 func TestMarkdownAlwaysOpensRenderedAndTogglesToSourceAtTheCitedLine(t *testing.T) {
 	model := interfaceFixture()
-	location := repository.Location{Path: "README.md", Line: 2}
+	location := analyzer.Location{Path: "README.md", Line: 2}
 	cited, _ := model.openSource(location)
 	model = cited.(interfaceModel)
 	if model.pageTitle != "README.md · rendered" || strings.Contains(model.pageContent, "    2  ") || !strings.Contains(model.notice, "Line 2 · ") || !strings.Contains(model.notice, "marked with ›") {
@@ -301,15 +301,15 @@ func TestMarkdownAlwaysOpensRenderedAndTogglesToSourceAtTheCitedLine(t *testing.
 		t.Fatalf("v should return to the rendered page, got %q", model.pageTitle)
 	}
 	model, _ = press(model, 'v', 0)
-	listed, _ := model.openFile(repository.Location{Path: "README.md", Line: 1})
+	listed, _ := model.openFile(analyzer.Location{Path: "README.md", Line: 1})
 	if listed.(interfaceModel).pageTitle != "README.md:1" {
 		t.Fatal("a file whose view was chosen should keep that view")
 	}
-	fresh, _ := interfaceFixture().openFile(repository.Location{Path: "README.md", Line: 1})
+	fresh, _ := interfaceFixture().openFile(analyzer.Location{Path: "README.md", Line: 1})
 	if fresh.(interfaceModel).pageTitle != "README.md · rendered" {
 		t.Fatal("a Markdown file should open rendered when no view was chosen")
 	}
-	code, _ := model.openFile(repository.Location{Path: "main.go", Line: 1})
+	code, _ := model.openFile(analyzer.Location{Path: "main.go", Line: 1})
 	toggled, _ := press(code.(interfaceModel), 'v', 0)
 	if toggled.pageTitle != "main.go:1" {
 		t.Fatal("code files have no rendered view")
@@ -331,8 +331,8 @@ func TestSourceViewKeepsTheWholeFileReachableAndScrollsToTheCitation(t *testing.
 	for line := 1; line <= 300; line++ {
 		fmt.Fprintf(&source, "value%d = %d\n", line, line)
 	}
-	model.application.snapshot.Files = append(model.application.snapshot.Files, repository.File{Path: "long.py", Content: source.String()})
-	opened, _ := model.openSource(repository.Location{Path: "long.py", Line: 200})
+	model.application.snapshot.Files = append(model.application.snapshot.Files, analyzer.File{Path: "long.py", Content: source.String()})
+	opened, _ := model.openSource(analyzer.Location{Path: "long.py", Line: 200})
 	model = opened.(interfaceModel)
 	content := ansi.Strip(model.pageContent)
 	if !strings.Contains(content, "    1  value1 = 1") || !strings.Contains(content, "  300  value300 = 300") {

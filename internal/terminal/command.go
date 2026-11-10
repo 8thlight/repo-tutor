@@ -18,6 +18,7 @@ import (
 	"repo-tutor/internal/about"
 	"repo-tutor/internal/agent"
 	"repo-tutor/internal/repository"
+	"repo-tutor/internal/repository/analyzer"
 	"repo-tutor/internal/session"
 	"repo-tutor/internal/tutor"
 )
@@ -187,7 +188,7 @@ func doctor(ctx context.Context, arguments []string, output io.Writer) error {
 	return nil
 }
 
-func summary(output io.Writer, snapshot repository.Snapshot) {
+func summary(output io.Writer, snapshot analyzer.Snapshot) {
 	fmt.Fprintf(output, "Repository: %s\n", tutor.Plain(snapshot.Root))
 	fmt.Fprintf(output, "%d module(s), %d packages, %d documents, %d entry point(s)\n", len(snapshot.Modules), len(snapshot.Packages), len(snapshot.Documents), len(snapshot.EntryPoints))
 	for _, module := range snapshot.Modules {

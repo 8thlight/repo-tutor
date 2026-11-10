@@ -6,12 +6,12 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 
-	"repo-tutor/internal/repository"
+	"repo-tutor/internal/repository/analyzer"
 )
 
 type lessonPlace struct{ history, offset int }
 
-func (model interfaceModel) shownCitations() []repository.Location {
+func (model interfaceModel) shownCitations() []analyzer.Location {
 	turns := model.application.state.Turns
 	if len(turns) == 0 {
 		return nil

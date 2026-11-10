@@ -8,34 +8,36 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"repo-tutor/internal/repository/analyzer"
 	"sort"
 	"strings"
+	"time"
 	"unicode/utf8"
 )
 
 const maximumFileBytes = 512 * 1024
 const maximumSnapshotBytes = 64 * 1024 * 1024
 
-func Read(ctx context.Context, directory string) (Snapshot, error) {
+func Read(ctx context.Context, directory string) (analyzer.Snapshot, error) {
 	source, err := readSource(ctx, directory)
 	if err != nil {
-		return Snapshot{}, err
+		return analyzer.Snapshot{}, err
 	}
-	return Build(source)
+	return analyzer.Build(source)
 }
 
-func readSource(ctx context.Context, directory string) (Source, error) {
+func readSource(ctx context.Context, directory string) (analyzer.Source, error) {
 	root, err := filepath.Abs(directory)
 	if err != nil {
-		return Source{}, err
+		return analyzer.Source{}, err
 	}
 	root, err = filepath.EvalSymlinks(root)
 	if err != nil {
-		return Source{}, fmt.Errorf("open repository: %w", err)
+		return analyzer.Source{}, fmt.Errorf("open repository: %w", err)
 	}
 	information, err := os.Stat(root)
 	if err != nil || !information.IsDir() {
-		return Source{}, fmt.Errorf("repository must be a directory: %s", root)
+		return analyzer.Source{}, fmt.Errorf("repository must be a directory: %s", root)
 	}
 	var names []string
 	var warnings []string
@@ -47,12 +49,12 @@ func readSource(ctx context.Context, directory string) (Source, error) {
 			return walkError
 		}
 		if entry.IsDir() {
-			if name != root && excludedDirectory(entry.Name()) {
+			if name != root && analyzer.Excluded(entry.Name()) {
 				return filepath.SkipDir
 			}
 			return nil
 		}
-		if !entry.Type().IsRegular() || !supportedFile(entry.Name()) {
+		if !entry.Type().IsRegular() || !analyzer.Supported(entry.Name()) {
 			return nil
 		}
 		relative, err := filepath.Rel(root, name)
@@ -63,7 +65,7 @@ func readSource(ctx context.Context, directory string) (Source, error) {
 		return nil
 	})
 	if err != nil {
-		return Source{}, fmt.Errorf("scan repository: %w", err)
+		return analyzer.Source{}, fmt.Errorf("scan repository: %w", err)
 	}
 	if ignored, err := ignoredFiles(ctx, root, names); err == nil {
 		var included []string
@@ -75,23 +77,23 @@ func readSource(ctx context.Context, directory string) (Source, error) {
 		names = included
 	}
 	sort.Strings(names)
-	var files []File
+	var files []analyzer.File
 	total := 0
 	for _, name := range names {
 		if err := ctx.Err(); err != nil {
-			return Source{}, err
+			return analyzer.Source{}, err
 		}
 		file, err := os.Open(filepath.Join(root, filepath.FromSlash(name)))
 		if err != nil {
-			return Source{}, fmt.Errorf("read %s: %w", name, err)
+			return analyzer.Source{}, fmt.Errorf("read %s: %w", name, err)
 		}
 		data, readError := io.ReadAll(io.LimitReader(file, maximumFileBytes+1))
 		closeError := file.Close()
 		if readError != nil {
-			return Source{}, fmt.Errorf("read %s: %w", name, readError)
+			return analyzer.Source{}, fmt.Errorf("read %s: %w", name, readError)
 		}
 		if closeError != nil {
-			return Source{}, closeError
+			return analyzer.Source{}, closeError
 		}
 		if len(data) > maximumFileBytes || !utf8.Valid(data) || strings.ContainsRune(string(data), 0) {
 			warnings = append(warnings, name+": skipped oversized or non-text file")
@@ -99,40 +101,15 @@ func readSource(ctx context.Context, directory string) (Source, error) {
 		}
 		total += len(data)
 		if total > maximumSnapshotBytes {
-			return Source{}, fmt.Errorf("repository source exceeds the 64 MiB scan limit; choose a smaller module directory")
+			return analyzer.Source{}, fmt.Errorf("repository source exceeds the 64 MiB scan limit; choose a smaller module directory")
 		}
-		files = append(files, File{name, string(data)})
+		files = append(files, analyzer.File{Path: name, Content: string(data)})
 	}
 	changeLog, history := readChanges(ctx, root)
 	if err := ctx.Err(); err != nil {
-		return Source{}, err
+		return analyzer.Source{}, err
 	}
-	return Source{Root: root, Files: files, Warnings: warnings, ChangeLog: changeLog, History: history}, nil
-}
-
-func excludedDirectory(name string) bool {
-	if strings.HasPrefix(name, ".") {
-		return true
-	}
-	switch name {
-	case "vendor", "node_modules", "output", "dist", "build", "result", "testdata", "fixtures", "__pycache__", "coverage":
-		return true
-	}
-	return false
-}
-
-func supportedFile(name string) bool {
-	if strings.HasPrefix(name, ".") {
-		return false
-	}
-	if name == "go.mod" || manifestFile(name) || sourceExtension(name) {
-		return true
-	}
-	switch strings.ToLower(filepath.Ext(name)) {
-	case ".go", ".md":
-		return true
-	}
-	return false
+	return analyzer.Source{Root: root, Files: files, Warnings: warnings, ChangeLog: changeLog, History: history}, nil
 }
 
 func ignoredFiles(ctx context.Context, root string, names []string) (map[string]bool, error) {
@@ -151,4 +128,16 @@ func ignoredFiles(ctx context.Context, root string, names []string) (map[string]
 		result[name] = true
 	}
 	return result, nil
+}
+
+func readChanges(ctx context.Context, root string) (string, bool) {
+	bounded, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	command := exec.CommandContext(bounded, "git", "log", "--relative", "--since=180.days", "--max-count=2000", "--no-merges", "--format=", "--name-only", "-z", "--no-renames", "--", ".")
+	command.Dir = root
+	data, err := command.Output()
+	if err != nil {
+		return "", false
+	}
+	return string(data), true
 }

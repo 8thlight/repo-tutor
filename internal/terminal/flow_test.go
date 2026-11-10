@@ -10,7 +10,7 @@ import (
 
 	"github.com/charmbracelet/x/ansi"
 
-	"repo-tutor/internal/repository"
+	"repo-tutor/internal/repository/analyzer"
 	"repo-tutor/internal/session"
 	"repo-tutor/internal/tutor"
 )
@@ -23,7 +23,7 @@ func readingFixture() interfaceModel {
 }
 
 func citedReply(question string) tutor.Reply {
-	return tutor.Reply{Explanation: "It starts in main.go:2.", Question: question, Assessment: "none", Citations: []repository.Location{{Path: "main.go", Line: 2}}}
+	return tutor.Reply{Explanation: "It starts in main.go:2.", Question: question, Assessment: "none", Citations: []analyzer.Location{{Path: "main.go", Line: 2}}}
 }
 
 func TestALessonReplyLeavesNoPendingQuestion(t *testing.T) {
@@ -296,7 +296,7 @@ func TestControlFExtendsAFinishedQuiz(t *testing.T) {
 func TestSourcesEndsWithEveryOtherFileInPathOrder(t *testing.T) {
 	model := interfaceFixture()
 	model.application.snapshot.Files = append(model.application.snapshot.Files,
-		repository.File{Path: "zeta/notes.txt", Content: "later\n"}, repository.File{Path: "alpha/notes.txt", Content: "earlier\n"})
+		analyzer.File{Path: "zeta/notes.txt", Content: "later\n"}, analyzer.File{Path: "alpha/notes.txt", Content: "earlier\n"})
 	opened, _ := model.openPicker("sources", "")
 	var paths, descriptions []string
 	for _, item := range opened.(interfaceModel).picker.Items() {

@@ -7,7 +7,7 @@ import (
 
 	"github.com/charmbracelet/x/ansi"
 
-	"repo-tutor/internal/repository"
+	"repo-tutor/internal/repository/analyzer"
 )
 
 func TestRenderedRowFindsTheCitedTextDespiteMarkup(t *testing.T) {
@@ -39,8 +39,8 @@ func TestCitationScrollsRenderedMarkdownToItsText(t *testing.T) {
 	for section := 1; section <= 60; section++ {
 		fmt.Fprintf(&document, "## Section %d\n\nParagraph number %d explains one idea.\n\n", section, section)
 	}
-	model.application.snapshot.Files = append(model.application.snapshot.Files, repository.File{Path: "docs/guide.md", Content: document.String()})
-	cited, _ := model.openSource(repository.Location{Path: "docs/guide.md", Line: 3 + 4*40})
+	model.application.snapshot.Files = append(model.application.snapshot.Files, analyzer.File{Path: "docs/guide.md", Content: document.String()})
+	cited, _ := model.openSource(analyzer.Location{Path: "docs/guide.md", Line: 3 + 4*40})
 	model = cited.(interfaceModel)
 	if model.viewport.YOffset() == 0 || !strings.Contains(ansi.Strip(model.viewport.View()), "Paragraph number 41 explains one idea.") || !strings.Contains(model.notice, "marked with ›") {
 		t.Fatalf("the rendered view should scroll to the cited paragraph: offset %d, notice %q", model.viewport.YOffset(), model.notice)
@@ -54,7 +54,7 @@ func TestCitationScrollsRenderedMarkdownToItsText(t *testing.T) {
 	if len(marked) != 1 || !strings.Contains(marked[0], "Paragraph number 41 explains one idea.") {
 		t.Fatalf("exactly the cited row should carry the gutter marker: %q", marked)
 	}
-	opened, _ := interfaceFixture().openSource(repository.Location{Path: "README.md", Line: 1})
+	opened, _ := interfaceFixture().openSource(analyzer.Location{Path: "README.md", Line: 1})
 	short := opened.(interfaceModel)
 	if short.viewport.YOffset() != 0 {
 		t.Fatal("a short document should stay at the top")
@@ -64,8 +64,8 @@ func TestCitationScrollsRenderedMarkdownToItsText(t *testing.T) {
 func TestRenderedMarkdownAlwaysMarksARow(t *testing.T) {
 	model := interfaceFixture()
 	model.application.snapshot.Files = append(model.application.snapshot.Files,
-		repository.File{Path: "rule.md", Content: "# Title\n\n***\n"},
-		repository.File{Path: "comment.md", Content: "<!-- generated -->\n\n# Real Heading Here\n"})
+		analyzer.File{Path: "rule.md", Content: "# Title\n\n***\n"},
+		analyzer.File{Path: "comment.md", Content: "<!-- generated -->\n\n# Real Heading Here\n"})
 	for name, test := range map[string]struct {
 		path, row, notice string
 		line              int
@@ -74,7 +74,7 @@ func TestRenderedMarkdownAlwaysMarksARow(t *testing.T) {
 		"list pick on a hidden line": {"comment.md", "› Real Heading Here", "so the top is marked", 1},
 		"matched line":               {"comment.md", "› Real Heading Here", "marked with ›", 3},
 	} {
-		opened, _ := model.openSource(repository.Location{Path: test.path, Line: test.line})
+		opened, _ := model.openSource(analyzer.Location{Path: test.path, Line: test.line})
 		page := opened.(interfaceModel)
 		var marked []string
 		for _, row := range strings.Split(ansi.Strip(page.pageContent), "\n") {
@@ -120,18 +120,18 @@ func TestRenderedRowMatchesATableRowThroughItsRules(t *testing.T) {
 func TestMarkdownOpensInTheViewTheSettingChooses(t *testing.T) {
 	model := interfaceFixture()
 	model.application.settings.MarkdownOpensRendered = false
-	opened, _ := model.openFile(repository.Location{Path: "README.md", Line: 1})
+	opened, _ := model.openFile(analyzer.Location{Path: "README.md", Line: 1})
 	if opened.(interfaceModel).sourceRendered {
 		t.Fatal("with the setting off, a Markdown file should open as source")
 	}
 	model.application.settings.MarkdownOpensRendered = true
-	opened, _ = model.openFile(repository.Location{Path: "README.md", Line: 1})
+	opened, _ = model.openFile(analyzer.Location{Path: "README.md", Line: 1})
 	if !opened.(interfaceModel).sourceRendered {
 		t.Fatal("with the setting on, a Markdown file should open rendered")
 	}
 	model.application.settings.MarkdownOpensRendered = false
 	chosen := model.rememberMarkdownView("README.md", true)
-	opened, _ = chosen.openFile(repository.Location{Path: "README.md", Line: 1})
+	opened, _ = chosen.openFile(analyzer.Location{Path: "README.md", Line: 1})
 	if !opened.(interfaceModel).sourceRendered {
 		t.Fatal("a view chosen with v should win over the setting")
 	}

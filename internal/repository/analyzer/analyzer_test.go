@@ -1,19 +1,15 @@
-package repository_test
+package analyzer_test
 
 import (
-	"context"
-	"os"
-	"os/exec"
-	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
 
-	"repo-tutor/internal/repository"
+	"repo-tutor/internal/repository/analyzer"
 )
 
 func TestGoInventoryAndFoundations(t *testing.T) {
-	files := []repository.File{
+	files := []analyzer.File{
 		{Path: "go.mod", Content: "module example.test/course\n\ngo 1.26\n"},
 		{Path: "README.md", Content: "# Course\n"},
 		{Path: "binary/main.go", Content: "package main\nimport \"example.test/course/service\"\nfunc main() { service.Run() }\n"},
@@ -25,15 +21,15 @@ func TestGoInventoryAndFoundations(t *testing.T) {
 		{Path: "x/tool.go", Content: "package tool\nfunc Run() {}\n"},
 		{Path: "bad/broken.go", Content: "package bad\nfunc broken(\n"},
 	}
-	before := append([]repository.File(nil), files...)
-	snapshot := repository.Analyze(files)
+	before := append([]analyzer.File(nil), files...)
+	snapshot := analyzer.Analyze(files)
 	if !reflect.DeepEqual(before, files) {
 		t.Fatal("analysis changed the input files")
 	}
 	if len(snapshot.Modules) != 2 || len(snapshot.Packages) != 4 || !reflect.DeepEqual(snapshot.Documents, []string{"README.md"}) {
 		t.Fatalf("unexpected inventory: %+v", snapshot)
 	}
-	if !reflect.DeepEqual(snapshot.EntryPoints, []repository.Location{{Path: "binary/main.go", Line: 3}}) {
+	if !reflect.DeepEqual(snapshot.EntryPoints, []analyzer.Location{{Path: "binary/main.go", Line: 3}}) {
 		t.Fatalf("wrong entry points: %v", snapshot.EntryPoints)
 	}
 	value, found := snapshot.Package("example.test/course/value")
@@ -47,7 +43,7 @@ func TestGoInventoryAndFoundations(t *testing.T) {
 		t.Fatalf("malformed source was not reported: %v", snapshot.Warnings)
 	}
 	positions := map[string]int{}
-	for index, current := range repository.Foundations(snapshot) {
+	for index, current := range analyzer.Foundations(snapshot) {
 		positions[current.Path] = index
 	}
 	if !(positions["example.test/course/value"] < positions["example.test/course/service"] && positions["example.test/course/service"] < positions["example.test/course/binary"]) {
@@ -56,7 +52,7 @@ func TestGoInventoryAndFoundations(t *testing.T) {
 }
 
 func TestMixedLanguageInventory(t *testing.T) {
-	snapshot := repository.Analyze([]repository.File{
+	snapshot := analyzer.Analyze([]analyzer.File{
 		{Path: "pyproject.toml", Content: "[project]\nname = 'learning'\n[project.scripts]\nlearn = 'course.main:run'\n"},
 		{Path: "src/course/main.py", Content: "from .values import Name\n\ndef run():\n    return Name()\n"},
 		{Path: "src/course/values/__init__.py", Content: "from .model import Name\n"},
@@ -75,7 +71,7 @@ func TestMixedLanguageInventory(t *testing.T) {
 	if !found || !reflect.DeepEqual(javascript.Dependencies, []string{"javascript/typescript:web/src/values"}) || len(javascript.Tests) != 1 {
 		t.Fatalf("literal TypeScript import not resolved: %+v", javascript)
 	}
-	if len(snapshot.EntryPoints) != 2 || snapshot.EntryPoints[0] != (repository.Location{Path: "pyproject.toml", Line: 4}) || snapshot.EntryPoints[1] != (repository.Location{Path: "src/course/main.py", Line: 3}) {
+	if len(snapshot.EntryPoints) != 2 || snapshot.EntryPoints[0] != (analyzer.Location{Path: "pyproject.toml", Line: 4}) || snapshot.EntryPoints[1] != (analyzer.Location{Path: "src/course/main.py", Line: 3}) {
 		t.Fatalf("Python CLI registration not located: %+v", snapshot.EntryPoints)
 	}
 	if len(snapshot.Warnings) == 0 || !strings.Contains(snapshot.Warnings[0], "literal imports") {
@@ -84,7 +80,7 @@ func TestMixedLanguageInventory(t *testing.T) {
 }
 
 func TestNestedTestDirectoryBelongsToItsPackage(t *testing.T) {
-	snapshot := repository.Analyze([]repository.File{
+	snapshot := analyzer.Analyze([]analyzer.File{
 		{Path: "src/app/models.py", Content: "class Order:\n    pass\n"},
 		{Path: "src/app/tests/test_models.py", Content: "def test_order():\n    pass\n"},
 		{Path: "src/app/tests/unit/test_deep.py", Content: "def test_deep():\n    pass\n"},
@@ -118,7 +114,7 @@ func TestNestedTestDirectoryBelongsToItsPackage(t *testing.T) {
 }
 
 func TestMirroredTestIsOwnedByTheOnePackageItImports(t *testing.T) {
-	snapshot := repository.Analyze([]repository.File{
+	snapshot := analyzer.Analyze([]analyzer.File{
 		{Path: "src/shop/__init__.py", Content: ""},
 		{Path: "src/shop/cart.py", Content: "def add():\n    pass\n"},
 		{Path: "src/pay/__init__.py", Content: ""},
@@ -151,7 +147,7 @@ func TestMirroredTestIsOwnedByTheOnePackageItImports(t *testing.T) {
 }
 
 func TestJavaTestInNestedTestDirectoryKeepsJavaRules(t *testing.T) {
-	snapshot := repository.Analyze([]repository.File{
+	snapshot := analyzer.Analyze([]analyzer.File{
 		{Path: "src/main/java/com/acme/app/Main.java", Content: "package com.acme.app;\nclass Main {}\n"},
 		{Path: "src/main/java/com/acme/app/test/Odd.java", Content: "package com.acme.app.test;\nclass Odd {}\n"},
 	})
@@ -161,7 +157,7 @@ func TestJavaTestInNestedTestDirectoryKeepsJavaRules(t *testing.T) {
 }
 
 func TestJavaInventory(t *testing.T) {
-	snapshot := repository.Analyze([]repository.File{
+	snapshot := analyzer.Analyze([]analyzer.File{
 		{Path: "pom.xml", Content: "<project><parent><artifactId>parent</artifactId></parent><artifactId>course</artifactId></project>"},
 		{Path: "src/main/java/com/acme/app/Main.java", Content: "package com.acme.app;\n\nimport com.acme.values.Name;\nimport com.acme.util.*;\nimport java.util.List;\nimport static com.acme.values.Name.of;\n\npublic class Main {\n    public static void main(String[] args) {\n        if (args.length > 0 && args[0] != null) {}\n    }\n}\n"},
 		{Path: "src/main/java/com/acme/values/Name.java", Content: "package com.acme.values;\n\npublic record Name(String value) {\n    public static Name of(String value) {\n        return new Name(value);\n    }\n}\n"},
@@ -180,23 +176,23 @@ func TestJavaInventory(t *testing.T) {
 		t.Fatalf("Java test was read as source: %+v", app)
 	}
 	values, _ := snapshot.Package("java:src/main/java/com/acme/values")
-	if len(values.Symbols) != 2 || values.Symbols[0].Name != "Name" || values.Symbols[1] != (repository.Symbol{Name: "of", Kind: "function", Location: repository.Location{Path: "src/main/java/com/acme/values/Name.java", Line: 4}}) {
+	if len(values.Symbols) != 2 || values.Symbols[0].Name != "Name" || values.Symbols[1] != (analyzer.Symbol{Name: "of", Kind: "function", Location: analyzer.Location{Path: "src/main/java/com/acme/values/Name.java", Line: 4}}) {
 		t.Fatalf("wrong Java declarations: %+v", values.Symbols)
 	}
-	if !reflect.DeepEqual(snapshot.EntryPoints, []repository.Location{{Path: "src/main/java/com/acme/app/Main.java", Line: 9}}) {
+	if !reflect.DeepEqual(snapshot.EntryPoints, []analyzer.Location{{Path: "src/main/java/com/acme/app/Main.java", Line: 9}}) {
 		t.Fatalf("main method not located: %+v", snapshot.EntryPoints)
 	}
 	if len(snapshot.Warnings) != 1 || !strings.Contains(snapshot.Warnings[0], "Java inventory") {
 		t.Fatalf("Java gaps were not disclosed: %v", snapshot.Warnings)
 	}
-	hints := repository.ReadingHints(snapshot, nil)
+	hints := analyzer.ReadingHints(snapshot, nil)
 	if len(hints) != 1 || hints[0].Branches != 2 || hints[0].Line != 10 {
 		t.Fatalf("wrong Java branch points: %+v", hints)
 	}
 }
 
 func TestJavaTestRecognition(t *testing.T) {
-	snapshot := repository.Analyze([]repository.File{
+	snapshot := analyzer.Analyze([]analyzer.File{
 		{Path: "src/main/java/a/Widget.java", Content: "package a;\nclass Widget {}\n"},
 		{Path: "src/main/java/a/Latest.java", Content: "package a;\nclass Latest {}\n"},
 		{Path: "src/main/java/a/GIT.java", Content: "package a;\nclass GIT {}\n"},
@@ -215,7 +211,7 @@ func TestJavaTestRecognition(t *testing.T) {
 }
 
 func TestJavaTestOwnership(t *testing.T) {
-	snapshot := repository.Analyze([]repository.File{
+	snapshot := analyzer.Analyze([]analyzer.File{
 		{Path: "src/main/java/com/acme/app/Main.java", Content: "package com.acme.app;\nclass Main {}\n"},
 		{Path: "src/test/java/com/acme/app/MainTest.java", Content: "package com.acme.app;\nclass MainTest {}\n"},
 		{Path: "src/integrationTest/java/com/acme/app/FlowTest.java", Content: "package com.acme.app;\nclass FlowTest {}\n"},
@@ -242,7 +238,7 @@ func TestJavaTestOwnership(t *testing.T) {
 }
 
 func TestJavaNamedClassOwnership(t *testing.T) {
-	snapshot := repository.Analyze([]repository.File{
+	snapshot := analyzer.Analyze([]analyzer.File{
 		{Path: "src/main/java/com/acme/web/OrderController.java", Content: "package com.acme.web;\nclass OrderController {}\n"},
 		{Path: "src/main/java/com/acme/domain/Order.java", Content: "package com.acme.domain;\nclass Order {}\n"},
 		{Path: "src/test/java/com/acme/slices/ImportedTest.java", Content: "package com.acme.slices;\nimport com.acme.web.OrderController;\n@WebMvcTest(controllers = OrderController.class)\nclass ImportedTest {}\n"},
@@ -267,7 +263,7 @@ func TestJavaNamedClassOwnership(t *testing.T) {
 }
 
 func TestJavaTestLayer(t *testing.T) {
-	snapshot := repository.Analyze([]repository.File{
+	snapshot := analyzer.Analyze([]analyzer.File{
 		{Path: "src/main/java/com/acme/app/Main.java", Content: "package com.acme.app;\nimport com.acme.values.Name;\nclass Main {}\n"},
 		{Path: "src/main/java/com/acme/values/Name.java", Content: "package com.acme.values;\nclass Name {}\n"},
 		{Path: "src/test/java/com/acme/integration/FlowTest.java", Content: "package com.acme.integration;\nimport com.acme.app.Main;\nimport com.acme.values.Name;\nimport org.junit.jupiter.api.Test;\n@SpringBootTest\nclass FlowTest {}\n"},
@@ -287,7 +283,7 @@ func TestJavaTestLayer(t *testing.T) {
 		t.Fatalf("an owned system test or a layer changed its production package: %+v", app)
 	}
 	positions := map[string]int{}
-	for index, current := range repository.Foundations(snapshot) {
+	for index, current := range analyzer.Foundations(snapshot) {
 		positions[current.Path] = index
 	}
 	if positions[layer.Path] < positions["java:src/main/java/com/acme/app"] || positions[layer.Path] < positions["java:src/main/java/com/acme/values"] {
@@ -296,7 +292,7 @@ func TestJavaTestLayer(t *testing.T) {
 }
 
 func TestJavaSystemTestInTheApplicationPackageFormsALayer(t *testing.T) {
-	snapshot := repository.Analyze([]repository.File{
+	snapshot := analyzer.Analyze([]analyzer.File{
 		{Path: "src/main/java/com/acme/App.java", Content: "package com.acme;\n@SpringBootApplication\nclass App {}\n"},
 		{Path: "src/main/java/com/acme/web/Page.java", Content: "package com.acme.web;\nclass Page {}\n"},
 		{Path: "src/test/java/com/acme/AppTests.java", Content: "package com.acme;\nimport com.acme.web.Page;\n@SpringBootTest\nclass AppTests {}\n"},
@@ -318,7 +314,7 @@ func TestJavaSystemTestInTheApplicationPackageFormsALayer(t *testing.T) {
 }
 
 func TestJavaModuleListedOnceWhenMavenAndGradleNameIt(t *testing.T) {
-	snapshot := repository.Analyze([]repository.File{
+	snapshot := analyzer.Analyze([]analyzer.File{
 		{Path: "pom.xml", Content: "<project><artifactId>shop</artifactId></project>"},
 		{Path: "settings.gradle", Content: "rootProject.name = 'shop'\n"},
 		{Path: "src/main/java/a/A.java", Content: "package a;\nclass A {}\n"},
@@ -330,81 +326,9 @@ func TestJavaModuleListedOnceWhenMavenAndGradleNameIt(t *testing.T) {
 
 func TestJavaBranchPointsSkipComments(t *testing.T) {
 	source := "package a;\n\n/**\n * Runs if the input is ready and while open.\n */\nclass Run {\n    boolean any = \"src/*\".isEmpty() || false;  // for each file\n    void go(boolean ok) {\n        /* if skipped */ if (ok) {}\n        String t = \"\"\"\n            /* kept as text\n            \"\"\";\n        for (;;) {}\n    }\n}\n"
-	snapshot := repository.Analyze([]repository.File{{Path: "src/main/java/a/Run.java", Content: source}})
-	hints := repository.ReadingHints(snapshot, nil)
+	snapshot := analyzer.Analyze([]analyzer.File{{Path: "src/main/java/a/Run.java", Content: source}})
+	hints := analyzer.ReadingHints(snapshot, nil)
 	if len(hints) != 1 || hints[0].Branches != 3 || hints[0].Line != 7 {
 		t.Fatalf("comments or literals changed the branch points: %+v", hints)
-	}
-}
-
-func TestReadExclusionsAndFingerprint(t *testing.T) {
-	root := t.TempDir()
-	write := func(name, content string) {
-		t.Helper()
-		full := filepath.Join(root, name)
-		if err := os.MkdirAll(filepath.Dir(full), 0700); err != nil {
-			t.Fatal(err)
-		}
-		if err := os.WriteFile(full, []byte(content), 0600); err != nil {
-			t.Fatal(err)
-		}
-	}
-	write("go.mod", "module course\n")
-	write("main.go", "package main\nfunc main() {}\n")
-	write("README.md", "# Course\n")
-	for _, directory := range []string{".git", ".scratch", "vendor", "node_modules", "output", "fixtures"} {
-		write(directory+"/secret.go", "package ignored\n")
-	}
-	outside := filepath.Join(t.TempDir(), "outside.go")
-	if err := os.WriteFile(outside, []byte("package outside\n"), 0600); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.Symlink(outside, filepath.Join(root, "link.go")); err != nil {
-		t.Fatal(err)
-	}
-	write("large.md", strings.Repeat("x", 512*1024+1))
-	first, err := repository.Read(context.Background(), root)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(first.Files) != 3 || len(first.Warnings) != 1 {
-		t.Fatalf("excluded files entered the snapshot: %+v", first)
-	}
-	second, err := repository.Read(context.Background(), root)
-	if err != nil || first.Fingerprint != second.Fingerprint {
-		t.Fatalf("unchanged source produced a different fingerprint: %v", err)
-	}
-	write("main.go", "package main\nfunc main() { println(1) }\n")
-	third, err := repository.Read(context.Background(), root)
-	if err != nil || first.Fingerprint == third.Fingerprint {
-		t.Fatalf("changed source did not invalidate the fingerprint: %v", err)
-	}
-}
-
-func TestGitIgnoredFilesAreNotRead(t *testing.T) {
-	if _, err := exec.LookPath("git"); err != nil {
-		t.Skip("git is optional")
-	}
-	root := t.TempDir()
-	if output, err := exec.Command("git", "init", "-q", root).CombinedOutput(); err != nil {
-		t.Fatalf("git init: %v: %s", err, output)
-	}
-	for name, content := range map[string]string{
-		".gitignore":             "ignored/\n",
-		"main.py":                "print('hello')\n",
-		"ignored/credentials.py": "secret = 'never include me'\n",
-	} {
-		full := filepath.Join(root, name)
-		os.MkdirAll(filepath.Dir(full), 0700)
-		if err := os.WriteFile(full, []byte(content), 0600); err != nil {
-			t.Fatal(err)
-		}
-	}
-	snapshot, err := repository.Read(context.Background(), root)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(snapshot.Files) != 1 || snapshot.Files[0].Path != "main.py" {
-		t.Fatalf("Git ignored source was included: %v", snapshot.Files)
 	}
 }

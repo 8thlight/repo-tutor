@@ -5,13 +5,13 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 
-	"repo-tutor/internal/repository"
+	"repo-tutor/internal/repository/analyzer"
 	"repo-tutor/internal/tutor"
 )
 
 func hotspotFixture() interfaceModel {
 	model := interfaceFixture()
-	model.application.snapshot.Hotspots = []repository.Hotspot{{Path: "main.go", Line: 2, Language: "go", Commits: 3, Branches: 4, Lines: 10, Score: 20}}
+	model.application.snapshot.Hotspots = []analyzer.Hotspot{{Path: "main.go", Line: 2, Language: "go", Commits: 3, Branches: 4, Lines: 10, Score: 20}}
 	model.application.course = tutor.Course(model.application.snapshot)
 	return model
 }

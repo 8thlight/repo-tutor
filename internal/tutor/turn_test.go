@@ -6,14 +6,14 @@ import (
 	"strings"
 	"testing"
 
-	"repo-tutor/internal/repository"
+	"repo-tutor/internal/repository/analyzer"
 	"repo-tutor/internal/tutor"
 )
 
 func TestReplyBoundary(t *testing.T) {
 	prepared := tutor.Context{Excerpts: []tutor.Excerpt{{Path: "main.go", StartLine: 2, EndLine: 5}}}
 	request := tutor.Request{Topic: tutor.Overview, Action: "answer", Question: "Where does it start?"}
-	valid := tutor.Reply{Explanation: "Execution begins in main.go:3.", Question: "What is delegated?", Assessment: "correct", Feedback: "You found the entry point.", Citations: []repository.Location{{Path: "main.go", Line: 3}}}
+	valid := tutor.Reply{Explanation: "Execution begins in main.go:3.", Question: "What is delegated?", Assessment: "correct", Feedback: "You found the entry point.", Citations: []analyzer.Location{{Path: "main.go", Line: 3}}}
 	for _, test := range []struct {
 		name   string
 		change func(*tutor.Reply, *tutor.Request)
@@ -30,13 +30,13 @@ func TestReplyBoundary(t *testing.T) {
 		{name: "ten citations", change: func(reply *tutor.Reply, _ *tutor.Request) {
 			reply.Citations = nil
 			for range 10 {
-				reply.Citations = append(reply.Citations, repository.Location{Path: "main.go", Line: 3})
+				reply.Citations = append(reply.Citations, analyzer.Location{Path: "main.go", Line: 3})
 			}
 		}},
 		{name: "nine citations", valid: true, change: func(reply *tutor.Reply, _ *tutor.Request) {
 			reply.Citations = nil
 			for range 9 {
-				reply.Citations = append(reply.Citations, repository.Location{Path: "main.go", Line: 3})
+				reply.Citations = append(reply.Citations, analyzer.Location{Path: "main.go", Line: 3})
 			}
 		}},
 		{name: "missing evidence", change: func(reply *tutor.Reply, _ *tutor.Request) { reply.Citations = nil }},
@@ -53,7 +53,7 @@ func TestReplyBoundary(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			reply := valid
-			reply.Citations = append([]repository.Location(nil), valid.Citations...)
+			reply.Citations = append([]analyzer.Location(nil), valid.Citations...)
 			current := request
 			if test.change != nil {
 				test.change(&reply, &current)
@@ -74,11 +74,11 @@ func TestReplyBoundary(t *testing.T) {
 }
 
 func TestContextIsBoundedAndRelevant(t *testing.T) {
-	files := []repository.File{{Path: "go.mod", Content: "module course\n"}, {Path: "README.md", Content: "# Course\n"}, {Path: "target/target.go", Content: "package target\nfunc Explain() {}\n"}}
+	files := []analyzer.File{{Path: "go.mod", Content: "module course\n"}, {Path: "README.md", Content: "# Course\n"}, {Path: "target/target.go", Content: "package target\nfunc Explain() {}\n"}}
 	for index := 0; index < 40; index++ {
-		files = append(files, repository.File{Path: strings.Repeat("a", index+1) + ".go", Content: "package course\n" + strings.Repeat("var value = 1\n", 1000)})
+		files = append(files, analyzer.File{Path: strings.Repeat("a", index+1) + ".go", Content: "package course\n" + strings.Repeat("var value = 1\n", 1000)})
 	}
-	snapshot := repository.Analyze(files)
+	snapshot := analyzer.Analyze(files)
 	prepared := tutor.Prepare(snapshot, tutor.Request{Action: "question", Topic: tutor.Overview, Message: "Explain target/target.go."})
 	bytes := 0
 	found := false
@@ -97,12 +97,12 @@ func TestContextIsBoundedAndRelevant(t *testing.T) {
 }
 
 func TestQuizContextRetainsTeachingSeparateFromLastFeedback(t *testing.T) {
-	snapshot := repository.Analyze([]repository.File{
+	snapshot := analyzer.Analyze([]analyzer.File{
 		{Path: "go.mod", Content: "module learning\n"},
 		{Path: "core/value.go", Content: "package core\nfunc Calculate() int { return 42 }\n"},
 		{Path: "cli/main.go", Content: "package cli\nfunc Run() {}\n"},
 	})
-	lesson := tutor.Reply{Explanation: "Core owns calculations; CLI handles commands.", Assessment: "none", Citations: []repository.Location{{Path: "core/value.go", Line: 2}}}
+	lesson := tutor.Reply{Explanation: "Core owns calculations; CLI handles commands.", Assessment: "none", Citations: []analyzer.Location{{Path: "core/value.go", Line: 2}}}
 	feedback := tutor.Reply{Explanation: "That is correct.", Assessment: "correct", Feedback: "You identified core."}
 	prepared := tutor.Prepare(snapshot, tutor.Request{Topic: tutor.Overview, Action: "quiz", Lesson: &lesson, Previous: &feedback})
 	_, payload, found := strings.Cut(prepared.Prompt, "Turn and source excerpts:\n")
@@ -143,18 +143,18 @@ func TestProgressIsEvidenceBasedAndImmutable(t *testing.T) {
 }
 
 func TestFollowUpRetainsEvidenceAndFindsNamedSymbols(t *testing.T) {
-	files := []repository.File{
+	files := []analyzer.File{
 		{Path: "go.mod", Content: "module course\n"},
 		{Path: "README.md", Content: "# Course\n"},
 		{Path: "deep/behavior.go", Content: "package deep\nfunc TraceRename() {}\n"},
 	}
 	for index := 0; index < 40; index++ {
-		files = append(files, repository.File{Path: strings.Repeat("a", index+1) + ".go", Content: "package course\n" + strings.Repeat("var value = 1\n", 1000)})
+		files = append(files, analyzer.File{Path: strings.Repeat("a", index+1) + ".go", Content: "package course\n" + strings.Repeat("var value = 1\n", 1000)})
 	}
-	snapshot := repository.Analyze(files)
+	snapshot := analyzer.Analyze(files)
 	for _, request := range []tutor.Request{
 		{Action: "question", Topic: tutor.Overview, Message: "How does TraceRename work?"},
-		{Action: "answer", Topic: tutor.Overview, Message: "Why does it do that?", Previous: &tutor.Reply{Citations: []repository.Location{{Path: "deep/behavior.go", Line: 2}}}},
+		{Action: "answer", Topic: tutor.Overview, Message: "Why does it do that?", Previous: &tutor.Reply{Citations: []analyzer.Location{{Path: "deep/behavior.go", Line: 2}}}},
 	} {
 		prepared := tutor.Prepare(snapshot, request)
 		found := false
@@ -169,15 +169,15 @@ func TestFollowUpRetainsEvidenceAndFindsNamedSymbols(t *testing.T) {
 	}
 }
 
-func hotspotSnapshot() repository.Snapshot {
-	var files []repository.File
-	var hotspots []repository.Hotspot
+func hotspotSnapshot() analyzer.Snapshot {
+	var files []analyzer.File
+	var hotspots []analyzer.Hotspot
 	for index := range 7 {
 		path := "core/busy" + strings.Repeat("x", index) + ".go"
-		files = append(files, repository.File{Path: path, Content: "package core\n" + strings.Repeat("var value = 1\n", 80)})
-		hotspots = append(hotspots, repository.Hotspot{Path: path, Line: 50, Language: "go", Commits: 9 - index, Branches: 12, Lines: 81, Score: 100 - index})
+		files = append(files, analyzer.File{Path: path, Content: "package core\n" + strings.Repeat("var value = 1\n", 80)})
+		hotspots = append(hotspots, analyzer.Hotspot{Path: path, Line: 50, Language: "go", Commits: 9 - index, Branches: 12, Lines: 81, Score: 100 - index})
 	}
-	snapshot := repository.Analyze(append(files, repository.File{Path: "go.mod", Content: "module course\n"}))
+	snapshot := analyzer.Analyze(append(files, analyzer.File{Path: "go.mod", Content: "module course\n"}))
 	snapshot.Hotspots = hotspots
 	return snapshot
 }
@@ -222,7 +222,7 @@ func TestALessonNeverCarriesAQuestion(t *testing.T) {
 	prepared := tutor.Context{Excerpts: []tutor.Excerpt{{Path: "main.go", StartLine: 2, EndLine: 5}}}
 	request := tutor.Request{Topic: tutor.Overview, Action: "lesson"}
 	for name, question := range map[string]string{"without a question": "", "with a question": "What is delegated?"} {
-		reply := tutor.Reply{Explanation: "Execution begins in main.go:3.", Question: question, Assessment: "none", Citations: []repository.Location{{Path: "main.go", Line: 3}}}
+		reply := tutor.Reply{Explanation: "Execution begins in main.go:3.", Question: question, Assessment: "none", Citations: []analyzer.Location{{Path: "main.go", Line: 3}}}
 		data, _ := json.Marshal(reply)
 		decoded, err := tutor.DecodeReply(string(data), prepared, request)
 		if err != nil || decoded.Question != "" {

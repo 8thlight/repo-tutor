@@ -6,17 +6,17 @@ import (
 	"strings"
 	"testing"
 
-	"repo-tutor/internal/repository"
+	"repo-tutor/internal/repository/analyzer"
 	"repo-tutor/internal/tutor"
 )
 
 func TestPackagesNamedLikeTheSpecialTopicsKeepTheirOwnIds(t *testing.T) {
-	snapshot := repository.Analyze([]repository.File{
+	snapshot := analyzer.Analyze([]analyzer.File{
 		{Path: "go.mod", Content: "module overview\n"},
 		{Path: "main.go", Content: "package main\nfunc main() {}\n"},
 		{Path: "hotspots/hotspots.go", Content: "package hotspots\nfunc Rank() {}\n"},
 	})
-	snapshot.Hotspots = []repository.Hotspot{{Path: "main.go", Line: 2, Language: "go", Commits: 1, Branches: 1, Lines: 2, Score: 4}}
+	snapshot.Hotspots = []analyzer.Hotspot{{Path: "main.go", Line: 2, Language: "go", Commits: 1, Branches: 1, Lines: 2, Score: 4}}
 	seen := map[string]int{}
 	for _, topic := range tutor.Course(snapshot) {
 		seen[topic.ID]++
@@ -35,7 +35,7 @@ func TestPackagesNamedLikeTheSpecialTopicsKeepTheirOwnIds(t *testing.T) {
 }
 
 func TestATestLayerIsATopicAfterTheCodeItExercises(t *testing.T) {
-	snapshot := repository.Analyze([]repository.File{
+	snapshot := analyzer.Analyze([]analyzer.File{
 		{Path: "src/main/java/com/acme/app/Main.java", Content: "package com.acme.app;\nclass Main {}\n"},
 		{Path: "src/test/java/com/acme/integration/FlowTest.java", Content: "package com.acme.integration;\nimport com.acme.app.Main;\n@SpringBootTest\nclass FlowTest {}\n"},
 		{Path: "src/test/java/com/acme/loose/LooseTest.java", Content: "package com.acme.loose;\nclass LooseTest {}\n"},

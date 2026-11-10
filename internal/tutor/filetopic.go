@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"repo-tutor/internal/repository"
+	"repo-tutor/internal/repository/analyzer"
 )
 
 const (
@@ -22,7 +22,7 @@ func FilePath(topic string) (string, bool) {
 	return strings.CutPrefix(topic, filePrefix)
 }
 
-func fileWindowStarts(snapshot repository.Snapshot, path string) []int {
+func fileWindowStarts(snapshot analyzer.Snapshot, path string) []int {
 	file, found := snapshot.File(path)
 	if !found || file.Content == "" {
 		return nil

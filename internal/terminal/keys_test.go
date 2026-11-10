@@ -1,7 +1,7 @@
 package terminal
 
 import (
-	"repo-tutor/internal/repository"
+	"repo-tutor/internal/repository/analyzer"
 	"strings"
 	"testing"
 
@@ -217,12 +217,12 @@ func TestTheFooterStaysGlobalAndThePageKeysLiveInTheSidebar(t *testing.T) {
 	if !strings.Contains(ansi.Strip(index.(interfaceModel).sidebarShortcuts()), "A  Show answer") {
 		t.Fatal("the question index sidebar should offer A")
 	}
-	file, _ := model.openFile(repository.Location{Path: "main.go", Line: 1})
+	file, _ := model.openFile(analyzer.Location{Path: "main.go", Line: 1})
 	code := ansi.Strip(file.(interfaceModel).sidebarShortcuts())
 	if !strings.Contains(code, "Enter or Esc  Back") || !strings.Contains(code, "T  Teach this file") || strings.Contains(code, "Rendered or source") || strings.Contains(code, "Ctrl+G") {
 		t.Fatalf("a code file lists back and teach, with no lesson keys:\n%s", code)
 	}
-	markdown, _ := model.openFile(repository.Location{Path: "README.md", Line: 1})
+	markdown, _ := model.openFile(analyzer.Location{Path: "README.md", Line: 1})
 	if !strings.Contains(ansi.Strip(markdown.(interfaceModel).sidebarShortcuts()), "v  Rendered or source") {
 		t.Fatal("a Markdown file also offers v")
 	}
@@ -237,7 +237,7 @@ func TestTheFooterStaysGlobalAndThePageKeysLiveInTheSidebar(t *testing.T) {
 func TestWithoutASidebarThePageKeysMoveToTheFooterWithoutAnEscapeTwice(t *testing.T) {
 	model := interfaceFixture()
 	model.width = 90
-	file, _ := model.openFile(repository.Location{Path: "README.md", Line: 1})
+	file, _ := model.openFile(analyzer.Location{Path: "README.md", Line: 1})
 	line := ansi.Strip(file.(interfaceModel).footerKeys(140))
 	if !strings.HasPrefix(line, "Enter or Esc back · T teach this file · v rendered or source") {
 		t.Fatalf("with no sidebar the file's keys lead the footer: %q", line)
@@ -254,7 +254,7 @@ func TestWithoutASidebarThePageKeysMoveToTheFooterWithoutAnEscapeTwice(t *testin
 
 func TestANarrowFooterDropsPageKeysBeforeItDropsQuit(t *testing.T) {
 	model := interfaceFixture()
-	file, _ := model.openFile(repository.Location{Path: "README.md", Line: 1})
+	file, _ := model.openFile(analyzer.Location{Path: "README.md", Line: 1})
 	opened := file.(interfaceModel)
 	for _, width := range []int{80, 50, 40, 30} {
 		line := ansi.Strip(opened.footerKeys(width))
@@ -272,11 +272,11 @@ func TestNavigationHelpNeverAppearsInTheNoticeLine(t *testing.T) {
 	for name, open := range map[string]func() interfaceModel{
 		"a list": func() interfaceModel { next, _ := model.openPicker("sources", ""); return next.(interfaceModel) },
 		"a code file": func() interfaceModel {
-			next, _ := model.openFile(repository.Location{Path: "main.go", Line: 1})
+			next, _ := model.openFile(analyzer.Location{Path: "main.go", Line: 1})
 			return next.(interfaceModel)
 		},
 		"a Markdown file": func() interfaceModel {
-			next, _ := model.openFile(repository.Location{Path: "README.md", Line: 1})
+			next, _ := model.openFile(analyzer.Location{Path: "README.md", Line: 1})
 			return next.(interfaceModel)
 		},
 	} {

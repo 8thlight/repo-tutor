@@ -9,17 +9,17 @@ import (
 	"strings"
 	"unicode"
 
-	"repo-tutor/internal/repository"
+	"repo-tutor/internal/repository/analyzer"
 )
 
 const ReplySchema = `{"type":"object","properties":{"explanation":{"type":"string"},"question":{"type":"string"},"assessment":{"type":"string","enum":["none","correct","partial","incorrect"]},"feedback":{"type":"string"},"citations":{"type":"array","items":{"type":"object","properties":{"path":{"type":"string"},"line":{"type":"integer"}},"required":["path","line"],"additionalProperties":false}}},"required":["explanation","question","assessment","feedback","citations"],"additionalProperties":false}`
 
 type Reply struct {
-	Explanation string                `json:"explanation"`
-	Question    string                `json:"question"`
-	Assessment  string                `json:"assessment"`
-	Feedback    string                `json:"feedback"`
-	Citations   []repository.Location `json:"citations"`
+	Explanation string              `json:"explanation"`
+	Question    string              `json:"question"`
+	Assessment  string              `json:"assessment"`
+	Feedback    string              `json:"feedback"`
+	Citations   []analyzer.Location `json:"citations"`
 }
 
 type Excerpt struct {
@@ -44,15 +44,15 @@ type Context struct {
 	Excerpts []Excerpt
 }
 
-func Prepare(snapshot repository.Snapshot, request Request) Context {
+func Prepare(snapshot analyzer.Snapshot, request Request) Context {
 	excerpts := selectExcerpts(snapshot, request)
 	manifest, _ := json.Marshal(struct {
-		Modules     []repository.Module   `json:"modules"`
-		Packages    []repository.Package  `json:"packages"`
-		EntryPoints []repository.Location `json:"entry_points"`
-		Documents   []string              `json:"documents"`
-		Hotspots    []repository.Hotspot  `json:"reading_hints"`
-		History     bool                  `json:"history_available"`
+		Modules     []analyzer.Module   `json:"modules"`
+		Packages    []analyzer.Package  `json:"packages"`
+		EntryPoints []analyzer.Location `json:"entry_points"`
+		Documents   []string            `json:"documents"`
+		Hotspots    []analyzer.Hotspot  `json:"reading_hints"`
+		History     bool                `json:"history_available"`
 	}{snapshot.Modules, packageSummaries(snapshot.Packages), snapshot.EntryPoints, snapshot.Documents, snapshot.Hotspots[:min(10, len(snapshot.Hotspots))], snapshot.History})
 	data, _ := json.Marshal(struct {
 		Goal     string    `json:"learner_goal"`
@@ -217,7 +217,7 @@ func Plain(text string) string {
 	}, text)
 }
 
-func selectExcerpts(snapshot repository.Snapshot, request Request) []Excerpt {
+func selectExcerpts(snapshot analyzer.Snapshot, request Request) []Excerpt {
 	type candidate struct {
 		name string
 		line int
@@ -292,7 +292,7 @@ func selectExcerpts(snapshot repository.Snapshot, request Request) []Excerpt {
 	for _, name := range documents {
 		add(name, 1)
 	}
-	for _, current := range repository.Foundations(snapshot) {
+	for _, current := range analyzer.Foundations(snapshot) {
 		for _, name := range current.Files {
 			add(name, 1)
 		}
@@ -337,8 +337,8 @@ func documentRank(name string) int {
 	}
 }
 
-func packageSummaries(packages []repository.Package) []repository.Package {
-	result := make([]repository.Package, 0, len(packages))
+func packageSummaries(packages []analyzer.Package) []analyzer.Package {
+	result := make([]analyzer.Package, 0, len(packages))
 	for _, current := range packages {
 		current.Symbols = nil
 		current.Imports = nil
@@ -349,9 +349,9 @@ func packageSummaries(packages []repository.Package) []repository.Package {
 	return result
 }
 
-func relevantFiles(snapshot repository.Snapshot, request Request) []repository.File {
+func relevantFiles(snapshot analyzer.Snapshot, request Request) []analyzer.File {
 	type scored struct {
-		file  repository.File
+		file  analyzer.File
 		score int
 	}
 	words := strings.FieldsFunc(strings.ToLower(request.Message+" "+request.Goal), func(character rune) bool {
@@ -393,7 +393,7 @@ func relevantFiles(snapshot repository.Snapshot, request Request) []repository.F
 		}
 	}
 	sort.SliceStable(candidates, func(i, j int) bool { return candidates[i].score > candidates[j].score })
-	var result []repository.File
+	var result []analyzer.File
 	for _, current := range candidates[:min(3, len(candidates))] {
 		result = append(result, current.file)
 	}

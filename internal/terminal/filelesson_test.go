@@ -6,7 +6,7 @@ import (
 
 	"github.com/charmbracelet/x/ansi"
 
-	"repo-tutor/internal/repository"
+	"repo-tutor/internal/repository/analyzer"
 	"repo-tutor/internal/session"
 	"repo-tutor/internal/tutor"
 )
@@ -16,7 +16,7 @@ func openFileFixture(t *testing.T) interfaceModel {
 	model := readingFixture()
 	model.width, model.height = 120, 36
 	model.resize()
-	opened, _ := model.openFile(repository.Location{Path: "core/value.go", Line: 1})
+	opened, _ := model.openFile(analyzer.Location{Path: "core/value.go", Line: 1})
 	return opened.(interfaceModel)
 }
 

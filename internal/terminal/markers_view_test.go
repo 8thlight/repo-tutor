@@ -7,7 +7,7 @@ import (
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/ansi"
 
-	"repo-tutor/internal/repository"
+	"repo-tutor/internal/repository/analyzer"
 )
 
 func beforeEvidence(content string) string {
@@ -72,7 +72,7 @@ func TestMarkersKeepTheirWidthWhenTheLessonWraps(t *testing.T) {
 func TestEvidenceIsARuledSectionWithOneNumberedRowPerCitation(t *testing.T) {
 	model := interfaceFixture()
 	model.noColor = false
-	model.application.state.Turns[0].Reply.Citations = []repository.Location{{Path: "main.go", Line: 2}, {Path: "main.go", Line: 9}, {Path: "README.md", Line: 1}}
+	model.application.state.Turns[0].Reply.Citations = []analyzer.Location{{Path: "main.go", Line: 2}, {Path: "main.go", Line: 9}, {Path: "README.md", Line: 1}}
 	content := ansi.Strip(model.lessonContent())
 	for _, expected := range []string{"── EVIDENCE · 3 sources ─", "[1]  main.go:2", "[2]  main.go:9", "[3]  README.md:1"} {
 		if !strings.Contains(content, expected) {

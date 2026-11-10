@@ -1,16 +1,16 @@
-package repository_test
+package analyzer_test
 
 import (
 	"strings"
 	"testing"
 
-	"repo-tutor/internal/repository"
+	"repo-tutor/internal/repository/analyzer"
 )
 
-func goSource() repository.Source {
-	return repository.Source{
+func goSource() analyzer.Source {
+	return analyzer.Source{
 		Root: "/work/course",
-		Files: []repository.File{
+		Files: []analyzer.File{
 			{Path: "main.go", Content: "package main\nfunc main() {\n\tif true {\n\t}\n}\n"},
 			{Path: "go.mod", Content: "module course\n"},
 		},
@@ -19,19 +19,19 @@ func goSource() repository.Source {
 }
 
 func TestBuildFingerprintFollowsTheContentAndNotTheOrder(t *testing.T) {
-	first, err := repository.Build(goSource())
+	first, err := analyzer.Build(goSource())
 	if err != nil {
 		t.Fatal(err)
 	}
 	reordered := goSource()
 	reordered.Files[0], reordered.Files[1] = reordered.Files[1], reordered.Files[0]
-	second, err := repository.Build(reordered)
+	second, err := analyzer.Build(reordered)
 	if err != nil || first.Fingerprint != second.Fingerprint {
 		t.Fatalf("file order changed the fingerprint: %v", err)
 	}
 	changed := goSource()
 	changed.Files[0].Content += "\n"
-	third, err := repository.Build(changed)
+	third, err := analyzer.Build(changed)
 	if err != nil || first.Fingerprint == third.Fingerprint {
 		t.Fatalf("changed content kept the fingerprint: %v", err)
 	}
@@ -39,8 +39,8 @@ func TestBuildFingerprintFollowsTheContentAndNotTheOrder(t *testing.T) {
 
 func TestBuildKeepsTheRootAndPutsReadWarningsFirst(t *testing.T) {
 	source := goSource()
-	source.Files = append(source.Files, repository.File{Path: "go.mod.bak/go.mod", Content: "no directive\n"})
-	snapshot, err := repository.Build(source)
+	source.Files = append(source.Files, analyzer.File{Path: "go.mod.bak/go.mod", Content: "no directive\n"})
+	snapshot, err := analyzer.Build(source)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,7 +53,7 @@ func TestBuildTurnsTheChangeLogIntoReadingHints(t *testing.T) {
 	source := goSource()
 	source.ChangeLog = "main.go\x00main.go\x00go.mod\x00"
 	source.History = true
-	snapshot, err := repository.Build(source)
+	snapshot, err := analyzer.Build(source)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -63,7 +63,7 @@ func TestBuildTurnsTheChangeLogIntoReadingHints(t *testing.T) {
 }
 
 func TestBuildReportsASourceWithNothingToRead(t *testing.T) {
-	snapshot, err := repository.Build(repository.Source{Root: "/work/empty", Files: []repository.File{{Path: "notes.txt", Content: "hi\n"}}})
+	snapshot, err := analyzer.Build(analyzer.Source{Root: "/work/empty", Files: []analyzer.File{{Path: "notes.txt", Content: "hi\n"}}})
 	if err == nil || !strings.Contains(err.Error(), "/work/empty") || len(snapshot.Hotspots) != 0 {
 		t.Fatalf("an empty source was accepted: %v %+v", err, snapshot)
 	}

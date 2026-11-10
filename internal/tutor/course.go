@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"repo-tutor/internal/repository"
+	"repo-tutor/internal/repository/analyzer"
 )
 
 const Overview = ":overview"
@@ -18,9 +18,9 @@ type Topic struct {
 	Title string `json:"title"`
 }
 
-func Course(snapshot repository.Snapshot) []Topic {
+func Course(snapshot analyzer.Snapshot) []Topic {
 	result := []Topic{{Overview, "Repository overview"}}
-	for _, current := range repository.Foundations(snapshot) {
+	for _, current := range analyzer.Foundations(snapshot) {
 		if len(current.Files) > 0 || current.TestLayer {
 			result = append(result, Topic{current.Path, current.Directory + " (" + current.Name + ")"})
 		}
@@ -31,7 +31,7 @@ func Course(snapshot repository.Snapshot) []Topic {
 	return result
 }
 
-func Diagram(snapshot repository.Snapshot) string {
+func Diagram(snapshot analyzer.Snapshot) string {
 	var output strings.Builder
 	output.WriteString("flowchart TD\n")
 	indexes := map[string]int{}

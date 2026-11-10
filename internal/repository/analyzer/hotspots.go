@@ -1,15 +1,12 @@
-package repository
+package analyzer
 
 import (
-	"context"
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"os/exec"
 	"path"
 	"sort"
 	"strings"
-	"time"
 )
 
 type Hotspot struct {
@@ -103,18 +100,6 @@ func branchPoints(file File, language string) (int, int) {
 		count += matches
 	}
 	return count, first
-}
-
-func readChanges(ctx context.Context, root string) (string, bool) {
-	bounded, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
-	command := exec.CommandContext(bounded, "git", "log", "--relative", "--since=180.days", "--max-count=2000", "--no-merges", "--format=", "--name-only", "-z", "--no-renames", "--", ".")
-	command.Dir = root
-	data, err := command.Output()
-	if err != nil {
-		return "", false
-	}
-	return string(data), true
 }
 
 func ChangeCounts(history string) map[string]int {

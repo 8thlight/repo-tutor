@@ -17,7 +17,7 @@ import (
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/ansi"
 
-	"repo-tutor/internal/repository"
+	"repo-tutor/internal/repository/analyzer"
 	"repo-tutor/internal/tutor"
 )
 
@@ -429,7 +429,7 @@ func turnLabel(action string) string {
 	}
 }
 
-func (model interfaceModel) evidenceBlock(citations []repository.Location) string {
+func (model interfaceModel) evidenceBlock(citations []analyzer.Location) string {
 	count := sourceCount(len(citations))
 	number := lipgloss.NewStyle().Foreground(model.palette().accent).Bold(true)
 	faint := lipgloss.NewStyle().Faint(true)

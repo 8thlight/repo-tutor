@@ -11,7 +11,7 @@ import (
 	"github.com/charmbracelet/colorprofile"
 	"github.com/charmbracelet/x/ansi"
 
-	"repo-tutor/internal/repository"
+	"repo-tutor/internal/repository/analyzer"
 	"repo-tutor/internal/session"
 	"repo-tutor/internal/tutor"
 )
@@ -346,7 +346,7 @@ func TestEscLeavesASourceFileForTheListItCameFrom(t *testing.T) {
 	for _, list := range []string{"sources"} {
 		opened, _ := newLearnerFixture().openPicker(list, "")
 		model := opened.(interfaceModel)
-		file, _ := model.openFile(repository.Location{Path: "main.go", Line: 1})
+		file, _ := model.openFile(analyzer.Location{Path: "main.go", Line: 1})
 		inFile := file.(interfaceModel)
 		if inFile.page != "source" {
 			t.Fatalf("%s: Enter should open a file, got %s", list, inFile.page)
@@ -361,13 +361,13 @@ func TestEscLeavesASourceFileForTheListItCameFrom(t *testing.T) {
 func TestEnterClosesASourceFileTheWayItOpenedIt(t *testing.T) {
 	for _, list := range []string{"sources"} {
 		opened, _ := newLearnerFixture().openPicker(list, "")
-		file, _ := opened.(interfaceModel).openFile(repository.Location{Path: "main.go", Line: 1})
+		file, _ := opened.(interfaceModel).openFile(analyzer.Location{Path: "main.go", Line: 1})
 		back, _ := press(file.(interfaceModel), tea.KeyEnter, 0)
 		if back.page != list {
 			t.Fatalf("Enter on a file opened from %s should return to it, got %s", list, back.page)
 		}
 	}
-	read, _ := newLearnerFixture().openFile(repository.Location{Path: "main.go", Line: 1})
+	read, _ := newLearnerFixture().openFile(analyzer.Location{Path: "main.go", Line: 1})
 	back, _ := press(read.(interfaceModel), tea.KeyEnter, 0)
 	if back.page != "lesson" {
 		t.Fatalf("Enter on a file opened with /read should return to the lesson, got %s", back.page)

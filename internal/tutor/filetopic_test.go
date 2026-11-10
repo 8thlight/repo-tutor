@@ -5,17 +5,17 @@ import (
 	"strings"
 	"testing"
 
-	"repo-tutor/internal/repository"
+	"repo-tutor/internal/repository/analyzer"
 	"repo-tutor/internal/tutor"
 )
 
-func fileSnapshot() repository.Snapshot {
+func fileSnapshot() analyzer.Snapshot {
 	var big strings.Builder
 	big.WriteString("package big\n")
 	for index := range 2000 {
 		fmt.Fprintf(&big, "var value%d = %d // a line long enough to fill windows\n", index, index)
 	}
-	return repository.Analyze([]repository.File{
+	return analyzer.Analyze([]analyzer.File{
 		{Path: "go.mod", Content: "module course\n"},
 		{Path: "README.md", Content: "# Course\n"},
 		{Path: "small/small.go", Content: "package small\nfunc Tiny() {}\n"},
