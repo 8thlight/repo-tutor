@@ -33,11 +33,11 @@ approvals:
   date: 2026-11-10
 - gate: architecture
   unit: architecture.yaml
-  hash: sha256:b791129f53587c47cc15608399808244de4d2c3793a2676f6f2810d09b02ab07
+  hash: sha256:8efcaa1b4d4b436159665a2e804e60bbeb4f0425fdc03ae1efaaffa53014562f
   approver:
     kind: agent
     harness: claude
-    session: subagent-B1F222EE-03DD-4DD6-8FFF-24301D7EF6E8
+    session: subagent-3D71E0DC-BA31-4558-AD24-871FC6084977
   author:
     kind: agent
     harness: claude
