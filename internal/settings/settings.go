@@ -55,10 +55,34 @@ func Defaults() Settings {
 	return Settings{TabStyle: TabStyleNone, MarkdownOpensRendered: true, Highlight: HighlightGreen, QuizLength: 5, ExamLength: 10}
 }
 
+func decodeFile(data []byte) (file, error) {
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal(data, &fields); err != nil {
+		return file{}, err
+	}
+	var decoded file
+	targets := map[string]any{
+		"version":                 &decoded.Version,
+		"tab_style":               &decoded.TabStyle,
+		"markdown_opens_rendered": &decoded.MarkdownOpensRendered,
+		"highlight":               &decoded.Highlight,
+		"quiz_length":             &decoded.QuizLength,
+		"exam_length":             &decoded.ExamLength,
+	}
+	for name, target := range targets {
+		if value, present := fields[name]; present {
+			if err := json.Unmarshal(value, target); err != nil {
+				return file{}, err
+			}
+		}
+	}
+	return decoded, nil
+}
+
 func Decode(data []byte) (Settings, Status) {
 	settings := Defaults()
-	var decoded file
-	if err := json.Unmarshal(data, &decoded); err != nil {
+	decoded, err := decodeFile(data)
+	if err != nil {
 		return settings, Status{Unreadable: true}
 	}
 	if decoded.TabStyle != nil && slices.Contains(TabStyles, *decoded.TabStyle) {
