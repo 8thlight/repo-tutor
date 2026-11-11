@@ -22,11 +22,15 @@ banned_in_core:
 
 drivers:
   - agent/runner
+  - file/writer
   - repository/reader
   - session
   - terminal
 
 components:
+  - name: file/writer
+    position: 1
+    depends_on: []
   - name: about
     position: 1
     depends_on: []
@@ -47,7 +51,7 @@ components:
     depends_on: [tutor]
   - name: session
     position: 3
-    depends_on: [settings/codec, tutor]
+    depends_on: [file/writer, settings/codec, tutor]
   - name: terminal
     position: 4
     depends_on: [about, agent/runner, repository/analyzer, repository/reader, session, settings/codec, tutor]

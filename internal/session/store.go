@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"repo-tutor/internal/file/writer"
 	"repo-tutor/internal/tutor"
 )
 
@@ -177,25 +178,5 @@ func (store *Store) Save(state State) error {
 }
 
 func (store *Store) write(name string, data []byte) error {
-	return writeFile(store.Directory, name, data)
-}
-
-func writeFile(directory, name string, data []byte) error {
-	file, err := os.CreateTemp(directory, ".session-*")
-	if err != nil {
-		return err
-	}
-	defer os.Remove(file.Name())
-	if _, err := file.Write(data); err != nil {
-		file.Close()
-		return err
-	}
-	if err := file.Sync(); err != nil {
-		file.Close()
-		return err
-	}
-	if err := file.Close(); err != nil {
-		return err
-	}
-	return os.Rename(file.Name(), filepath.Join(directory, name))
+	return writer.Write(store.Directory, name, data)
 }

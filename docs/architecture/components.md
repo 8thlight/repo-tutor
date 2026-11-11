@@ -22,6 +22,7 @@ Each driver does input or output on its own, and the entry point passes it what 
 | Component | Reads | Writes | Runs |
 | -- | -- | -- | -- |
 | `repository/reader` | The learner's repository: file names, file text up to 512 KiB a file and 64 MiB in all | Nothing, and never into the repository | `git check-ignore` and `git log` in the repository, which only read |
+| `file/writer` | Nothing | One file in the directory it is given, through a temporary file in that directory that is renamed over the target. The temporary file is removed on failure | Nothing |
 | `session` | `XDG_STATE_HOME` or the user's configuration directory, and the state directory: `settings.json`, and in the repository's folder `session.json`, cached lessons | `settings.json`, and in the repository's folder `session.json`, `previous.json`, cached lessons, and `session.lock`. A damaged `settings.json` is renamed to `settings.json.bad`. Old cached lessons are removed | Nothing |
 | `agent/runner` | The agent CLI's standard output and standard error | `reply.schema.json` in the agent working folder for Codex. The agent working folder is inside the repository's session folder | The agent CLI, `claude` or `codex`, with the prompt on standard input and the agent working folder as its directory |
 | `terminal` | Standard input, the terminal's size and colors, `TERM`, `NO_COLOR`, and the environment that picks the color profile. Command line flags | Standard output and standard error | `claude --version` and `codex --version` for `doctor` |

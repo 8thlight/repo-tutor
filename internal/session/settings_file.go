@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"repo-tutor/internal/file/writer"
 	"repo-tutor/internal/settings/codec"
 )
 
@@ -51,5 +52,5 @@ func ChangeSettings(base string, change func(codec.Settings) codec.Settings) (co
 		}
 	}
 	changed := change(current)
-	return changed, writeFile(base, settingsName, codec.Encode(changed))
+	return changed, writer.Write(base, settingsName, codec.Encode(changed))
 }
