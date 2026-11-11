@@ -92,6 +92,9 @@ records check until a new approval covers it.
   Never edit the ledger by hand. When a unit was renamed or deleted, its old entry fails the check. Drop it with
   `nix run .#approve -- --remove <gate> <unit>`, which refuses while the unit exists. The renamed unit needs its own
   approval.
+- Never record `person` as the approver. Pass `--approver agent:<harness>:<session>` when you approve. A person at a
+  terminal runs `approve` without `--approver` and confirms under the name they set. Without a terminal the tool
+  refuses, and you must not work around that.
 - Approve a gate only when `approvals.<gate>` in `.threnos/config.toml`, or in `.threnos/local.toml` for this person,
   lists `agent`. Otherwise stop and ask a person.
 - Never approve your own work. An agent approver names its harness and session, and its session must differ from the
