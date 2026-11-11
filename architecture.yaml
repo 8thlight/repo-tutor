@@ -11,6 +11,17 @@ acceptance:
   scenarios: code
   may_import: [github.com/microsoft/tui-test]
 
+libraries:
+  terminal:
+    - charm.land/bubbletea/v2
+    - charm.land/bubbles/v2
+    - charm.land/lipgloss/v2
+    - charm.land/glamour/v2
+    - github.com/charmbracelet/x/ansi
+    - github.com/charmbracelet/x/term
+    - github.com/charmbracelet/colorprofile
+    - github.com/alecthomas/chroma/v2
+
 banned_in_core:
   - filesystem
   - network

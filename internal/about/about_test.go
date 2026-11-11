@@ -4,16 +4,15 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime/debug"
 	"strings"
 	"testing"
 )
 
 func TestBuildFactsComeFromBuildInfoAndDegradeToUnknown(t *testing.T) {
-	info := &debug.BuildInfo{GoVersion: "go1.26.0", Main: debug.Module{Version: "v1.2.3"}, Settings: []debug.BuildSetting{
-		{Key: "vcs.revision", Value: "0123456789abcdef0123"},
-		{Key: "vcs.time", Value: "2026-10-26T10:00:00Z"},
-		{Key: "vcs.modified", Value: "true"},
+	info := &BuildInfo{GoVersion: "go1.26.0", MainVersion: "v1.2.3", Settings: map[string]string{
+		"vcs.revision": "0123456789abcdef0123",
+		"vcs.time":     "2026-10-26T10:00:00Z",
+		"vcs.modified": "true",
 	}}
 	text := FromBuildInfo(info, true, "darwin", "arm64").Text()
 	for _, expected := range []string{"repo-tutor v1.2.3", "Revision 0123456789ab (modified)", "2026-10-26T10:00:00Z", "go1.26.0 on darwin/arm64", "Copyright © 2026 8th Light, LLC.", "Licensed under the GNU General Public License, version 3 or later.", "https://8thlight.com"} {
@@ -21,7 +20,7 @@ func TestBuildFactsComeFromBuildInfoAndDegradeToUnknown(t *testing.T) {
 			t.Fatalf("missing %q:\n%s", expected, text)
 		}
 	}
-	local := FromBuildInfo(&debug.BuildInfo{Main: debug.Module{Version: "(devel)"}}, true, "linux", "amd64")
+	local := FromBuildInfo(&BuildInfo{MainVersion: "(devel)"}, true, "linux", "amd64")
 	if local.Version != developmentVersion || local.Revision != unknown || local.Time != unknown {
 		t.Fatalf("a build without version control data should say unknown: %+v", local)
 	}
@@ -84,7 +83,7 @@ func TestOnlyReleaseTagsReplaceTheDevelopmentVersion(t *testing.T) {
 		"(devel)":                                  developmentVersion,
 		"":                                         developmentVersion,
 	} {
-		if got := FromBuildInfo(&debug.BuildInfo{Main: debug.Module{Version: version}}, true, "linux", "amd64").Version; got != want {
+		if got := FromBuildInfo(&BuildInfo{MainVersion: version}, true, "linux", "amd64").Version; got != want {
 			t.Fatalf("%q read as %q, want %q", version, got, want)
 		}
 	}

@@ -37,6 +37,9 @@ lint-acceptance:
 test:
     go test -race -count=1 ./...
 
+dependencies:
+    python3 tools/dependency-check/check.py
+
 notices:
     go run ./tools/about/generate internal/about/NOTICES.txt
 

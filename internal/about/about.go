@@ -4,7 +4,6 @@ import (
 	_ "embed"
 	"fmt"
 	"regexp"
-	"runtime/debug"
 	"strings"
 )
 
@@ -54,25 +53,28 @@ type Build struct {
 	System    string
 }
 
-func FromBuildInfo(info *debug.BuildInfo, found bool, goos, goarch string) Build {
+type BuildInfo struct {
+	GoVersion   string
+	MainVersion string
+	Settings    map[string]string
+}
+
+func FromBuildInfo(info *BuildInfo, found bool, goos, goarch string) Build {
 	build := Build{Version: developmentVersion, Revision: unknown, Time: unknown, GoVersion: unknown, System: goos + "/" + goarch}
 	if !found || info == nil {
 		return build
 	}
 	build.GoVersion = info.GoVersion
-	if tagged := taggedVersion(info.Main.Version); tagged != "" {
+	if tagged := taggedVersion(info.MainVersion); tagged != "" {
 		build.Version = tagged
 	}
-	for _, setting := range info.Settings {
-		switch setting.Key {
-		case "vcs.revision":
-			build.Revision = setting.Value
-		case "vcs.time":
-			build.Time = setting.Value
-		case "vcs.modified":
-			build.Modified = setting.Value == "true"
-		}
+	if revision, ok := info.Settings["vcs.revision"]; ok {
+		build.Revision = revision
 	}
+	if committed, ok := info.Settings["vcs.time"]; ok {
+		build.Time = committed
+	}
+	build.Modified = info.Settings["vcs.modified"] == "true"
 	return build
 }
 
