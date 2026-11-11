@@ -10,6 +10,7 @@ acceptance = ["person", "agent"]
 architecture = ["person", "agent"]
 model = ["person", "agent"]
 build = ["person"]
+decisions = ["person", "agent"]
 
 [seeds]
 skip = [

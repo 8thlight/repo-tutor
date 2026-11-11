@@ -94,6 +94,9 @@ records check until a new approval covers it.
   lists `agent`. Otherwise stop and ask a person.
 - Never approve your own work. An agent approver names its harness and session, and its session must differ from the
   author's. Do not invent a session identifier or reuse the author's.
+- Set `approval: agent` on a decision record only when `approvals.decisions` lists `agent`. Add `approver` and `author`
+  with your harness and session, and never approve a record you wrote in the same session. Otherwise leave it for a
+  person.
 - An approval does not widen what you may decide alone. A new privacy, security, ownership, destructive, stored-format,
   or hash-compatibility consequence still goes to a person.
 

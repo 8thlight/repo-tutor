@@ -3,6 +3,8 @@ category: architecture
 status: accepted
 approval: agent
 note: Approved by an independent agent review, at the owner's delegation.
+approver: {kind: agent, harness: claude, session: subagent-a11e1c07b12a70f01}
+author: {kind: agent, harness: claude, session: main-cc90e89f}
 builds-on: ['0630', '0650']
 ---
 
