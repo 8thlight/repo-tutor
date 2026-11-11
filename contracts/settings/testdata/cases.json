@@ -1,0 +1,1446 @@
+{
+  "defaults": {
+    "source": "docs/decisions/0220-settings-file.md, 0230, 0300, 0450, 0500",
+    "values": {
+      "tab_style": "none",
+      "markdown_opens_rendered": true,
+      "highlight": "green",
+      "quiz_length": 5,
+      "exam_length": 10
+    }
+  },
+  "choices": {
+    "source": "docs/decisions/0230-settings-page.md for the tab styles, 0250 for the joined styles, 0500 for the highlights, 0300 for the quiz lengths, 0450 for the exam lengths",
+    "tab_style": [
+      "none",
+      "block",
+      "slanted",
+      "rounded",
+      "joined_slanted",
+      "joined_rounded",
+      "joined_arrows"
+    ],
+    "highlight": [
+      "none",
+      "red",
+      "green",
+      "yellow",
+      "blue",
+      "magenta",
+      "cyan"
+    ],
+    "quiz_length": [
+      3,
+      5,
+      10
+    ],
+    "exam_length": [
+      10,
+      20,
+      30,
+      0
+    ]
+  },
+  "decode": [
+    {
+      "name": "an-empty-object-gives-the-defaults",
+      "source": "docs/decisions/0220-settings-file.md",
+      "input": "{}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "a-version-alone-gives-the-defaults",
+      "source": "docs/decisions/0220-settings-file.md",
+      "input": "{\"version\":1}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "tab-style-none",
+      "source": "docs/decisions/0230-settings-page.md",
+      "input": "{\"tab_style\": \"none\"}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "tab-style-block",
+      "source": "docs/decisions/0230-settings-page.md",
+      "input": "{\"tab_style\": \"block\"}",
+      "expect": {
+        "values": {
+          "tab_style": "block",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "tab-style-slanted",
+      "source": "docs/decisions/0230-settings-page.md",
+      "input": "{\"tab_style\": \"slanted\"}",
+      "expect": {
+        "values": {
+          "tab_style": "slanted",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "tab-style-rounded",
+      "source": "docs/decisions/0230-settings-page.md",
+      "input": "{\"tab_style\": \"rounded\"}",
+      "expect": {
+        "values": {
+          "tab_style": "rounded",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "tab-style-joined-slanted",
+      "source": "docs/decisions/0250-joined-tab-styles.md",
+      "input": "{\"tab_style\": \"joined_slanted\"}",
+      "expect": {
+        "values": {
+          "tab_style": "joined_slanted",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "tab-style-joined-rounded",
+      "source": "docs/decisions/0250-joined-tab-styles.md",
+      "input": "{\"tab_style\": \"joined_rounded\"}",
+      "expect": {
+        "values": {
+          "tab_style": "joined_rounded",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "tab-style-joined-arrows",
+      "source": "docs/decisions/0250-joined-tab-styles.md",
+      "input": "{\"tab_style\": \"joined_arrows\"}",
+      "expect": {
+        "values": {
+          "tab_style": "joined_arrows",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "highlight-none",
+      "source": "docs/decisions/0500-use-the-terminal-colors.md",
+      "input": "{\"highlight\": \"none\"}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "none",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "highlight-red",
+      "source": "docs/decisions/0500-use-the-terminal-colors.md",
+      "input": "{\"highlight\": \"red\"}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "red",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "highlight-green",
+      "source": "docs/decisions/0500-use-the-terminal-colors.md",
+      "input": "{\"highlight\": \"green\"}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "highlight-yellow",
+      "source": "docs/decisions/0500-use-the-terminal-colors.md",
+      "input": "{\"highlight\": \"yellow\"}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "yellow",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "highlight-blue",
+      "source": "docs/decisions/0500-use-the-terminal-colors.md",
+      "input": "{\"highlight\": \"blue\"}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "blue",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "highlight-magenta",
+      "source": "docs/decisions/0500-use-the-terminal-colors.md",
+      "input": "{\"highlight\": \"magenta\"}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "magenta",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "highlight-cyan",
+      "source": "docs/decisions/0500-use-the-terminal-colors.md",
+      "input": "{\"highlight\": \"cyan\"}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "cyan",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "quiz-length-3",
+      "source": "docs/decisions/0300-course-flow.md",
+      "input": "{\"quiz_length\": 3}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 3,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "quiz-length-5",
+      "source": "docs/decisions/0300-course-flow.md",
+      "input": "{\"quiz_length\": 5}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "quiz-length-10",
+      "source": "docs/decisions/0300-course-flow.md",
+      "input": "{\"quiz_length\": 10}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 10,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "exam-length-10",
+      "source": "docs/decisions/0450-exam.md",
+      "input": "{\"exam_length\": 10}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "exam-length-20",
+      "source": "docs/decisions/0450-exam.md",
+      "input": "{\"exam_length\": 20}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 20
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "exam-length-30",
+      "source": "docs/decisions/0450-exam.md",
+      "input": "{\"exam_length\": 30}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 30
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "exam-length-0",
+      "source": "docs/decisions/0450-exam.md",
+      "input": "{\"exam_length\": 0}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 0
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "markdown-opens-as-source",
+      "source": "docs/decisions/0230-settings-page.md",
+      "input": "{\"markdown_opens_rendered\":false}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": false,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "markdown-opens-rendered",
+      "source": "docs/decisions/0230-settings-page.md",
+      "input": "{\"markdown_opens_rendered\":true}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "every-field-together",
+      "source": "docs/decisions/0220-settings-file.md",
+      "input": "{\"version\":1,\"tab_style\":\"rounded\",\"markdown_opens_rendered\":false,\"highlight\":\"blue\",\"quiz_length\":10,\"exam_length\":30}",
+      "expect": {
+        "values": {
+          "tab_style": "rounded",
+          "markdown_opens_rendered": false,
+          "highlight": "blue",
+          "quiz_length": 10,
+          "exam_length": 30
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "an-unknown-tab-style-uses-the-default",
+      "source": "docs/decisions/0220-settings-file.md",
+      "input": "{\"tab_style\":\"zigzag\"}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "an-unknown-highlight-uses-the-default",
+      "source": "docs/decisions/0220-settings-file.md",
+      "input": "{\"highlight\":\"pink\"}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "an-earlier-highlight-teal-falls-back-to-green",
+      "source": "docs/decisions/0500-use-the-terminal-colors.md",
+      "input": "{\"version\": 1, \"highlight\": \"teal\"}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "an-earlier-highlight-orange-falls-back-to-green",
+      "source": "docs/decisions/0500-use-the-terminal-colors.md",
+      "input": "{\"version\": 1, \"highlight\": \"orange\"}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "an-earlier-highlight-dark-blue-falls-back-to-green",
+      "source": "docs/decisions/0500-use-the-terminal-colors.md",
+      "input": "{\"version\": 1, \"highlight\": \"dark_blue\"}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "an-earlier-highlight-purple-falls-back-to-green",
+      "source": "docs/decisions/0500-use-the-terminal-colors.md",
+      "input": "{\"version\": 1, \"highlight\": \"purple\"}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "a-value-is-matched-exactly-so-capitals-are-unknown",
+      "source": "docs/decisions/0220-settings-file.md",
+      "input": "{\"tab_style\":\"Block\",\"highlight\":\"Red\"}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "an-empty-string-is-an-unknown-value",
+      "source": "docs/decisions/0220-settings-file.md",
+      "input": "{\"tab_style\":\"\",\"highlight\":\"\"}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "null-is-not-a-known-value",
+      "source": "docs/decisions/0220-settings-file.md",
+      "input": "{\"tab_style\":null,\"markdown_opens_rendered\":null,\"highlight\":null,\"quiz_length\":null,\"exam_length\":null}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "quiz-length-0-is-not-offered",
+      "source": "docs/decisions/0300-course-flow.md",
+      "input": "{\"quiz_length\": 0}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "quiz-length-4-is-not-offered",
+      "source": "docs/decisions/0300-course-flow.md",
+      "input": "{\"quiz_length\": 4}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "quiz-length-minus-3-is-not-offered",
+      "source": "docs/decisions/0300-course-flow.md",
+      "input": "{\"quiz_length\": -3}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "quiz-length-100-is-not-offered",
+      "source": "docs/decisions/0300-course-flow.md",
+      "input": "{\"quiz_length\": 100}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "exam-length-5-is-not-offered",
+      "source": "docs/decisions/0450-exam.md",
+      "input": "{\"exam_length\": 5}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "exam-length-15-is-not-offered",
+      "source": "docs/decisions/0450-exam.md",
+      "input": "{\"exam_length\": 15}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "exam-length-minus-1-is-not-offered",
+      "source": "docs/decisions/0450-exam.md",
+      "input": "{\"exam_length\": -1}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "exam-length-100-is-not-offered",
+      "source": "docs/decisions/0450-exam.md",
+      "input": "{\"exam_length\": 100}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "one-unknown-value-leaves-the-other-fields-alone",
+      "source": "docs/decisions/0220-settings-file.md",
+      "input": "{\"tab_style\":\"zigzag\",\"highlight\":\"cyan\",\"markdown_opens_rendered\":false,\"quiz_length\":3,\"exam_length\":4}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": false,
+          "highlight": "cyan",
+          "quiz_length": 3,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "an-unknown-field-is-ignored",
+      "source": "docs/decisions/0220-settings-file.md",
+      "input": "{\"version\":1,\"font\":\"mono\"}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "an-unknown-field-beside-known-fields",
+      "source": "docs/decisions/0220-settings-file.md",
+      "input": "{\"font\":\"mono\",\"tab_style\":\"block\",\"extra\":{\"nested\":[1,2]}}",
+      "expect": {
+        "values": {
+          "tab_style": "block",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "a-truncated-file-is-unreadable",
+      "source": "docs/decisions/0220-settings-file.md",
+      "input": "{\"tab_style\":",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": true,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "an-empty-file-is-unreadable",
+      "source": "docs/decisions/0220-settings-file.md",
+      "input": "",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": true,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "text-that-is-not-json-is-unreadable",
+      "source": "docs/decisions/0220-settings-file.md",
+      "input": "tab_style = block",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": true,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "an-array-is-unreadable",
+      "source": "docs/decisions/0220-settings-file.md",
+      "input": "[]",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": true,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "a-bare-number-is-unreadable",
+      "source": "docs/decisions/0220-settings-file.md",
+      "input": "5",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": true,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "text-after-the-object-is-unreadable",
+      "source": "docs/decisions/0220-settings-file.md",
+      "input": "{} extra",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": true,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "version-1-is-read-and-writable",
+      "source": "docs/decisions/0220-settings-file.md",
+      "input": "{\"version\":1,\"tab_style\":\"block\"}",
+      "expect": {
+        "values": {
+          "tab_style": "block",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "version-0-is-read-and-writable",
+      "source": "docs/decisions/0220-settings-file.md",
+      "input": "{\"version\":0,\"tab_style\":\"block\"}",
+      "expect": {
+        "values": {
+          "tab_style": "block",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "a-negative-version-is-read-and-writable",
+      "source": "docs/decisions/0220-settings-file.md",
+      "input": "{\"version\":-1,\"tab_style\":\"block\"}",
+      "expect": {
+        "values": {
+          "tab_style": "block",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "a-newer-version-is-read-and-read-only",
+      "source": "docs/decisions/0220-settings-file.md",
+      "input": "{\"version\":2,\"tab_style\":\"block\",\"highlight\":\"red\",\"markdown_opens_rendered\":false,\"quiz_length\":3,\"exam_length\":20}",
+      "expect": {
+        "values": {
+          "tab_style": "block",
+          "markdown_opens_rendered": false,
+          "highlight": "red",
+          "quiz_length": 3,
+          "exam_length": 20
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": true
+        }
+      }
+    },
+    {
+      "name": "a-much-newer-version-is-read-only",
+      "source": "docs/decisions/0220-settings-file.md",
+      "input": "{\"version\":100}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": true
+        }
+      }
+    },
+    {
+      "name": "a-newer-version-still-falls-back-on-unknown-values",
+      "source": "docs/decisions/0220-settings-file.md",
+      "input": "{\"version\":2,\"tab_style\":\"zigzag\",\"quiz_length\":4}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": true
+        }
+      }
+    },
+    {
+      "name": "a-newer-version-ignores-fields-it-does-not-know",
+      "source": "docs/decisions/0220-settings-file.md",
+      "input": "{\"version\":3,\"font\":\"mono\",\"tab_style\":\"rounded\"}",
+      "expect": {
+        "values": {
+          "tab_style": "rounded",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": true
+        }
+      }
+    },
+    {
+      "name": "a-field-name-is-matched-exactly",
+      "source": "docs/decisions/0220-settings-file.md",
+      "input": "{\"Tab_Style\":\"block\"}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "an-upper-case-field-name-is-an-unknown-field",
+      "source": "docs/decisions/0220-settings-file.md",
+      "input": "{\"QUIZ_LENGTH\":10}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "a-repeated-field-takes-the-last-value",
+      "source": "docs/decisions/0220-settings-file.md",
+      "input": "{\"quiz_length\":3,\"quiz_length\":10}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 10,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "a-repeated-field-takes-the-last-value-even-when-the-last-is-not-offered",
+      "source": "docs/decisions/0220-settings-file.md",
+      "input": "{\"quiz_length\":10,\"quiz_length\":4}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": false,
+          "read_only": false
+        }
+      }
+    }
+  ],
+  "encode": [
+    {
+      "name": "the-defaults",
+      "source": "docs/decisions/0220-settings-file.md",
+      "values": {
+        "tab_style": "none",
+        "markdown_opens_rendered": true,
+        "highlight": "green",
+        "quiz_length": 5,
+        "exam_length": 10
+      }
+    },
+    {
+      "name": "tab-style-none",
+      "source": "docs/decisions/0230-settings-page.md",
+      "values": {
+        "tab_style": "none",
+        "markdown_opens_rendered": true,
+        "highlight": "green",
+        "quiz_length": 5,
+        "exam_length": 10
+      }
+    },
+    {
+      "name": "tab-style-block",
+      "source": "docs/decisions/0230-settings-page.md",
+      "values": {
+        "tab_style": "block",
+        "markdown_opens_rendered": true,
+        "highlight": "green",
+        "quiz_length": 5,
+        "exam_length": 10
+      }
+    },
+    {
+      "name": "tab-style-slanted",
+      "source": "docs/decisions/0230-settings-page.md",
+      "values": {
+        "tab_style": "slanted",
+        "markdown_opens_rendered": true,
+        "highlight": "green",
+        "quiz_length": 5,
+        "exam_length": 10
+      }
+    },
+    {
+      "name": "tab-style-rounded",
+      "source": "docs/decisions/0230-settings-page.md",
+      "values": {
+        "tab_style": "rounded",
+        "markdown_opens_rendered": true,
+        "highlight": "green",
+        "quiz_length": 5,
+        "exam_length": 10
+      }
+    },
+    {
+      "name": "tab-style-joined-slanted",
+      "source": "docs/decisions/0230-settings-page.md",
+      "values": {
+        "tab_style": "joined_slanted",
+        "markdown_opens_rendered": true,
+        "highlight": "green",
+        "quiz_length": 5,
+        "exam_length": 10
+      }
+    },
+    {
+      "name": "tab-style-joined-rounded",
+      "source": "docs/decisions/0230-settings-page.md",
+      "values": {
+        "tab_style": "joined_rounded",
+        "markdown_opens_rendered": true,
+        "highlight": "green",
+        "quiz_length": 5,
+        "exam_length": 10
+      }
+    },
+    {
+      "name": "tab-style-joined-arrows",
+      "source": "docs/decisions/0230-settings-page.md",
+      "values": {
+        "tab_style": "joined_arrows",
+        "markdown_opens_rendered": true,
+        "highlight": "green",
+        "quiz_length": 5,
+        "exam_length": 10
+      }
+    },
+    {
+      "name": "highlight-none",
+      "source": "docs/decisions/0500-use-the-terminal-colors.md",
+      "values": {
+        "tab_style": "none",
+        "markdown_opens_rendered": true,
+        "highlight": "none",
+        "quiz_length": 5,
+        "exam_length": 10
+      }
+    },
+    {
+      "name": "highlight-red",
+      "source": "docs/decisions/0500-use-the-terminal-colors.md",
+      "values": {
+        "tab_style": "none",
+        "markdown_opens_rendered": true,
+        "highlight": "red",
+        "quiz_length": 5,
+        "exam_length": 10
+      }
+    },
+    {
+      "name": "highlight-green",
+      "source": "docs/decisions/0500-use-the-terminal-colors.md",
+      "values": {
+        "tab_style": "none",
+        "markdown_opens_rendered": true,
+        "highlight": "green",
+        "quiz_length": 5,
+        "exam_length": 10
+      }
+    },
+    {
+      "name": "highlight-yellow",
+      "source": "docs/decisions/0500-use-the-terminal-colors.md",
+      "values": {
+        "tab_style": "none",
+        "markdown_opens_rendered": true,
+        "highlight": "yellow",
+        "quiz_length": 5,
+        "exam_length": 10
+      }
+    },
+    {
+      "name": "highlight-blue",
+      "source": "docs/decisions/0500-use-the-terminal-colors.md",
+      "values": {
+        "tab_style": "none",
+        "markdown_opens_rendered": true,
+        "highlight": "blue",
+        "quiz_length": 5,
+        "exam_length": 10
+      }
+    },
+    {
+      "name": "highlight-magenta",
+      "source": "docs/decisions/0500-use-the-terminal-colors.md",
+      "values": {
+        "tab_style": "none",
+        "markdown_opens_rendered": true,
+        "highlight": "magenta",
+        "quiz_length": 5,
+        "exam_length": 10
+      }
+    },
+    {
+      "name": "highlight-cyan",
+      "source": "docs/decisions/0500-use-the-terminal-colors.md",
+      "values": {
+        "tab_style": "none",
+        "markdown_opens_rendered": true,
+        "highlight": "cyan",
+        "quiz_length": 5,
+        "exam_length": 10
+      }
+    },
+    {
+      "name": "quiz-length-3",
+      "source": "docs/decisions/0300-course-flow.md",
+      "values": {
+        "tab_style": "none",
+        "markdown_opens_rendered": true,
+        "highlight": "green",
+        "quiz_length": 3,
+        "exam_length": 10
+      }
+    },
+    {
+      "name": "quiz-length-5",
+      "source": "docs/decisions/0300-course-flow.md",
+      "values": {
+        "tab_style": "none",
+        "markdown_opens_rendered": true,
+        "highlight": "green",
+        "quiz_length": 5,
+        "exam_length": 10
+      }
+    },
+    {
+      "name": "quiz-length-10",
+      "source": "docs/decisions/0300-course-flow.md",
+      "values": {
+        "tab_style": "none",
+        "markdown_opens_rendered": true,
+        "highlight": "green",
+        "quiz_length": 10,
+        "exam_length": 10
+      }
+    },
+    {
+      "name": "exam-length-10",
+      "source": "docs/decisions/0450-exam.md",
+      "values": {
+        "tab_style": "none",
+        "markdown_opens_rendered": true,
+        "highlight": "green",
+        "quiz_length": 5,
+        "exam_length": 10
+      }
+    },
+    {
+      "name": "exam-length-20",
+      "source": "docs/decisions/0450-exam.md",
+      "values": {
+        "tab_style": "none",
+        "markdown_opens_rendered": true,
+        "highlight": "green",
+        "quiz_length": 5,
+        "exam_length": 20
+      }
+    },
+    {
+      "name": "exam-length-30",
+      "source": "docs/decisions/0450-exam.md",
+      "values": {
+        "tab_style": "none",
+        "markdown_opens_rendered": true,
+        "highlight": "green",
+        "quiz_length": 5,
+        "exam_length": 30
+      }
+    },
+    {
+      "name": "exam-length-0",
+      "source": "docs/decisions/0450-exam.md",
+      "values": {
+        "tab_style": "none",
+        "markdown_opens_rendered": true,
+        "highlight": "green",
+        "quiz_length": 5,
+        "exam_length": 0
+      }
+    },
+    {
+      "name": "markdown-as-source",
+      "source": "docs/decisions/0230-settings-page.md",
+      "values": {
+        "tab_style": "none",
+        "markdown_opens_rendered": false,
+        "highlight": "green",
+        "quiz_length": 5,
+        "exam_length": 10
+      }
+    },
+    {
+      "name": "every-field-changed",
+      "source": "docs/decisions/0220-settings-file.md",
+      "values": {
+        "tab_style": "joined_arrows",
+        "markdown_opens_rendered": false,
+        "highlight": "magenta",
+        "quiz_length": 10,
+        "exam_length": 0
+      }
+    }
+  ]
+}
