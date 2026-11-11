@@ -3,8 +3,8 @@ set shell := ["bash", "-euo", "pipefail", "-c"]
 
 import "tools/mutation/mutation.just"
 
-md_paths := "docs AGENTS.md README.md"
-link_paths := "'docs/**/*.md' AGENTS.md README.md"
+md_paths := "docs contracts AGENTS.md README.md"
+link_paths := "'docs/**/*.md' 'contracts/**/*.md' AGENTS.md README.md"
 prefix := env("PREFIX", env("HOME") + "/.local")
 
 default:
