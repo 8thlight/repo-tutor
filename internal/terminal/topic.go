@@ -3,7 +3,7 @@ package terminal
 import (
 	tea "charm.land/bubbletea/v2"
 
-	"repo-tutor/internal/session"
+	sessionstore "repo-tutor/internal/session/store"
 	"repo-tutor/internal/tutor"
 )
 
@@ -11,7 +11,7 @@ func readingAction(action string) bool {
 	return action == "lesson"
 }
 
-func latestReading(state session.State, topic string) (int, bool) {
+func latestReading(state sessionstore.State, topic string) (int, bool) {
 	for index := len(state.Turns) - 1; index >= 0; index-- {
 		if state.Turns[index].Topic == topic && readingAction(state.Turns[index].Action) {
 			return index, true
@@ -20,13 +20,13 @@ func latestReading(state session.State, topic string) (int, bool) {
 	return -1, false
 }
 
-func showAgain(state session.State, source int) session.State {
+func showAgain(state sessionstore.State, source int) sessionstore.State {
 	copied := state.Turns[source]
 	copied.Resumed = true
 	state.Topic = copied.Topic
 	state.Question = ""
 	state.Review = false
-	state.Turns = append(append([]session.Turn(nil), state.Turns...), copied)
+	state.Turns = append(append([]sessionstore.Turn(nil), state.Turns...), copied)
 	if trimmed := len(state.Turns) - 200; trimmed > 0 {
 		state.Turns = state.Turns[trimmed:]
 		state.Quiz = tutor.ShiftQuizTurns(state.Quiz, trimmed)
@@ -34,7 +34,7 @@ func showAgain(state session.State, source int) session.State {
 	return state
 }
 
-func resumeTopic(state session.State, topic string) (session.State, bool) {
+func resumeTopic(state sessionstore.State, topic string) (sessionstore.State, bool) {
 	source, found := latestReading(state, topic)
 	if !found {
 		return state, false
@@ -52,7 +52,7 @@ func resumeTopic(state session.State, topic string) (session.State, bool) {
 	return showAgain(state, source), true
 }
 
-func leaveQuestions(state session.State) (session.State, bool) {
+func leaveQuestions(state sessionstore.State) (sessionstore.State, bool) {
 	source, found := latestReading(state, state.Topic)
 	if !found {
 		for index := len(state.Turns) - 1; index >= 0 && !found; index-- {

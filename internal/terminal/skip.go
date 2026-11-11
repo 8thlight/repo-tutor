@@ -6,7 +6,7 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 
-	"repo-tutor/internal/session"
+	sessionstore "repo-tutor/internal/session/store"
 	"repo-tutor/internal/tutor"
 )
 
@@ -100,7 +100,7 @@ func (model interfaceModel) leaveQuiz() (tea.Model, tea.Cmd) {
 	return model.learn()
 }
 
-func (application application) skipOpenQuestion() (session.State, bool) {
+func (application application) skipOpenQuestion() (sessionstore.State, bool) {
 	state := application.state
 	if quiz, skipped := tutor.SkipQuizQuestion(state.Quiz); skipped && state.Quiz != nil && state.Quiz.Covers(state.Topic) {
 		state.Quiz = quiz

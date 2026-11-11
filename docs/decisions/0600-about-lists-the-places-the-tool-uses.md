@@ -2,7 +2,7 @@
 category: ux
 status: accepted
 approval: person
-affects: [session, terminal, about]
+affects: [session/store, terminal, about]
 builds-on: ['0100', '0220', '0400']
 partly-supersedes: ['0590']
 ---

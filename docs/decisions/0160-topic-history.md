@@ -2,7 +2,7 @@
 category: behavior
 status: accepted
 approval: person
-affects: [session, terminal]
+affects: [session/store, terminal]
 ---
 
 # 0160. History by topic

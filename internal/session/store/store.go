@@ -1,4 +1,4 @@
-package session
+package store
 
 import (
 	"bytes"
@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
@@ -16,7 +17,13 @@ import (
 	"repo-tutor/internal/tutor"
 )
 
-const Version = 8
+const (
+	Version = 8
+
+	lessonPrefix  = "lesson-"
+	lessonSuffix  = ".md"
+	goalKeyLength = 16
+)
 
 type Turn struct {
 	Topic   string      `json:"topic"`
@@ -136,7 +143,28 @@ func (store *Store) Load() (State, bool, error) {
 }
 
 func (store *Store) lessonPath(key string) string {
-	return filepath.Join(store.Directory, "lesson-"+key+".md")
+	return filepath.Join(store.Directory, lessonPrefix+key+lessonSuffix)
+}
+
+type LessonFile struct {
+	Path    string
+	GoalKey string
+}
+
+func (store *Store) LessonFiles() []LessonFile {
+	paths, err := filepath.Glob(filepath.Join(store.Directory, lessonPrefix+"*"+lessonSuffix))
+	if err != nil {
+		return nil
+	}
+	var files []LessonFile
+	for _, path := range paths {
+		name := strings.TrimPrefix(filepath.Base(path), lessonPrefix)
+		if len(name) < goalKeyLength {
+			continue
+		}
+		files = append(files, LessonFile{Path: path, GoalKey: name[:goalKeyLength]})
+	}
+	return files
 }
 
 func (store *Store) LoadLesson(key string) ([]byte, bool, error) {

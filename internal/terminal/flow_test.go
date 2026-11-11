@@ -11,7 +11,7 @@ import (
 	"github.com/charmbracelet/x/ansi"
 
 	"repo-tutor/internal/repository/analyzer"
-	"repo-tutor/internal/session"
+	sessionstore "repo-tutor/internal/session/store"
 	"repo-tutor/internal/tutor"
 )
 
@@ -73,7 +73,7 @@ func TestMoreIsRefusedWhileAQuestionIsPending(t *testing.T) {
 func TestAnAnswerIsStillReviewedBeforeTheNextQuizQuestion(t *testing.T) {
 	model := readingFixture()
 	model.application.state.Quiz = &tutor.Quiz{Topic: tutor.Overview, Goal: 5, Questions: []tutor.QuizQuestion{{Text: "First?", Assessment: "partial"}}}
-	model.application.state.Turns = append(model.application.state.Turns, session.Turn{Topic: tutor.Overview, Action: "answer", Reply: tutor.Reply{Assessment: "partial", Feedback: "Close."}})
+	model.application.state.Turns = append(model.application.state.Turns, sessionstore.Turn{Topic: tutor.Overview, Action: "answer", Reply: tutor.Reply{Assessment: "partial", Feedback: "Close."}})
 	model.application.state.Review = true
 	intent, err := continueIntent(model.application.state, model.application.course, false)
 	if err != nil || intent.action != "quiz-next" {
@@ -276,7 +276,7 @@ func TestTheSidebarOffersOnlyNextQuestionDuringAQuiz(t *testing.T) {
 func TestControlFExtendsAFinishedQuiz(t *testing.T) {
 	model := readingFixture()
 	model.application.state.Quiz = &tutor.Quiz{Topic: tutor.Overview, Goal: 3, Questions: []tutor.QuizQuestion{{Text: "A?", Assessment: "correct"}, {Text: "B?", Assessment: "partial"}, {Text: "C?", Assessment: "correct"}}}
-	model.application.state.Turns = append(model.application.state.Turns, session.Turn{Topic: tutor.Overview, Action: "answer", Reply: tutor.Reply{Assessment: "correct", Feedback: "Right."}})
+	model.application.state.Turns = append(model.application.state.Turns, sessionstore.Turn{Topic: tutor.Overview, Action: "answer", Reply: tutor.Reply{Assessment: "correct", Feedback: "Right."}})
 	model.application.state.Review = true
 	if !quizFinished(model.application.state) {
 		t.Fatal("every question is answered and reviewed, so the quiz is finished")
@@ -411,7 +411,7 @@ func TestTheQuestionIndexKeyLivesInTheSidebarAndNotInTheTitle(t *testing.T) {
 func quizFeedbackFixture() interfaceModel {
 	model := readingFixture()
 	model.application.state.Quiz = &tutor.Quiz{Topic: tutor.Overview, Goal: 5, Questions: []tutor.QuizQuestion{{Text: "First?", Assessment: "partial"}}}
-	model.application.state.Turns = append(model.application.state.Turns, session.Turn{Topic: tutor.Overview, Action: "answer", Reply: tutor.Reply{Assessment: "partial", Feedback: "Close."}})
+	model.application.state.Turns = append(model.application.state.Turns, sessionstore.Turn{Topic: tutor.Overview, Action: "answer", Reply: tutor.Reply{Assessment: "partial", Feedback: "Close."}})
 	model.application.state.Review = true
 	return model
 }
@@ -582,7 +582,7 @@ func quizWithLessonFixture() interfaceModel {
 	model := readingFixture()
 	model.application.state.Turns[0].Action = "lesson"
 	quizReply := tutor.Reply{Explanation: "Try this.", Question: "First?", Assessment: "none", Citations: model.application.state.Turns[0].Reply.Citations}
-	model.application.state.Turns = append(model.application.state.Turns, session.Turn{Topic: tutor.Overview, Action: "quiz", Reply: quizReply})
+	model.application.state.Turns = append(model.application.state.Turns, sessionstore.Turn{Topic: tutor.Overview, Action: "quiz", Reply: quizReply})
 	model.application.state.Quiz = &tutor.Quiz{Topic: tutor.Overview, Goal: 5, Questions: []tutor.QuizQuestion{{Text: "First?"}}}
 	model.application.state.Question = "First?"
 	model.history = len(model.application.state.Turns) - 1
@@ -723,7 +723,7 @@ func TestOneHelperArmsEverySecondPressPrompt(t *testing.T) {
 func TestLeavingAQuizShowsTheLessonEvenAfterHintsAndClarifications(t *testing.T) {
 	model := quizWithLessonFixture()
 	clarification := tutor.Reply{Explanation: "A hint about the question.", Question: "First?", Assessment: "none", Citations: model.application.state.Turns[0].Reply.Citations}
-	model.application.state.Turns = append(model.application.state.Turns, session.Turn{Topic: tutor.Overview, Action: "question", Message: "hint?", Reply: clarification})
+	model.application.state.Turns = append(model.application.state.Turns, sessionstore.Turn{Topic: tutor.Overview, Action: "question", Message: "hint?", Reply: clarification})
 	model.history = len(model.application.state.Turns) - 1
 	armed, _ := press(model, 'l', tea.ModCtrl)
 	left, _ := press(armed, 'l', tea.ModCtrl)

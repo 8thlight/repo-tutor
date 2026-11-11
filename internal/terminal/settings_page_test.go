@@ -9,7 +9,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/x/ansi"
 
-	"repo-tutor/internal/session"
+	settingsstore "repo-tutor/internal/settings/store"
 	"repo-tutor/internal/tutor"
 )
 
@@ -40,7 +40,7 @@ func TestSpaceChoosesAndSavesTheFocusedChoice(t *testing.T) {
 	if model.application.settings.TabStyle != "slanted" || model.notice != settingsSavedNotice {
 		t.Fatalf("Space should choose the focused style: %+v %q", model.application.settings, model.notice)
 	}
-	saved, _, _ := session.LoadSettings(model.application.settingsBase)
+	saved, _, _ := settingsstore.LoadSettings(model.application.settingsBase)
 	if saved.TabStyle != "slanted" {
 		t.Fatalf("the choice should be saved at once: %+v", saved)
 	}
@@ -170,7 +170,7 @@ func TestHighlightChoiceIsSavedAndChangesTheAccent(t *testing.T) {
 	if model.application.settings.Highlight != "red" || model.palette().accent == before {
 		t.Fatalf("choosing Red should change the highlight: %+v", model.application.settings)
 	}
-	saved, _, _ := session.LoadSettings(model.application.settingsBase)
+	saved, _, _ := settingsstore.LoadSettings(model.application.settingsBase)
 	if saved.Highlight != "red" {
 		t.Fatalf("the highlight should be saved: %+v", saved)
 	}
@@ -222,7 +222,7 @@ func TestQuizLengthIsChosenSavedAndUsedForTheNextQuiz(t *testing.T) {
 	if model.application.settings.QuizLength != 10 {
 		t.Fatalf("choosing 10 questions should set the length: %+v", model.application.settings)
 	}
-	saved, _, _ := session.LoadSettings(model.application.settingsBase)
+	saved, _, _ := settingsstore.LoadSettings(model.application.settingsBase)
 	if saved.QuizLength != 10 {
 		t.Fatalf("the length should be saved: %+v", saved)
 	}
@@ -253,7 +253,7 @@ func TestExamLengthIsChosenSavedAndExplainedOnce(t *testing.T) {
 	if model.application.settings.ExamLength != 20 {
 		t.Fatalf("choosing 20 questions should set the exam length: %+v", model.application.settings)
 	}
-	saved, _, _ := session.LoadSettings(model.application.settingsBase)
+	saved, _, _ := settingsstore.LoadSettings(model.application.settingsBase)
 	if saved.ExamLength != 20 {
 		t.Fatalf("the exam length should be saved: %+v", saved)
 	}
@@ -275,7 +275,7 @@ func TestEveryTopicReadIsAnExamLengthChoice(t *testing.T) {
 	if !strings.Contains(ansi.Strip(model.settingsContent()), "(•) Every topic read") {
 		t.Fatalf("the choice should read Every topic read:\n%s", ansi.Strip(model.settingsContent()))
 	}
-	saved, _, _ := session.LoadSettings(model.application.settingsBase)
+	saved, _, _ := settingsstore.LoadSettings(model.application.settingsBase)
 	if saved.ExamLength != 0 {
 		t.Fatalf("the choice should be saved, got %d", saved.ExamLength)
 	}

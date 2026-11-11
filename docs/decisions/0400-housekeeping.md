@@ -2,7 +2,7 @@
 category: behavior
 status: accepted
 approval: person
-affects: [session, terminal]
+affects: [lesson/pruner, session/store, terminal]
 ---
 
 # 0400. Housekeeping

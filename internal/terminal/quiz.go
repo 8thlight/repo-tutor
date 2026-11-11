@@ -6,11 +6,11 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 
-	"repo-tutor/internal/session"
+	sessionstore "repo-tutor/internal/session/store"
 	"repo-tutor/internal/tutor"
 )
 
-func reviewing(state session.State) bool {
+func reviewing(state sessionstore.State) bool {
 	if state.Review {
 		return true
 	}
@@ -21,7 +21,7 @@ func reviewing(state session.State) bool {
 	return turn.Action == "answer" && (turn.Reply.Assessment != "none" || turn.Reply.Question == "")
 }
 
-func probeIntent(state session.State, course []tutor.Topic) (turnIntent, error) {
+func probeIntent(state sessionstore.State, course []tutor.Topic) (turnIntent, error) {
 	topics := tutor.ProbeTopics(course, state.Progress)
 	if len(topics) == 0 {
 		return turnIntent{}, fmt.Errorf("every topic is already marked as known; choose a topic or start a quiz")
@@ -29,7 +29,7 @@ func probeIntent(state session.State, course []tutor.Topic) (turnIntent, error) 
 	return turnIntent{"probe", "Ask one short question that tests whether I already know this topic.", topics[0]}, nil
 }
 
-func continueIntent(state session.State, course []tutor.Topic, extend bool) (turnIntent, error) {
+func continueIntent(state sessionstore.State, course []tutor.Topic, extend bool) (turnIntent, error) {
 	quiz := state.Quiz
 	if extend {
 		if quiz != nil && quiz.Exam {
@@ -87,15 +87,15 @@ func quizText(quiz *tutor.Quiz) string {
 	return text.String()
 }
 
-func inQuestionFlow(state session.State) bool {
+func inQuestionFlow(state sessionstore.State) bool {
 	return (state.Quiz != nil && !state.Quiz.Finished()) || state.Probe != nil
 }
 
-func questionOpen(state session.State) bool {
+func questionOpen(state sessionstore.State) bool {
 	return state.Question != "" && !reviewing(state)
 }
 
-func quizFinished(state session.State) bool {
+func quizFinished(state sessionstore.State) bool {
 	quiz := state.Quiz
 	return quiz != nil && reviewing(state) && quiz.Completed() >= quiz.Goal
 }
@@ -110,7 +110,7 @@ func (model interfaceModel) continueQuiz(extend bool) (tea.Model, tea.Cmd) {
 	return model.begin(intent)
 }
 
-func quizSlotItems(state session.State) []browserItem {
+func quizSlotItems(state sessionstore.State) []browserItem {
 	quiz := state.Quiz
 	if quiz == nil {
 		return []browserItem{{"No quiz yet", "Start a quiz with Ctrl+G.", "", -1}}
@@ -137,7 +137,7 @@ func quizSlotItems(state session.State) []browserItem {
 	return items
 }
 
-func reopenQuestion(state session.State, slot int) (session.State, bool) {
+func reopenQuestion(state sessionstore.State, slot int) (sessionstore.State, bool) {
 	reopened, ok := tutor.Reopen(state.Quiz, slot)
 	if !ok {
 		return state, false
@@ -145,7 +145,7 @@ func reopenQuestion(state session.State, slot int) (session.State, bool) {
 	text := reopened.Questions[slot].Text
 	state.Quiz, state.Question, state.Review = reopened, text, false
 	reply := tutor.Reply{Assessment: "none", Explanation: fmt.Sprintf("Returning to question %d of %d.", slot+1, reopened.Goal), Question: text}
-	state.Turns = append(append([]session.Turn(nil), state.Turns...), session.Turn{Topic: state.Topic, Action: "quiz-retry", Reply: reply})
+	state.Turns = append(append([]sessionstore.Turn(nil), state.Turns...), sessionstore.Turn{Topic: state.Topic, Action: "quiz-retry", Reply: reply})
 	return state, true
 }
 

@@ -11,7 +11,7 @@ import (
 	"github.com/charmbracelet/x/ansi"
 
 	"repo-tutor/internal/repository/analyzer"
-	"repo-tutor/internal/session"
+	sessionstore "repo-tutor/internal/session/store"
 	"repo-tutor/internal/tutor"
 )
 
@@ -23,7 +23,7 @@ func TestContinueRequiresReviewAndStopsAtQuizGoal(t *testing.T) {
 	model.application.state.Review = true
 	model.application.state.Quiz = &tutor.Quiz{Topic: tutor.Overview, Goal: 5, Questions: []tutor.QuizQuestion{{Text: "First?", Assessment: "partial"}}}
 	calls := 0
-	model.run = func(_ context.Context, state session.State, action, _, _ string) (session.State, error) {
+	model.run = func(_ context.Context, state sessionstore.State, action, _, _ string) (sessionstore.State, error) {
 		calls++
 		if action != "quiz-next" {
 			t.Fatalf("continue should request the next quiz question, got %s", action)
@@ -75,7 +75,7 @@ func TestLoadingReplacesPreviousLessonAndKeepsBrowsingAvailable(t *testing.T) {
 func TestSkippedQuestionHasBoundaryAndFailedContinueKeepsReview(t *testing.T) {
 	model := interfaceFixture()
 	reply := tutor.Reply{Assessment: "none", Explanation: "The core package contains the calculation."}
-	model.application.state.Turns = append(model.application.state.Turns, session.Turn{Topic: tutor.Overview, Action: "answer", Message: "Please skip this question", Reply: reply})
+	model.application.state.Turns = append(model.application.state.Turns, sessionstore.Turn{Topic: tutor.Overview, Action: "answer", Message: "Please skip this question", Reply: reply})
 	model.application.state.Question, model.application.state.Review = "", true
 	model.application.state.Quiz = &tutor.Quiz{Topic: tutor.Overview, Goal: 5, Questions: []tutor.QuizQuestion{{Text: "Where?", Assessment: "skipped"}}}
 	model.history = 1
@@ -84,8 +84,8 @@ func TestSkippedQuestionHasBoundaryAndFailedContinueKeepsReview(t *testing.T) {
 	if !strings.Contains(content, "── FEEDBACK") || !strings.Contains(content, "── END OF QUESTION") || !strings.Contains(ansi.Strip(model.composer()), "continue") {
 		t.Fatalf("ungraded skip lost its question boundary:\n%s", content)
 	}
-	model.run = func(context.Context, session.State, string, string, string) (session.State, error) {
-		return session.State{}, errors.New("test connection failed")
+	model.run = func(context.Context, sessionstore.State, string, string, string) (sessionstore.State, error) {
+		return sessionstore.State{}, errors.New("test connection failed")
 	}
 	started, command := model.continueQuiz(false)
 	next, _ := started.(interfaceModel).Update(finishedCommand(t, command))
@@ -100,7 +100,7 @@ func TestSkippedQuestionHasBoundaryAndFailedContinueKeepsReview(t *testing.T) {
 
 func TestRephrasedQuestionRemainsAnswerable(t *testing.T) {
 	model := interfaceFixture()
-	model.application.state.Turns = append(model.application.state.Turns, session.Turn{Topic: tutor.Overview, Action: "answer", Message: "What do you mean?", Reply: tutor.Reply{Assessment: "none", Explanation: "Consider the package responsibilities from the overview.", Question: "Which package owns calculations?"}})
+	model.application.state.Turns = append(model.application.state.Turns, sessionstore.Turn{Topic: tutor.Overview, Action: "answer", Message: "What do you mean?", Reply: tutor.Reply{Assessment: "none", Explanation: "Consider the package responsibilities from the overview.", Question: "Which package owns calculations?"}})
 	model.application.state.Question = model.application.state.Turns[1].Reply.Question
 	model.history = 1
 	composer := ansi.Strip(model.composer())
@@ -110,7 +110,7 @@ func TestRephrasedQuestionRemainsAnswerable(t *testing.T) {
 }
 
 func TestLastLessonMatchesTopicAndIgnoresQuizFeedback(t *testing.T) {
-	turns := []session.Turn{
+	turns := []sessionstore.Turn{
 		{Topic: "core", Action: "lesson", Reply: tutor.Reply{Explanation: "An older lesson."}},
 		{Topic: "core", Action: "lesson", Reply: tutor.Reply{Explanation: "The calculation belongs to core."}},
 		{Topic: "cli", Action: "lesson", Reply: tutor.Reply{Explanation: "CLI handles commands."}},
@@ -198,7 +198,7 @@ func TestQuizTabStaysActiveAcrossStartAndIndex(t *testing.T) {
 func TestSelectingSkippedSlotReturnsToItsQuestion(t *testing.T) {
 	model := interfaceFixture()
 	model.application.state.Quiz = &tutor.Quiz{Topic: tutor.Overview, Goal: 5, Active: 1, Questions: []tutor.QuizQuestion{{Text: "Where?", Assessment: "skipped"}, {Text: "Why?", Assessment: "correct"}}}
-	model.application.state.Turns = append(model.application.state.Turns, session.Turn{Topic: tutor.Overview, Action: "answer", Reply: tutor.Reply{Assessment: "correct", Feedback: "Right."}})
+	model.application.state.Turns = append(model.application.state.Turns, sessionstore.Turn{Topic: tutor.Overview, Action: "answer", Reply: tutor.Reply{Assessment: "correct", Feedback: "Right."}})
 	model.application.state.Question, model.application.state.Review = "", true
 	opened, _ := model.openPicker("quiz", "")
 	model = opened.(interfaceModel)
@@ -229,7 +229,7 @@ func TestSelectingNextSlotGeneratesItOnlyAfterReview(t *testing.T) {
 	model := interfaceFixture()
 	model.application.state.Review = true
 	model.application.state.Quiz = &tutor.Quiz{Topic: tutor.Overview, Goal: 5, Questions: []tutor.QuizQuestion{{Text: "First?", Assessment: "partial"}}}
-	model.run = func(_ context.Context, state session.State, action, _, _ string) (session.State, error) {
+	model.run = func(_ context.Context, state sessionstore.State, action, _, _ string) (sessionstore.State, error) {
 		if action != "quiz-next" {
 			t.Fatalf("the next slot should generate the next question, got %s", action)
 		}
@@ -261,7 +261,7 @@ func TestAnswerTurnIsRecordedOnceAndShiftsWithTrimmedHistory(t *testing.T) {
 func TestFirstLessonLoadsSavedOverviewWithoutAgentAndMarksStaleness(t *testing.T) {
 	for _, fingerprint := range []string{"current", "older"} {
 		model := interfaceFixture()
-		store, err := session.Open(t.TempDir(), "/work/repowise")
+		store, err := sessionstore.Open(t.TempDir(), "/work/repowise")
 		if err != nil {
 			t.Fatal(err)
 		}

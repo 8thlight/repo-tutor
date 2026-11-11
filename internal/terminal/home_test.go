@@ -12,7 +12,7 @@ import (
 	"github.com/charmbracelet/x/ansi"
 
 	"repo-tutor/internal/repository/analyzer"
-	"repo-tutor/internal/session"
+	sessionstore "repo-tutor/internal/session/store"
 	"repo-tutor/internal/tutor"
 )
 
@@ -99,7 +99,7 @@ func TestResumedSessionOpensOnLearnNotHome(t *testing.T) {
 	if model := interfaceFixture(); model.page != "lesson" {
 		t.Fatalf("a session with turns should resume on Learn, got %s", model.page)
 	}
-	if model := newInterface(interfaceFixture().ctx, application{state: session.State{}}, nil, true); model.page != "home" {
+	if model := newInterface(interfaceFixture().ctx, application{state: sessionstore.State{}}, nil, true); model.page != "home" {
 		t.Fatalf("a session with no turns should open on Home, got %s", model.page)
 	}
 }
@@ -244,8 +244,8 @@ func TestEscAndPageKeysReturnToWhereThePageWasOpened(t *testing.T) {
 
 func TestFailedOverviewShowsOnHomeAndRetryStaysThere(t *testing.T) {
 	model := newLearnerFixture()
-	model.run = func(context.Context, session.State, string, string, string) (session.State, error) {
-		return session.State{}, errors.New("connection refused")
+	model.run = func(context.Context, sessionstore.State, string, string, string) (sessionstore.State, error) {
+		return sessionstore.State{}, errors.New("connection refused")
 	}
 	started, command := model.Update(beginFirstLesson{})
 	next, _ := started.(interfaceModel).Update(finishedCommand(t, command))
@@ -418,7 +418,7 @@ func TestHomeOffersReviewOnlyWhenATopicIsWeak(t *testing.T) {
 func TestAboutListsEveryPlaceTheToolUses(t *testing.T) {
 	model := interfaceFixture()
 	base := t.TempDir()
-	store, err := session.Open(base, model.application.snapshot.Root)
+	store, err := sessionstore.Open(base, model.application.snapshot.Root)
 	if err != nil {
 		t.Fatal(err)
 	}

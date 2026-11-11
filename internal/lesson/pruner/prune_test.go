@@ -1,4 +1,4 @@
-package session_test
+package pruner_test
 
 import (
 	"os"
@@ -6,12 +6,13 @@ import (
 	"testing"
 	"time"
 
-	"repo-tutor/internal/session"
+	"repo-tutor/internal/lesson/pruner"
+	sessionstore "repo-tutor/internal/session/store"
 	"repo-tutor/internal/tutor"
 )
 
 func TestPruneRemovesOnlyOldLessonsOfOtherGoals(t *testing.T) {
-	store, err := session.Open(t.TempDir(), "/work/repo")
+	store, err := sessionstore.Open(t.TempDir(), "/work/repo")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -35,7 +36,7 @@ func TestPruneRemovesOnlyOldLessonsOfOtherGoals(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(store.Directory, "session.json"), []byte("{}"), 0600); err != nil {
 		t.Fatal(err)
 	}
-	removed := store.PruneLessons(tutor.GoalKey(current), 60*24*time.Hour, now)
+	removed := pruner.Prune(store, tutor.GoalKey(current), 60*24*time.Hour, now)
 	if removed != 1 {
 		t.Fatalf("only the old file for the other goal should go, removed %d", removed)
 	}
@@ -55,7 +56,7 @@ func TestPruneRemovesOnlyOldLessonsOfOtherGoals(t *testing.T) {
 }
 
 func TestPruneIgnoresFilesThatAreNotLessons(t *testing.T) {
-	store, err := session.Open(t.TempDir(), "/work/repo")
+	store, err := sessionstore.Open(t.TempDir(), "/work/repo")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -64,7 +65,7 @@ func TestPruneIgnoresFilesThatAreNotLessons(t *testing.T) {
 	os.WriteFile(odd, []byte("x"), 0600)
 	old := time.Now().Add(-400 * 24 * time.Hour)
 	os.Chtimes(odd, old, old)
-	if store.PruneLessons(tutor.GoalKey("g"), time.Hour, time.Now()) != 0 {
+	if pruner.Prune(store, tutor.GoalKey("g"), time.Hour, time.Now()) != 0 {
 		t.Fatal("a file without a goal key is not a lesson to prune")
 	}
 }

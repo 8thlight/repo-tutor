@@ -2,7 +2,7 @@
 category: ux
 status: accepted
 approval: person
-affects: [session, terminal, tutor]
+affects: [session/store, terminal, tutor]
 ---
 
 # 0280. Ask for the goal

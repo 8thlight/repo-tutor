@@ -2,7 +2,7 @@
 category: behavior
 status: accepted
 approval: person
-affects: [session, terminal]
+affects: [session/store, terminal]
 builds-on: ['0220', '0460']
 partly-supersedes: ['0460']
 ---

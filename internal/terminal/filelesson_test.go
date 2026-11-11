@@ -7,7 +7,7 @@ import (
 	"github.com/charmbracelet/x/ansi"
 
 	"repo-tutor/internal/repository/analyzer"
-	"repo-tutor/internal/session"
+	sessionstore "repo-tutor/internal/session/store"
 	"repo-tutor/internal/tutor"
 )
 
@@ -37,7 +37,7 @@ func TestTAgainResumesTheSavedFileLessonWithoutARequest(t *testing.T) {
 	model := openFileFixture(t)
 	topic := tutor.FileTopic("core/value.go")
 	reply := tutor.Reply{Explanation: "value.go declares one type.", Assessment: "none", Citations: model.application.state.Turns[0].Reply.Citations}
-	model.application.state.Turns = append(model.application.state.Turns, session.Turn{Topic: topic, Action: "lesson", Reply: reply})
+	model.application.state.Turns = append(model.application.state.Turns, sessionstore.Turn{Topic: topic, Action: "lesson", Reply: reply})
 	model.application.state.Progress = map[string]tutor.Progress{tutor.Overview: {Lessons: 1}, topic: {Lessons: 1}}
 	model.application.state.Topic = tutor.Overview
 	again, _ := press(model, 't', 0)

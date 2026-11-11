@@ -12,7 +12,7 @@ import (
 
 	"repo-tutor/internal/agent/runner"
 	"repo-tutor/internal/repository/analyzer"
-	"repo-tutor/internal/session"
+	sessionstore "repo-tutor/internal/session/store"
 	"repo-tutor/internal/settings/codec"
 	"repo-tutor/internal/tutor"
 )
@@ -20,8 +20,8 @@ import (
 type application struct {
 	snapshot    analyzer.Snapshot
 	course      []tutor.Topic
-	state       session.State
-	store       *session.Store
+	state       sessionstore.State
+	store       *sessionstore.Store
 	output      io.Writer
 	diagnostics io.Writer
 	timeout     time.Duration
@@ -52,10 +52,10 @@ func (application application) cachedLesson(topic string) (tutor.SavedLesson, bo
 	return lesson, valid && lesson.Topic == topic
 }
 
-func (application application) openWithLesson(lesson tutor.SavedLesson, message string) (session.State, error) {
+func (application application) openWithLesson(lesson tutor.SavedLesson, message string) (sessionstore.State, error) {
 	opened := application.recordReply("lesson", message, lesson.Topic, "", lesson.Reply)
 	if err := application.store.Save(opened); err != nil {
-		return session.State{}, fmt.Errorf("save cached lesson: %w", err)
+		return sessionstore.State{}, fmt.Errorf("save cached lesson: %w", err)
 	}
 	return opened, nil
 }
@@ -93,9 +93,9 @@ func (application *application) turn(ctx context.Context, action, message, topic
 	return nil
 }
 
-func (application application) completeTurn(ctx context.Context, action, message, topic string) (session.State, error) {
+func (application application) completeTurn(ctx context.Context, action, message, topic string) (sessionstore.State, error) {
 	if len(message) > 16000 {
-		return session.State{}, fmt.Errorf("message is too long; keep each turn under 16000 bytes")
+		return sessionstore.State{}, fmt.Errorf("message is too long; keep each turn under 16000 bytes")
 	}
 	if action == "lesson" && message == firstLessonMessage {
 		if lesson, cached := application.cachedLesson(topic); cached && lesson.Fresh(application.snapshot.Fingerprint) {
@@ -105,7 +105,7 @@ func (application application) completeTurn(ctx context.Context, action, message
 	if action == "exam" {
 		plan := tutor.ExamPlan(application.course, application.state.Progress, application.settings.ExamLength)
 		if len(plan) == 0 {
-			return session.State{}, fmt.Errorf("an exam needs at least %d topics read", tutor.ExamMinimum)
+			return sessionstore.State{}, fmt.Errorf("an exam needs at least %d topics read", tutor.ExamMinimum)
 		}
 		topic = plan[0]
 	}
@@ -118,7 +118,7 @@ func (application application) completeTurn(ctx context.Context, action, message
 				updated := application.recordReply(action, message, topic, "", reply)
 				updated.SessionID = application.state.SessionID
 				if err := application.store.Save(updated); err != nil {
-					return session.State{}, fmt.Errorf("save tutor turn: %w", err)
+					return sessionstore.State{}, fmt.Errorf("save tutor turn: %w", err)
 				}
 				return updated, nil
 			}
@@ -140,12 +140,12 @@ func (application application) completeTurn(ctx context.Context, action, message
 	}
 	reply, sessionID, err := application.ask(ctx, request, application.state.SessionID)
 	if err != nil {
-		return session.State{}, err
+		return sessionstore.State{}, err
 	}
 	updated := application.recordReply(action, message, topic, request.Question, reply)
 	updated.SessionID = sessionID
 	if err := application.store.Save(updated); err != nil {
-		return session.State{}, fmt.Errorf("save tutor turn: %w", err)
+		return sessionstore.State{}, fmt.Errorf("save tutor turn: %w", err)
 	}
 	if action == "lesson" && (message == openingMessage || message == firstLessonMessage) {
 		application.saveLesson(topic, reply)
@@ -185,7 +185,7 @@ func (application application) prefetchLesson(ctx context.Context, topic string)
 	return nil
 }
 
-func (application application) recordReply(action, message, topic, pending string, reply tutor.Reply) session.State {
+func (application application) recordReply(action, message, topic, pending string, reply tutor.Reply) sessionstore.State {
 	if action == "answer" && reply.Assessment != "none" {
 		reply.Question = ""
 	}
@@ -215,7 +215,7 @@ func (application application) recordReply(action, message, topic, pending strin
 		updated.Progress = tutor.RecordQuizScore(updated.Progress, topic, updated.Quiz)
 	}
 	updated.Probe, updated.Progress = tutor.RecordProbe(updated.Probe, application.course, updated.Progress, action, topic, reply)
-	updated.Turns = append(append([]session.Turn(nil), updated.Turns...), session.Turn{Topic: topic, Action: action, Message: message, Reply: reply})
+	updated.Turns = append(append([]sessionstore.Turn(nil), updated.Turns...), sessionstore.Turn{Topic: topic, Action: action, Message: message, Reply: reply})
 	updated.Quiz = tutor.RecordAnswerTurn(application.state.Quiz, updated.Quiz, len(updated.Turns)-1)
 	if result, finished := tutor.ResultOf(updated.Quiz); finished {
 		updated.LastExam = &result
@@ -227,7 +227,7 @@ func (application application) recordReply(action, message, topic, pending strin
 	return updated
 }
 
-func lastLesson(turns []session.Turn, topic string) *tutor.Reply {
+func lastLesson(turns []sessionstore.Turn, topic string) *tutor.Reply {
 	for index := len(turns) - 1; index >= 0; index-- {
 		if turns[index].Topic == topic && turns[index].Action == "lesson" {
 			reply := turns[index].Reply

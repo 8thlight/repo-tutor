@@ -2,7 +2,7 @@
 category: behavior
 status: accepted
 approval: person
-affects: [agent/runner, session, terminal, about]
+affects: [agent/runner, session/store, terminal, about]
 builds-on: ['0010', '0220', '0400', '0460']
 partly-supersedes: ['0100']
 partly-superseded-by: ['0600']

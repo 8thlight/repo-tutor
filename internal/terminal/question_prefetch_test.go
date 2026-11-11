@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"repo-tutor/internal/session"
+	sessionstore "repo-tutor/internal/session/store"
 	"repo-tutor/internal/tutor"
 )
 
@@ -15,7 +15,7 @@ func quizPrefetchFixture(t *testing.T) interfaceModel {
 	model.application.questionStash = &questionStash{}
 	model.application.state.Quiz = &tutor.Quiz{Topic: model.application.state.Topic, Goal: 3, Active: 0, Questions: []tutor.QuizQuestion{{Text: "First?"}}}
 	model.application.state.Question = "First?"
-	model.prefetcher = func(context.Context, session.State, string) error { return nil }
+	model.prefetcher = func(context.Context, sessionstore.State, string) error { return nil }
 	return model
 }
 
@@ -51,7 +51,7 @@ func TestAStoredQuestionOrAFailureEndsTheWantToPrefetchIt(t *testing.T) {
 
 func TestWithoutAQuizTheLessonPrefetchStillRuns(t *testing.T) {
 	model, topic := prefetchFixture(t)
-	model.prefetcher = func(context.Context, session.State, string) error { return nil }
+	model.prefetcher = func(context.Context, sessionstore.State, string) error { return nil }
 	if key, wanted := model.prefetchTarget(); !wanted || key != topic {
 		t.Fatalf("got %q %v", key, wanted)
 	}
@@ -71,7 +71,7 @@ func TestTheNextQuestionIsRecordedFromTheStashWithoutAskingTheAgent(t *testing.T
 	model := quizPrefetchFixture(t)
 	model.application.state.Review = true
 	model.application.state.Question = ""
-	model.application.state.Turns = append(model.application.state.Turns, session.Turn{Topic: model.application.state.Topic, Action: "answer", Reply: tutor.Reply{Assessment: "correct", Feedback: "Yes."}})
+	model.application.state.Turns = append(model.application.state.Turns, sessionstore.Turn{Topic: model.application.state.Topic, Action: "answer", Reply: tutor.Reply{Assessment: "correct", Feedback: "Yes."}})
 	model.application.state.Quiz.Questions[0].Assessment = "correct"
 	key, _ := nextQuestionKey(model.application.state)
 	citations := model.application.state.Turns[0].Reply.Citations
@@ -121,7 +121,7 @@ func TestTheFooterNamesWhichPrefetchIsRunning(t *testing.T) {
 func TestAFinishedQuestionTurnPrefetchesTheNextQuestionAndShowsItsIndicator(t *testing.T) {
 	model := quizPrefetchFixture(t)
 	var prefetched []string
-	model.prefetcher = func(_ context.Context, _ session.State, key string) error {
+	model.prefetcher = func(_ context.Context, _ sessionstore.State, key string) error {
 		prefetched = append(prefetched, key)
 		return nil
 	}

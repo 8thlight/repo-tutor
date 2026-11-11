@@ -9,13 +9,13 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/x/ansi"
 
-	"repo-tutor/internal/session"
+	sessionstore "repo-tutor/internal/session/store"
 	"repo-tutor/internal/tutor"
 )
 
 func pendingGoalFixture(t *testing.T) interfaceModel {
 	base := interfaceFixture()
-	store, err := session.Open(t.TempDir(), "/work/repowise")
+	store, err := sessionstore.Open(t.TempDir(), "/work/repowise")
 	if err != nil {
 		t.Fatal(err)
 	}

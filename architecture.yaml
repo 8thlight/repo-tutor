@@ -23,8 +23,10 @@ banned_in_core:
 drivers:
   - agent/runner
   - file/writer
+  - lesson/pruner
   - repository/reader
-  - session
+  - session/store
+  - settings/store
   - terminal
 
 components:
@@ -49,9 +51,15 @@ components:
   - name: agent/runner
     position: 3
     depends_on: [tutor]
-  - name: session
+  - name: session/store
     position: 3
-    depends_on: [file/writer, settings/codec, tutor]
-  - name: terminal
+    depends_on: [file/writer, tutor]
+  - name: settings/store
     position: 4
-    depends_on: [about, agent/runner, repository/analyzer, repository/reader, session, settings/codec, tutor]
+    depends_on: [file/writer, session/store, settings/codec]
+  - name: lesson/pruner
+    position: 4
+    depends_on: [session/store]
+  - name: terminal
+    position: 5
+    depends_on: [about, agent/runner, lesson/pruner, repository/analyzer, repository/reader, session/store, settings/codec, settings/store, tutor]

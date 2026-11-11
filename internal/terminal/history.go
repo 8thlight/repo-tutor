@@ -5,7 +5,7 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 
-	"repo-tutor/internal/session"
+	sessionstore "repo-tutor/internal/session/store"
 	"repo-tutor/internal/tutor"
 )
 
@@ -15,7 +15,7 @@ type historyPosition struct {
 	steps int
 }
 
-func realTurns(turns []session.Turn, topic string) []int {
+func realTurns(turns []sessionstore.Turn, topic string) []int {
 	var indexes []int
 	for index, turn := range turns {
 		if turn.Topic == topic && !turn.Resumed && turn.Action != "quiz-retry" {
@@ -25,7 +25,7 @@ func realTurns(turns []session.Turn, topic string) []int {
 	return indexes
 }
 
-func positionOf(turns []session.Turn, viewed int) (historyPosition, bool) {
+func positionOf(turns []sessionstore.Turn, viewed int) (historyPosition, bool) {
 	if viewed < 0 || viewed >= len(turns) {
 		return historyPosition{}, false
 	}
@@ -43,7 +43,7 @@ func positionOf(turns []session.Turn, viewed int) (historyPosition, bool) {
 	return historyPosition{topic, max(1, step), len(indexes)}, true
 }
 
-func studiedTopics(course []string, turns []session.Turn) []string {
+func studiedTopics(course []string, turns []sessionstore.Turn) []string {
 	var studied []string
 	for _, topic := range course {
 		if len(realTurns(turns, topic)) > 0 {
@@ -59,7 +59,7 @@ type historyStep struct {
 	moved    bool
 }
 
-func stepHistory(course []string, state session.State, viewed, direction int) historyStep {
+func stepHistory(course []string, state sessionstore.State, viewed, direction int) historyStep {
 	position, found := positionOf(state.Turns, viewed)
 	if !found {
 		return historyStep{}
@@ -88,7 +88,7 @@ func stepHistory(course []string, state session.State, viewed, direction int) hi
 	return historyStep{target: liveIndex(state, studied[neighbor], target), crossing: true, moved: true}
 }
 
-func liveIndex(state session.State, topic string, index int) int {
+func liveIndex(state sessionstore.State, topic string, index int) int {
 	indexes := realTurns(state.Turns, topic)
 	if topic == state.Topic && len(indexes) > 0 && index == indexes[len(indexes)-1] {
 		return len(state.Turns) - 1

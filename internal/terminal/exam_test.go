@@ -8,7 +8,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/x/ansi"
 
-	"repo-tutor/internal/session"
+	sessionstore "repo-tutor/internal/session/store"
 	"repo-tutor/internal/tutor"
 )
 
@@ -183,7 +183,7 @@ func TestTheExamNamesItselfInTheTitleSidebarAndLeavePrompt(t *testing.T) {
 
 func TestPickingATopicDuringAnExamEndsTheExam(t *testing.T) {
 	model := startedExam(t)
-	model.application.state.Turns = append(model.application.state.Turns, session.Turn{Topic: "pkg05", Action: "lesson", Reply: model.application.state.Turns[0].Reply})
+	model.application.state.Turns = append(model.application.state.Turns, sessionstore.Turn{Topic: "pkg05", Action: "lesson", Reply: model.application.state.Turns[0].Reply})
 	resumed, found := resumeTopic(model.application.state, "pkg05")
 	if !found || resumed.Quiz != nil {
 		t.Fatalf("choosing a topic should leave the exam: found=%v quiz=%v", found, resumed.Quiz)
@@ -259,7 +259,7 @@ func examAfter(t *testing.T, completed int) interfaceModel {
 	}
 	quiz.Active = len(quiz.Questions) - 1
 	model.application.state.Topic, model.application.state.Question, model.application.state.Review = quiz.Plan[quiz.Active], "Open?", false
-	model.application.state.Turns = append(model.application.state.Turns, session.Turn{Topic: tutor.Overview, Action: "lesson", Reply: model.application.state.Turns[0].Reply})
+	model.application.state.Turns = append(model.application.state.Turns, sessionstore.Turn{Topic: tutor.Overview, Action: "lesson", Reply: model.application.state.Turns[0].Reply})
 	model.application.state.Turns[len(model.application.state.Turns)-1].Topic = quiz.Plan[quiz.Active]
 	model.history = len(model.application.state.Turns) - 1
 	return model
@@ -300,7 +300,7 @@ func TestLeavingAnExamBeforeTenQuestionsSavesNothingAndKeepsTheOldResult(t *test
 
 func TestPickingATopicOrStartingALessonAlsoSavesAPartialExam(t *testing.T) {
 	model := examAfter(t, 12)
-	model.application.state.Turns = append(model.application.state.Turns, session.Turn{Topic: "pkg02", Action: "lesson", Reply: model.application.state.Turns[0].Reply})
+	model.application.state.Turns = append(model.application.state.Turns, sessionstore.Turn{Topic: "pkg02", Action: "lesson", Reply: model.application.state.Turns[0].Reply})
 	resumed, found := resumeTopic(model.application.state, "pkg02")
 	if !found || resumed.LastExam == nil || resumed.LastExam.Goal != 12 || resumed.Quiz != nil {
 		t.Fatalf("switching topics should save the partial exam: %+v", resumed.LastExam)

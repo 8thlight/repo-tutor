@@ -8,8 +8,8 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 
-	"repo-tutor/internal/session"
 	"repo-tutor/internal/settings/codec"
+	settingsstore "repo-tutor/internal/settings/store"
 )
 
 const (
@@ -142,10 +142,10 @@ func (model interfaceModel) chooseSetting() (tea.Model, tea.Cmd) {
 		model.notice = settingsReadOnlyNotice
 		return model, nil
 	}
-	changed, err := session.ChangeSettings(model.application.settingsBase, choice.apply)
+	changed, err := settingsstore.ChangeSettings(model.application.settingsBase, choice.apply)
 	model.notice = settingsSavedNotice
 	if err != nil {
-		if errors.Is(err, session.ErrSettingsReadOnly) {
+		if errors.Is(err, settingsstore.ErrSettingsReadOnly) {
 			model.application.settingsStatus.ReadOnly = true
 			model.notice = settingsReadOnlyNotice
 			return model, nil

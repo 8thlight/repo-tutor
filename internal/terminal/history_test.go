@@ -6,14 +6,14 @@ import (
 
 	"github.com/charmbracelet/x/ansi"
 
-	"repo-tutor/internal/session"
+	sessionstore "repo-tutor/internal/session/store"
 	"repo-tutor/internal/tutor"
 )
 
-func historyState() session.State {
+func historyState() sessionstore.State {
 	answer := tutor.Reply{Explanation: "Right.", Feedback: "Correct.", Assessment: "correct"}
 	lesson := tutor.Reply{Explanation: "A lesson.", Question: "Why?", Assessment: "none"}
-	return session.State{Topic: tutor.Overview, Review: true, Turns: []session.Turn{
+	return sessionstore.State{Topic: tutor.Overview, Review: true, Turns: []sessionstore.Turn{
 		{Topic: tutor.Overview, Action: "lesson", Reply: lesson},
 		{Topic: tutor.Overview, Action: "answer", Reply: answer},
 		{Topic: "learning", Action: "lesson", Reply: lesson},

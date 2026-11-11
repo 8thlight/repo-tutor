@@ -14,7 +14,7 @@ import (
 
 	"repo-tutor/internal/about"
 	"repo-tutor/internal/repository/analyzer"
-	"repo-tutor/internal/session"
+	sessionstore "repo-tutor/internal/session/store"
 	"repo-tutor/internal/tutor"
 )
 
@@ -387,7 +387,7 @@ func (model interfaceModel) aboutPlaces() []about.Place {
 	folder := application.store.Directory
 	base := filepath.Dir(folder)
 	return append(places,
-		about.Place{Name: "State directory", Path: base, Holds: "Your settings and one folder per repository. Chosen by " + session.BaseSource(application.settingsBase) + ".", Access: about.ReadWrite},
+		about.Place{Name: "State directory", Path: base, Holds: "Your settings and one folder per repository. Chosen by " + sessionstore.BaseSource(application.settingsBase) + ".", Access: about.ReadWrite},
 		about.Place{Name: "This repository's session folder", Path: folder, Holds: "The saved session, one archived session, cached lessons, and a lock file.", Access: about.ReadWrite},
 		about.Place{Name: "The agent's working folder", Path: filepath.Join(folder, "agent"), Holds: "Where the agent CLI starts. It holds only the reply schema.", Access: about.ReadWrite},
 	)

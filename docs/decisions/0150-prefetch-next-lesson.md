@@ -2,7 +2,7 @@
 category: behavior
 status: accepted
 approval: person
-affects: [session, terminal, tutor]
+affects: [session/store, terminal, tutor]
 partly-supersedes: ['0020']
 partly-superseded-by: ['0380']
 ---

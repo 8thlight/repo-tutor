@@ -4,14 +4,14 @@ import (
 	"context"
 	"testing"
 
-	"repo-tutor/internal/session"
+	sessionstore "repo-tutor/internal/session/store"
 	"repo-tutor/internal/tutor"
 )
 
 func twoTopicFixture() interfaceModel {
 	model := interfaceFixture()
 	core := tutor.Reply{Explanation: "Core owns the calculation.", Question: "Where is the calculation?", Assessment: "none", Citations: model.application.state.Turns[0].Reply.Citations}
-	model.application.state.Turns = append(model.application.state.Turns, session.Turn{Topic: "core", Action: "lesson", Reply: core})
+	model.application.state.Turns = append(model.application.state.Turns, sessionstore.Turn{Topic: "core", Action: "lesson", Reply: core})
 	model.application.state.Topic, model.application.state.Question = "core", core.Question
 	model.application.state.Progress = map[string]tutor.Progress{tutor.Overview: {Lessons: 1}, "core": {Lessons: 1}}
 	model.history = 1
@@ -21,7 +21,7 @@ func twoTopicFixture() interfaceModel {
 func TestPickingAStudiedTopicResumesItWithoutARequest(t *testing.T) {
 	model := twoTopicFixture()
 	calls := 0
-	model.run = func(_ context.Context, state session.State, _, _, _ string) (session.State, error) {
+	model.run = func(_ context.Context, state sessionstore.State, _, _, _ string) (sessionstore.State, error) {
 		calls++
 		return state, nil
 	}
@@ -55,7 +55,7 @@ func TestPickingAStudiedTopicResumesItWithoutARequest(t *testing.T) {
 func TestResumingATopicEndsOtherQuizzesAndProbesAndLandsOnItsLesson(t *testing.T) {
 	model := twoTopicFixture()
 	graded := tutor.Reply{Explanation: "Right.", Feedback: "Correct.", Assessment: "correct", Citations: model.application.state.Turns[0].Reply.Citations}
-	model.application.state.Turns = append(model.application.state.Turns[:1], session.Turn{Topic: tutor.Overview, Action: "answer", Message: "main", Reply: graded}, model.application.state.Turns[1])
+	model.application.state.Turns = append(model.application.state.Turns[:1], sessionstore.Turn{Topic: tutor.Overview, Action: "answer", Message: "main", Reply: graded}, model.application.state.Turns[1])
 	model.application.state.Quiz = &tutor.Quiz{Topic: "core", Goal: 5, Questions: []tutor.QuizQuestion{{Text: "Where?"}}}
 	model.application.state.Probe = &tutor.Probe{Topics: []string{"core"}}
 	back, _ := model.openTopic(tutor.Overview)
@@ -78,7 +78,7 @@ func TestPickingAnUnstudiedTopicStillRequestsItsFirstLesson(t *testing.T) {
 func TestNextTopicOpensAFreshCachedLessonWithoutARequestAndIgnoresAStaleOne(t *testing.T) {
 	for _, fingerprint := range []string{"current", "older"} {
 		model := twoTopicFixture()
-		store, err := session.Open(t.TempDir(), "/work/repowise")
+		store, err := sessionstore.Open(t.TempDir(), "/work/repowise")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -130,7 +130,7 @@ func TestComingBackToATopicYouQuizzedResumesItsLessonNotTheQuizQuestion(t *testi
 	state := model.application.state
 	state.Turns[0].Reply.Question = ""
 	quizReply := tutor.Reply{Explanation: "Try this.", Question: "Which package owns the calculation?", Assessment: "none", Citations: state.Turns[0].Reply.Citations}
-	state.Turns = append([]session.Turn{state.Turns[0], {Topic: tutor.Overview, Action: "quiz", Reply: quizReply}}, state.Turns[1:]...)
+	state.Turns = append([]sessionstore.Turn{state.Turns[0], {Topic: tutor.Overview, Action: "quiz", Reply: quizReply}}, state.Turns[1:]...)
 	state.Topic, state.Question, state.Review = "core", "", false
 	state.Quiz = nil
 	resumed, found := resumeTopic(state, tutor.Overview)
@@ -146,7 +146,7 @@ func TestComingBackToATopicYouQuizzedResumesItsLessonNotTheQuizQuestion(t *testi
 func TestATopicWithOnlyQuizTurnsStartsItsLessonAgain(t *testing.T) {
 	model := twoTopicFixture()
 	state := model.application.state
-	state.Turns = []session.Turn{{Topic: "core", Action: "quiz", Reply: tutor.Reply{Question: "Q?"}}, state.Turns[0]}
+	state.Turns = []sessionstore.Turn{{Topic: "core", Action: "quiz", Reply: tutor.Reply{Question: "Q?"}}, state.Turns[0]}
 	if _, found := resumeTopic(state, "core"); found {
 		t.Fatal("quiz turns alone are not something to resume")
 	}
@@ -155,7 +155,7 @@ func TestATopicWithOnlyQuizTurnsStartsItsLessonAgain(t *testing.T) {
 func TestAnAnsweredQuizTurnIsNotResumedEither(t *testing.T) {
 	model := twoTopicFixture()
 	state := model.application.state
-	state.Turns = append(state.Turns, session.Turn{Topic: tutor.Overview, Action: "answer", Reply: tutor.Reply{Assessment: "correct", Feedback: "Yes."}})
+	state.Turns = append(state.Turns, sessionstore.Turn{Topic: tutor.Overview, Action: "answer", Reply: tutor.Reply{Assessment: "correct", Feedback: "Yes."}})
 	state.Topic = "core"
 	resumed, found := resumeTopic(state, tutor.Overview)
 	if !found || resumed.Turns[len(resumed.Turns)-1].Action != "lesson" || resumed.Review {

@@ -18,11 +18,11 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/colorprofile"
 
-	"repo-tutor/internal/session"
+	sessionstore "repo-tutor/internal/session/store"
 	"repo-tutor/internal/tutor"
 )
 
-type turnRunner func(context.Context, session.State, string, string, string) (session.State, error)
+type turnRunner func(context.Context, sessionstore.State, string, string, string) (sessionstore.State, error)
 
 type turnIntent struct {
 	action  string
@@ -31,7 +31,7 @@ type turnIntent struct {
 }
 
 type turnFinished struct {
-	state session.State
+	state sessionstore.State
 	err   error
 }
 
@@ -95,14 +95,14 @@ func runInterface(ctx context.Context, application application, input io.Reader,
 		running.Lock()
 		running.Unlock()
 	}()
-	runner := func(turnContext context.Context, state session.State, action, message, topic string) (session.State, error) {
+	runner := func(turnContext context.Context, state sessionstore.State, action, message, topic string) (sessionstore.State, error) {
 		running.Lock()
 		defer running.Unlock()
 		if err := runningContext.Err(); err != nil {
-			return session.State{}, err
+			return sessionstore.State{}, err
 		}
 		if err := turnContext.Err(); err != nil {
-			return session.State{}, err
+			return sessionstore.State{}, err
 		}
 		worker := application
 		worker.state = state
@@ -111,7 +111,7 @@ func runInterface(ctx context.Context, application application, input io.Reader,
 	_, noColor := os.LookupEnv("NO_COLOR")
 	model := newInterface(runningContext, application, runner, noColor)
 	if application.prefetch {
-		model.prefetcher = func(prefetchContext context.Context, state session.State, topic string) error {
+		model.prefetcher = func(prefetchContext context.Context, state sessionstore.State, topic string) error {
 			running.Lock()
 			defer running.Unlock()
 			if err := runningContext.Err(); err != nil {

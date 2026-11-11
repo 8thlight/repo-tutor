@@ -1,4 +1,4 @@
-package session_test
+package store_test
 
 import (
 	"fmt"
@@ -8,20 +8,20 @@ import (
 	"strings"
 	"testing"
 
-	"repo-tutor/internal/session"
+	sessionstore "repo-tutor/internal/session/store"
 	"repo-tutor/internal/tutor"
 )
 
 func TestPersistenceLockAndArchive(t *testing.T) {
 	base := t.TempDir()
-	store, err := session.Open(base, "/repository")
+	store, err := sessionstore.Open(base, "/repository")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := session.Open(base, "/repository"); err == nil {
+	if _, err := sessionstore.Open(base, "/repository"); err == nil {
 		t.Fatal("two tutors obtained the same session lock")
 	}
-	state := session.State{Version: session.Version, Repository: "/repository", Agent: "codex", Topic: tutor.Overview, SessionID: "session-id", Question: "Where does it begin?", Progress: map[string]tutor.Progress{tutor.Overview: {Correct: 1}}}
+	state := sessionstore.State{Version: sessionstore.Version, Repository: "/repository", Agent: "codex", Topic: tutor.Overview, SessionID: "session-id", Question: "Where does it begin?", Progress: map[string]tutor.Progress{tutor.Overview: {Correct: 1}}}
 	if err := store.Save(state); err != nil {
 		t.Fatal(err)
 	}
@@ -42,7 +42,7 @@ func TestPersistenceLockAndArchive(t *testing.T) {
 	if err := store.Close(); err != nil {
 		t.Fatal(err)
 	}
-	second, err := session.Open(base, "/repository")
+	second, err := sessionstore.Open(base, "/repository")
 	if err != nil {
 		t.Fatalf("closing the store did not release its lock: %v", err)
 	}
@@ -56,7 +56,7 @@ func TestPersistenceLockAndArchive(t *testing.T) {
 }
 
 func TestLessonIsKeptPerKeyAndReplacedInPlace(t *testing.T) {
-	store, err := session.Open(t.TempDir(), "/repository")
+	store, err := sessionstore.Open(t.TempDir(), "/repository")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -89,36 +89,36 @@ func TestLessonIsKeptPerKeyAndReplacedInPlace(t *testing.T) {
 
 func TestBaseDirectoryPrefersTheFlagThenXDGStateHome(t *testing.T) {
 	t.Setenv("XDG_STATE_HOME", "/state")
-	if base, _ := session.Base("/chosen"); base != "/chosen" {
+	if base, _ := sessionstore.Base("/chosen"); base != "/chosen" {
 		t.Fatalf("an explicit directory should win, got %s", base)
 	}
-	if base, _ := session.Base(""); base != "/state/repo-tutor" {
+	if base, _ := sessionstore.Base(""); base != "/state/repo-tutor" {
 		t.Fatalf("XDG_STATE_HOME should hold a repo-tutor folder, got %s", base)
 	}
 }
 
 func TestBaseSourceNamesWhatChoseTheDirectory(t *testing.T) {
 	t.Setenv("XDG_STATE_HOME", "/state")
-	if source := session.BaseSource("/chosen"); source != "--state-dir" {
+	if source := sessionstore.BaseSource("/chosen"); source != "--state-dir" {
 		t.Fatalf("a flag should be named, got %s", source)
 	}
-	if source := session.BaseSource(""); source != "XDG_STATE_HOME" {
+	if source := sessionstore.BaseSource(""); source != "XDG_STATE_HOME" {
 		t.Fatalf("the environment should be named, got %s", source)
 	}
 	t.Setenv("XDG_STATE_HOME", "")
-	if source := session.BaseSource(""); source != "the user configuration directory" {
+	if source := sessionstore.BaseSource(""); source != "the user configuration directory" {
 		t.Fatalf("the default should be named, got %s", source)
 	}
 }
 
 func TestNewerSessionIsLeftAloneAndTheMessageSaysToUpdate(t *testing.T) {
-	store, err := session.Open(t.TempDir(), "/repository")
+	store, err := sessionstore.Open(t.TempDir(), "/repository")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer store.Close()
 	path := filepath.Join(store.Directory, "session.json")
-	newer := []byte(fmt.Sprintf(`{"version": %d, "unknown": {"shape": [1, 2]}}`, session.Version+1))
+	newer := []byte(fmt.Sprintf(`{"version": %d, "unknown": {"shape": [1, 2]}}`, sessionstore.Version+1))
 	if err := os.WriteFile(path, newer, 0600); err != nil {
 		t.Fatal(err)
 	}
@@ -126,7 +126,7 @@ func TestNewerSessionIsLeftAloneAndTheMessageSaysToUpdate(t *testing.T) {
 	if found || err == nil {
 		t.Fatalf("a newer session must not load: %v", err)
 	}
-	for _, expected := range []string{"newer repo-tutor", fmt.Sprintf("version %d", session.Version+1), fmt.Sprintf("reads %d", session.Version), "update", "--new"} {
+	for _, expected := range []string{"newer repo-tutor", fmt.Sprintf("version %d", sessionstore.Version+1), fmt.Sprintf("reads %d", sessionstore.Version), "update", "--new"} {
 		if !strings.Contains(err.Error(), expected) {
 			t.Fatalf("the message should say %q: %v", expected, err)
 		}
@@ -141,10 +141,10 @@ func TestNewerSessionIsLeftAloneAndTheMessageSaysToUpdate(t *testing.T) {
 
 func TestOlderAndDamagedSessionsKeepTheMessageToStartAgain(t *testing.T) {
 	for name, content := range map[string]string{
-		"older":   fmt.Sprintf(`{"version": %d, "repository": "/r", "topic": "t", "agent": "codex"}`, session.Version-1),
+		"older":   fmt.Sprintf(`{"version": %d, "repository": "/r", "topic": "t", "agent": "codex"}`, sessionstore.Version-1),
 		"damaged": `{"version": `,
 	} {
-		store, err := session.Open(t.TempDir(), "/repository")
+		store, err := sessionstore.Open(t.TempDir(), "/repository")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -156,5 +156,29 @@ func TestOlderAndDamagedSessionsKeepTheMessageToStartAgain(t *testing.T) {
 		if err == nil || !strings.Contains(err.Error(), "use --new to archive it and start again") || strings.Contains(err.Error(), "newer") {
 			t.Fatalf("%s session should keep the old message: %v", name, err)
 		}
+	}
+}
+
+func TestLessonFilesListPathAndGoalKeyAndSkipShortNames(t *testing.T) {
+	store, err := sessionstore.Open(t.TempDir(), "/repository")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+	key := "0123456789abcdef-core"
+	if err := store.SaveLesson(key, []byte("lesson")); err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"lesson-short.md", "session.json", "lesson-0123456789abcdef.txt"} {
+		if err := os.WriteFile(filepath.Join(store.Directory, name), []byte("x"), 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	want := []sessionstore.LessonFile{{
+		Path:    filepath.Join(store.Directory, "lesson-"+key+".md"),
+		GoalKey: "0123456789abcdef",
+	}}
+	if got := store.LessonFiles(); !reflect.DeepEqual(got, want) {
+		t.Fatalf("got %+v, want %+v", got, want)
 	}
 }

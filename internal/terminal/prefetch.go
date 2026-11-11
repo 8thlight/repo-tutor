@@ -8,13 +8,13 @@ import (
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/ansi"
 
-	"repo-tutor/internal/session"
+	sessionstore "repo-tutor/internal/session/store"
 	"repo-tutor/internal/tutor"
 )
 
 const prefetchDelay = 3 * time.Second
 
-type lessonPrefetcher func(context.Context, session.State, string) error
+type lessonPrefetcher func(context.Context, sessionstore.State, string) error
 
 type prefetchDue struct{}
 

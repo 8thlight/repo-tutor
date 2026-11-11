@@ -13,7 +13,7 @@ import (
 	"github.com/charmbracelet/x/ansi"
 
 	"repo-tutor/internal/repository/analyzer"
-	"repo-tutor/internal/session"
+	sessionstore "repo-tutor/internal/session/store"
 	"repo-tutor/internal/settings/codec"
 	"repo-tutor/internal/tutor"
 )
@@ -41,9 +41,11 @@ func interfaceFixture() interfaceModel {
 	})
 	snapshot.Root = "/work/repowise"
 	reply := tutor.Reply{Explanation: "The **CLI** is the front door to the repository. It hands work to the `core` package.\n\n- Start with the entry point.\n- Follow one operation into the core.", Question: "Which package would you inspect to change a calculation?", Assessment: "none", Citations: []analyzer.Location{{Path: "main.go", Line: 2}}}
-	state := session.State{Version: session.Version, Repository: snapshot.Root, Agent: "codex", Goal: "Understand the architecture and make a small change.", Topic: tutor.Overview, Question: reply.Question, Progress: map[string]tutor.Progress{tutor.Overview: {Lessons: 1}}, Turns: []session.Turn{{Topic: tutor.Overview, Action: "lesson", Reply: reply}}}
+	state := sessionstore.State{Version: sessionstore.Version, Repository: snapshot.Root, Agent: "codex", Goal: "Understand the architecture and make a small change.", Topic: tutor.Overview, Question: reply.Question, Progress: map[string]tutor.Progress{tutor.Overview: {Lessons: 1}}, Turns: []sessionstore.Turn{{Topic: tutor.Overview, Action: "lesson", Reply: reply}}}
 	application := application{snapshot: snapshot, course: tutor.Course(snapshot), state: state, timeout: 3 * time.Minute, settings: codec.Defaults(), settingsBase: testSettingsBase}
-	return newInterface(context.Background(), application, func(context.Context, session.State, string, string, string) (session.State, error) { return state, nil }, true)
+	return newInterface(context.Background(), application, func(context.Context, sessionstore.State, string, string, string) (sessionstore.State, error) {
+		return state, nil
+	}, true)
 }
 
 func press(model interfaceModel, code rune, modifier tea.KeyMod) (interfaceModel, tea.Cmd) {
@@ -91,9 +93,9 @@ func TestInterfaceFitsTerminalAndKeepsExitDiscoverable(t *testing.T) {
 func TestNavigationRetainsDraftAndDoesNotCallAgent(t *testing.T) {
 	model := interfaceFixture()
 	calls := 0
-	model.run = func(context.Context, session.State, string, string, string) (session.State, error) {
+	model.run = func(context.Context, sessionstore.State, string, string, string) (sessionstore.State, error) {
 		calls++
-		return session.State{}, nil
+		return sessionstore.State{}, nil
 	}
 	model.input.SetValue("My unfinished answer")
 	model, _ = press(model, 's', tea.ModCtrl)
@@ -136,7 +138,7 @@ func TestGradedAnswerStaysWithItsQuestionAndFeedback(t *testing.T) {
 	model := interfaceFixture()
 	previousQuestion := model.application.state.Question
 	reply := tutor.Reply{Explanation: "Next idea: how a CLI command is wired up.", Assessment: "correct", Feedback: "Core is the shared engine.", Question: "Where are commands registered?"}
-	model.application.state.Turns = append(model.application.state.Turns, session.Turn{Topic: model.application.state.Topic, Action: "answer", Message: "core", Reply: reply})
+	model.application.state.Turns = append(model.application.state.Turns, sessionstore.Turn{Topic: model.application.state.Topic, Action: "answer", Message: "core", Reply: reply})
 	model.application.state.Question = reply.Question
 	model.history = 1
 	content := ansi.Strip(model.lessonContent())
@@ -152,7 +154,7 @@ func TestGradedAnswerStaysWithItsQuestionAndFeedback(t *testing.T) {
 	if !strings.HasPrefix(composer, "────") || !strings.Contains(composer, "Enter or Ctrl+N continue") || strings.Contains(composer, reply.Question) || strings.Contains(content, reply.Explanation) {
 		t.Fatalf("review must stop before the next idea or question:\n%s\n%s", content, composer)
 	}
-	model.application.state.Turns = append(model.application.state.Turns, session.Turn{Topic: "another", Action: "lesson", Reply: tutor.Reply{Assessment: "none"}})
+	model.application.state.Turns = append(model.application.state.Turns, sessionstore.Turn{Topic: "another", Action: "lesson", Reply: tutor.Reply{Assessment: "none"}})
 	content = ansi.Strip(model.lessonContent())
 	if strings.Contains(content, reply.Question) || !strings.Contains(content, reply.Feedback) {
 		t.Fatalf("historical review should keep feedback without mixing in the next question:\n%s", content)
@@ -171,7 +173,7 @@ func TestGradedAnswerStaysWithItsQuestionAndFeedback(t *testing.T) {
 
 func TestPlainFeedbackStopsBeforeNextIdea(t *testing.T) {
 	var output bytes.Buffer
-	application := application{output: &output, state: session.State{Review: true}}
+	application := application{output: &output, state: sessionstore.State{Review: true}}
 	application.show(tutor.Reply{Explanation: "Next lesson content.", Assessment: "partial", Feedback: "Review the shared engine.", Question: "What calls it?"})
 	content := output.String()
 	position := -1
@@ -192,10 +194,10 @@ func TestSuccessfulTurnAcceptsSavedStateAndClearsDraft(t *testing.T) {
 	previous := model.application.state
 	updated := previous
 	reply := tutor.Reply{Explanation: "The calculation lives in core/value.go:2.", Assessment: "correct", Feedback: "You found the shared value type.", Question: "Who uses it?", Citations: []analyzer.Location{{Path: "core/value.go", Line: 2}}}
-	updated.Turns = append(append([]session.Turn(nil), previous.Turns...), session.Turn{Topic: previous.Topic, Action: "answer", Message: "The core package", Reply: reply})
+	updated.Turns = append(append([]sessionstore.Turn(nil), previous.Turns...), sessionstore.Turn{Topic: previous.Topic, Action: "answer", Message: "The core package", Reply: reply})
 	updated.Question = reply.Question
 	updated.Progress = tutor.Record(previous.Progress, previous.Topic, "answer", reply)
-	model.run = func(context.Context, session.State, string, string, string) (session.State, error) {
+	model.run = func(context.Context, sessionstore.State, string, string, string) (sessionstore.State, error) {
 		return updated, nil
 	}
 	model.input.SetValue("The core package")
@@ -231,7 +233,7 @@ func TestFailedTurnKeepsDraftAndRetryUsesSameIntent(t *testing.T) {
 	model := interfaceFixture()
 	model.input.SetValue("The core package")
 	calls := 0
-	model.run = func(_ context.Context, state session.State, action, message, topic string) (session.State, error) {
+	model.run = func(_ context.Context, state sessionstore.State, action, message, topic string) (sessionstore.State, error) {
 		calls++
 		if action != "answer" || message != "The core package" || topic != tutor.Overview {
 			t.Fatal("retry changed the pending answer")
@@ -264,8 +266,8 @@ func TestCancellationAndFirstLessonFailureAreRecoverable(t *testing.T) {
 	model := interfaceFixture()
 	model.application.state.Turns = nil
 	model.history = -1
-	model.run = func(ctx context.Context, _ session.State, _, _, _ string) (session.State, error) {
-		return session.State{}, ctx.Err()
+	model.run = func(ctx context.Context, _ sessionstore.State, _, _, _ string) (sessionstore.State, error) {
+		return sessionstore.State{}, ctx.Err()
 	}
 	started, command := model.begin(turnIntent{"lesson", "start", tutor.Overview})
 	model = started.(interfaceModel)

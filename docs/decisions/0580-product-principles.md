@@ -2,7 +2,7 @@
 category: behavior
 status: superseded
 approval: person
-affects: [repository/analyzer, tutor, agent/runner, session, terminal]
+affects: [repository/analyzer, tutor, agent/runner, session/store, terminal]
 superseded-by: ['0610']
 builds-on: ['0010', '0030', '0040', '0340', '0370', '0460', '0500', '0520']
 ---

@@ -17,9 +17,11 @@ import (
 
 	"repo-tutor/internal/about"
 	"repo-tutor/internal/agent/runner"
+	"repo-tutor/internal/lesson/pruner"
 	"repo-tutor/internal/repository/analyzer"
 	"repo-tutor/internal/repository/reader"
-	"repo-tutor/internal/session"
+	sessionstore "repo-tutor/internal/session/store"
+	settingsstore "repo-tutor/internal/settings/store"
 	"repo-tutor/internal/tutor"
 )
 
@@ -232,12 +234,12 @@ func study(ctx context.Context, arguments []string, input io.Reader, output, dia
 			return err
 		}
 	}
-	store, err := session.Open(*stateDirectory, snapshot.Root)
+	store, err := sessionstore.Open(*stateDirectory, snapshot.Root)
 	if err != nil {
 		return err
 	}
 	defer store.Close()
-	var state session.State
+	var state sessionstore.State
 	found := false
 	if !*fresh {
 		state, found, err = store.Load()
@@ -283,7 +285,7 @@ func study(ctx context.Context, arguments []string, input io.Reader, output, dia
 		if learningGoal == "" {
 			learningGoal = tutor.DefaultGoal
 		}
-		state = session.State{Version: session.Version, Repository: snapshot.Root, Fingerprint: snapshot.Fingerprint, Agent: chosen, Model: *model, Goal: learningGoal, GoalChosen: *goal != "", Topic: tutor.Overview, Progress: map[string]tutor.Progress{}}
+		state = sessionstore.State{Version: sessionstore.Version, Repository: snapshot.Root, Fingerprint: snapshot.Fingerprint, Agent: chosen, Model: *model, Goal: learningGoal, GoalChosen: *goal != "", Topic: tutor.Overview, Progress: map[string]tutor.Progress{}}
 		for topic, progress := range carriedProgress {
 			state.Progress[topic] = progress
 		}
@@ -291,8 +293,8 @@ func study(ctx context.Context, arguments []string, input io.Reader, output, dia
 			return err
 		}
 	}
-	store.PruneLessons(tutor.GoalKey(state.Goal), lessonRetention, time.Now())
-	loaded, loadedStatus, err := session.LoadSettings(*stateDirectory)
+	pruner.Prune(store, tutor.GoalKey(state.Goal), lessonRetention, time.Now())
+	loaded, loadedStatus, err := settingsstore.LoadSettings(*stateDirectory)
 	if err != nil {
 		return err
 	}

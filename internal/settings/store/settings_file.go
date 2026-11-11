@@ -1,4 +1,4 @@
-package session
+package store
 
 import (
 	"errors"
@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"repo-tutor/internal/file/writer"
+	sessionstore "repo-tutor/internal/session/store"
 	"repo-tutor/internal/settings/codec"
 )
 
@@ -15,7 +16,7 @@ const settingsName = "settings.json"
 var ErrSettingsReadOnly = errors.New("settings come from a newer repo-tutor and are read-only")
 
 func LoadSettings(base string) (codec.Settings, codec.Status, error) {
-	base, err := Base(base)
+	base, err := sessionstore.Base(base)
 	if err != nil {
 		return codec.Defaults(), codec.Status{}, err
 	}
@@ -31,7 +32,7 @@ func LoadSettings(base string) (codec.Settings, codec.Status, error) {
 }
 
 func ChangeSettings(base string, change func(codec.Settings) codec.Settings) (codec.Settings, error) {
-	base, err := Base(base)
+	base, err := sessionstore.Base(base)
 	if err != nil {
 		return codec.Defaults(), err
 	}

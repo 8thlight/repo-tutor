@@ -9,7 +9,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/x/ansi"
 
-	"repo-tutor/internal/session"
+	sessionstore "repo-tutor/internal/session/store"
 	"repo-tutor/internal/tutor"
 )
 
@@ -18,7 +18,7 @@ func prefetchFixture(t *testing.T) (interfaceModel, string) {
 	model := twoTopicFixture()
 	model.application.state.Turns[1].Topic, model.application.state.Topic = "learning", "learning"
 	model.application.state.Progress = map[string]tutor.Progress{tutor.Overview: {Lessons: 1}, "learning": {Lessons: 1}}
-	store, err := session.Open(t.TempDir(), "/work/repowise")
+	store, err := sessionstore.Open(t.TempDir(), "/work/repowise")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -52,7 +52,7 @@ func runPrefetchCommand(t *testing.T, command tea.Cmd) prefetchFinished {
 func TestPrefetchStartsAfterATurnShowsAnIndicatorAndClearsWhenDone(t *testing.T) {
 	model, topic := prefetchFixture(t)
 	var prefetched []string
-	model.prefetcher = func(_ context.Context, _ session.State, name string) error {
+	model.prefetcher = func(_ context.Context, _ sessionstore.State, name string) error {
 		prefetched = append(prefetched, name)
 		return nil
 	}
@@ -81,7 +81,7 @@ func TestPrefetchStartsAfterATurnShowsAnIndicatorAndClearsWhenDone(t *testing.T)
 func TestForegroundTurnCancelsAPrefetchAndItsResultIsIgnored(t *testing.T) {
 	model, _ := prefetchFixture(t)
 	cancelled := make(chan struct{})
-	model.prefetcher = func(prefetchContext context.Context, _ session.State, _ string) error {
+	model.prefetcher = func(prefetchContext context.Context, _ sessionstore.State, _ string) error {
 		<-prefetchContext.Done()
 		close(cancelled)
 		return prefetchContext.Err()
@@ -105,7 +105,7 @@ func TestForegroundTurnCancelsAPrefetchAndItsResultIsIgnored(t *testing.T) {
 
 func TestPrefetchSkipsStudiedCachedAndFailedTopicsAndNeverRetriesAFailure(t *testing.T) {
 	model, topic := prefetchFixture(t)
-	model.prefetcher = func(context.Context, session.State, string) error { return errors.New("agent unavailable") }
+	model.prefetcher = func(context.Context, sessionstore.State, string) error { return errors.New("agent unavailable") }
 	if name, wanted := model.prefetchTarget(); !wanted || name != topic {
 		t.Fatalf("expected the next topic %s, got %q %v", topic, name, wanted)
 	}
@@ -117,7 +117,7 @@ func TestPrefetchSkipsStudiedCachedAndFailedTopicsAndNeverRetriesAFailure(t *tes
 	}
 
 	model, topic = prefetchFixture(t)
-	model.prefetcher = func(context.Context, session.State, string) error { return nil }
+	model.prefetcher = func(context.Context, sessionstore.State, string) error { return nil }
 	reply := tutor.Reply{Explanation: "Cached.", Question: "Q?", Assessment: "none", Citations: model.application.state.Turns[0].Reply.Citations}
 	lesson := tutor.SavedLesson{Fingerprint: "current", Goal: tutor.GoalKey(model.application.state.Goal), Topic: topic, Reply: reply}
 	if err := model.application.store.SaveLesson(tutor.LessonKey(model.application.state.Goal, topic), tutor.EncodeLesson(lesson)); err != nil {
@@ -133,7 +133,7 @@ func TestPrefetchSkipsStudiedCachedAndFailedTopicsAndNeverRetriesAFailure(t *tes
 	if _, wanted := model.prefetchTarget(); !wanted {
 		t.Fatal("a cached lesson for changed source should be prefetched again")
 	}
-	model.application.state.Turns = append(model.application.state.Turns, session.Turn{Topic: topic, Action: "lesson", Reply: reply})
+	model.application.state.Turns = append(model.application.state.Turns, sessionstore.Turn{Topic: topic, Action: "lesson", Reply: reply})
 	if _, wanted := model.prefetchTarget(); wanted {
 		t.Fatal("a studied topic needs no prefetch")
 	}
@@ -147,7 +147,7 @@ func TestPrefetchSkipsStudiedCachedAndFailedTopicsAndNeverRetriesAFailure(t *tes
 func TestForegroundRequestForTheSameTopicWaitsForThePrefetchInsteadOfCancellingIt(t *testing.T) {
 	model, topic := prefetchFixture(t)
 	contexts := make(chan context.Context, 1)
-	model.prefetcher = func(ctx context.Context, _ session.State, _ string) error {
+	model.prefetcher = func(ctx context.Context, _ sessionstore.State, _ string) error {
 		contexts <- ctx
 		<-ctx.Done()
 		return ctx.Err()

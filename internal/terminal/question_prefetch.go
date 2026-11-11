@@ -6,7 +6,7 @@ import (
 	"strings"
 	"sync"
 
-	"repo-tutor/internal/session"
+	sessionstore "repo-tutor/internal/session/store"
 	"repo-tutor/internal/tutor"
 )
 
@@ -20,7 +20,7 @@ func isQuestionKey(key string) bool {
 	return strings.HasPrefix(key, questionPrefix)
 }
 
-func nextQuestionKey(state session.State) (string, bool) {
+func nextQuestionKey(state sessionstore.State) (string, bool) {
 	quiz := state.Quiz
 	if quiz == nil || !quiz.Covers(state.Topic) || quiz.Finished() || len(quiz.Questions) >= quiz.Goal {
 		return "", false

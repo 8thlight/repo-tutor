@@ -9,7 +9,9 @@ The binary scans a repository, orders topics, and runs tutor turns through an ag
 | `internal/tutor` | Order topics, select source excerpts, build turn prompts, validate structured replies, and update progress with pure functions |
 | `internal/agent/runner` | Run Claude or Codex headless, consume their event streams, and normalize completed replies |
 | `internal/file/writer` | Write one file in a directory atomically: a temporary file, a flush to disk, and a rename over the target |
-| `internal/session` | Lock, load, archive, and atomically save one session per repository, and load and change the user settings file |
+| `internal/session/store` | Lock, load, archive, and atomically save one session per repository, keep its lesson files, and resolve the state directory |
+| `internal/settings/store` | Load and change the user settings file in the state directory, and move an unreadable file aside |
+| `internal/lesson/pruner` | Remove old cached lessons of other goals from a session folder |
 | `internal/settings/codec` | The settings value, its defaults, and a decoder and encoder with no input or output |
 | `internal/about` | Build facts, the splash, and the third-party license notices |
 | `internal/terminal` | Run the Bubble Tea workspace or the plain loop, parse plain-mode commands, display lessons and quizzes, and browse sources |
