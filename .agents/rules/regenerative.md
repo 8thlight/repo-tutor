@@ -82,6 +82,21 @@ exceptions. Spell words out or use a common short form such as `config`. Do not 
 - State what each component reads and writes, in the plan and outside it. The current tables are in
   `docs/architecture/components.md`. Stay inside the declared set.
 
+## Approvals
+
+When the project has `.threnos/approvals.yaml`, it holds an approval for each protected unit: a component's contract
+folder, `acceptance/`, `architecture.yaml`, and the model folder. A unit that changes after its approval fails the
+records check until a new approval covers it.
+
+- Record an approval only with `nix run .#approve -- <gate> [unit] --approver <who>`, which writes the unit's hash.
+  Never edit the ledger by hand.
+- Approve a gate only when `approvals.<gate>` in `.threnos/config.toml`, or in `.threnos/local.toml` for this person,
+  lists `agent`. Otherwise stop and ask a person.
+- Never approve your own work. An agent approver names its harness and session, and its session must differ from the
+  author's. Do not invent a session identifier or reuse the author's.
+- An approval does not widen what you may decide alone. A new privacy, security, ownership, destructive, stored-format,
+  or hash-compatibility consequence still goes to a person.
+
 ## Where files go
 
 Put throwaway notes, drafts, and your own working files in `.scratch/`. Put generated plans, documents, and review
