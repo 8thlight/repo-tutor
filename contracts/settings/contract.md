@@ -38,7 +38,7 @@ The settings component turns the bytes of `settings.json` into the learner's set
 
 **Other fields.** A field the contract does not name is ignored, in the version the tool reads and in a newer one.
 
-**An unreadable file.** When the bytes are not one JSON object, the result is the defaults with `Unreadable` set and `ReadOnly` clear. That covers an empty file, a truncated file, text that is not JSON, an array, a bare number, and text after the object.
+**An unreadable file.** When the bytes are not one JSON object, the result is the defaults with `Unreadable` set and `ReadOnly` clear. That covers an empty file, a truncated file, text that is not JSON, an array, a bare number, and text after the object. It also covers a known field of the wrong type, such as `{"quiz_length": "5"}`, `{"quiz_length": 5.0}`, `{"tab_style": 3}`, or `{"version": "1"}`. One such field makes the whole file unreadable, and the other fields are not kept. The tool still starts, and the driver shows the notice, as 0220 says. A value of the right type that is not offered is a different case, and it keeps the rule above.
 
 **The version.** A file with no `version`, or a `version` of 1 or less, is read and may be written over. A file whose `version` is greater than 1 is read for the fields above, with the same per-field fallbacks, and has `ReadOnly` set. The tool never writes over it.
 
@@ -55,6 +55,7 @@ The settings component turns the bytes of `settings.json` into the learner's set
 | -- | -- |
 | A bad value for one setting gives that setting's default and keeps the rest, instead of rejecting the file. 0220 decides this | hard |
 | An unreadable file gives the defaults and a flag, and the driver shows the notice. 0220 decides this | hard |
+| A known field of the wrong type makes the file unreadable, and the tool still starts. A person chose this over a boot failure, which would lock the learner out over a typo | hard |
 | A file from a newer version is read and marked read-only, so a downgrade never loses fields | hard |
 | Values and field names are matched exactly, with no change of case and no trimming | cheap |
 | A repeated field takes the last value, because JSON does not define it | cheap |
@@ -75,7 +76,6 @@ These hold for every input the contract tests use.
 
 ## Not covered
 
-- A field of the wrong type, such as `{"quiz_length": "5"}` or `{"version": "1"}`. The current decoder treats the whole file as unreadable. A person chose to leave this open.
 - The choice lists as shared package variables. A caller that changes one changes it for every later reader. A person chose to leave this open.
 - A byte order mark before the object. The current decoder treats it as unreadable. No decision exists.
 - Values passed to `Encode` that are not choices. The caller gives offered values, and the file written for others is not defined.
@@ -112,3 +112,4 @@ Each row names a plausible wrong implementation and the tests that fail it. The 
 | Writes compact JSON, indents with four spaces, puts the version last, or leaves out the final newline | The by-hand layout test |
 | Reads field names without regard to case | `a-field-name-is-matched-exactly` and `an-upper-case-field-name-is-an-unknown-field` cases |
 | Takes the first value of a repeated field | The two repeated-field cases |
+| One wrong-typed field gives that field's default and keeps the rest | `one-wrong-type-discards-the-other-fields` and the four wrong-type cases |

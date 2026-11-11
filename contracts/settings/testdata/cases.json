@@ -1175,6 +1175,96 @@
           "read_only": false
         }
       }
+    },
+    {
+      "name": "a-quoted-number-makes-the-file-unreadable",
+      "source": "docs/decisions/0220-settings-file.md",
+      "input": "{\"quiz_length\":\"5\"}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": true,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "a-fractional-number-makes-the-file-unreadable",
+      "source": "docs/decisions/0220-settings-file.md",
+      "input": "{\"quiz_length\":5.0}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": true,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "a-number-for-a-text-setting-makes-the-file-unreadable",
+      "source": "docs/decisions/0220-settings-file.md",
+      "input": "{\"tab_style\":3}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": true,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "a-quoted-version-makes-the-file-unreadable",
+      "source": "docs/decisions/0220-settings-file.md",
+      "input": "{\"version\":\"1\"}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": true,
+          "read_only": false
+        }
+      }
+    },
+    {
+      "name": "one-wrong-type-discards-the-other-fields",
+      "source": "docs/decisions/0220-settings-file.md",
+      "input": "{\"tab_style\":\"block\",\"quiz_length\":\"5\"}",
+      "expect": {
+        "values": {
+          "tab_style": "none",
+          "markdown_opens_rendered": true,
+          "highlight": "green",
+          "quiz_length": 5,
+          "exam_length": 10
+        },
+        "status": {
+          "unreadable": true,
+          "read_only": false
+        }
+      }
     }
   ],
   "encode": [
