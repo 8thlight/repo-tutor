@@ -1,0 +1,33 @@
+# Managed by approve.py. Each entry records one approval of one unit, with a hash of its content.
+approvals:
+- gate: contracts
+  unit: contracts/settings
+  hash: sha256:1c7b91b691893ddd249aae011826862ba155f4fadfb2ee92d7f5d21b139184ed
+  approver:
+    kind: person
+    name: dnawara
+  date: 2026-11-10
+- gate: acceptance
+  unit: acceptance
+  hash: sha256:f68e33024b871321344a2ca58ba8846a0cd55f33f8b9a5abe9bcf21d7a6047ef
+  approver:
+    kind: agent
+    harness: claude
+    session: subagent-4258FE0D-0F13-4F0A-A88F-A6B577512F1D
+  author:
+    kind: agent
+    harness: claude
+    session: main-a4b765a7
+  date: 2026-11-10
+- gate: architecture
+  unit: architecture.yaml
+  hash: sha256:d13246c45cceed9de1c023a49d8162a86d29938b3a490b5d993ff1f7ddf6c335
+  approver:
+    kind: agent
+    harness: claude
+    session: subagent-4258FE0D-0F13-4F0A-A88F-A6B577512F1D
+  author:
+    kind: agent
+    harness: claude
+    session: main-a4b765a7
+  date: 2026-11-10

@@ -3,6 +3,14 @@ regenerative = "on"
 repository_context = "off"
 mutation_cadence = "local"
 
+[approvals]
+principles = ["person", "agent"]
+contracts = ["person", "agent"]
+acceptance = ["person", "agent"]
+architecture = ["person", "agent"]
+model = ["person", "agent"]
+build = ["person"]
+
 [seeds]
 skip = [
   ".github/workflows/mutate.yml",
