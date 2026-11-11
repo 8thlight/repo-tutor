@@ -13,7 +13,7 @@ import (
 	"repo-tutor/internal/agent"
 	"repo-tutor/internal/repository/analyzer"
 	"repo-tutor/internal/session"
-	"repo-tutor/internal/settings"
+	"repo-tutor/internal/settings/codec"
 	"repo-tutor/internal/tutor"
 )
 
@@ -27,8 +27,8 @@ type application struct {
 	timeout     time.Duration
 	prefetch    bool
 
-	settings       settings.Settings
-	settingsStatus settings.Status
+	settings       codec.Settings
+	settingsStatus codec.Status
 	settingsBase   string
 
 	questionStash *questionStash

@@ -2,7 +2,7 @@
 category: ux
 status: superseded
 approval: person
-affects: [settings, terminal]
+affects: [settings/codec, terminal]
 superseded-by: ['0500']
 ---
 

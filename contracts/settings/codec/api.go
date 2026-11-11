@@ -1,4 +1,4 @@
-package settings
+package codec
 
 type Values struct {
 	TabStyle              string

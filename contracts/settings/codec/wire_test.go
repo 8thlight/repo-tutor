@@ -1,8 +1,8 @@
-package settings_test
+package codec_test
 
 import (
-	contract "repo-tutor/contracts/settings"
-	implementation "repo-tutor/internal/settings"
+	contract "repo-tutor/contracts/settings/codec"
+	implementation "repo-tutor/internal/settings/codec"
 )
 
 type adapter struct{}

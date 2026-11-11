@@ -9,7 +9,7 @@ These components are pure functions over values. They read and write nothing out
 | Component | Reads | Writes | Data access |
 | -- | -- | -- | -- |
 | `repository/analyzer` | Nothing | Nothing | Creates the snapshot from a source. Holds the language rules and the two file predicates |
-| `settings` | Nothing | Nothing | Creates a settings value from defaults or from bytes, and encodes one to bytes |
+| `settings/codec` | Nothing | Nothing | Creates a settings value from defaults or from bytes, and encodes one to bytes |
 | `tutor` | Nothing | Nothing | Creates topics, prompts, and validated replies from a snapshot and progress. Returns progress as a new value |
 | `about` | Embedded splash and notices | Nothing | Creates the build text from build facts. See the note below |
 

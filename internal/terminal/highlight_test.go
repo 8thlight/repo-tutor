@@ -6,7 +6,7 @@ import (
 
 	"charm.land/lipgloss/v2"
 
-	"repo-tutor/internal/settings"
+	"repo-tutor/internal/settings/codec"
 )
 
 func TestEverySettingsHighlightHasATerminalColor(t *testing.T) {
@@ -14,8 +14,8 @@ func TestEverySettingsHighlightHasATerminalColor(t *testing.T) {
 	for _, choice := range highlightColors {
 		ids = append(ids, choice.id)
 	}
-	if !slices.Equal(ids, settings.Highlights) {
-		t.Fatalf("the highlight table and the settings values must list the same colors in the same order: %v vs %v", ids, settings.Highlights)
+	if !slices.Equal(ids, codec.Highlights) {
+		t.Fatalf("the highlight table and the settings values must list the same colors in the same order: %v vs %v", ids, codec.Highlights)
 	}
 }
 

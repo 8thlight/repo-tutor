@@ -2,7 +2,7 @@
 category: behavior
 status: accepted
 approval: person
-affects: [settings, terminal, tutor]
+affects: [settings/codec, terminal, tutor]
 partly-supersedes: ['0030', '0140', '0230']
 partly-superseded-by: ['0320', '0360']
 ---

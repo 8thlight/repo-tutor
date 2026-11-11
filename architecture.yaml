@@ -33,7 +33,7 @@ components:
   - name: repository/analyzer
     position: 1
     depends_on: []
-  - name: settings
+  - name: settings/codec
     position: 1
     depends_on: []
   - name: repository/reader
@@ -47,7 +47,7 @@ components:
     depends_on: [tutor]
   - name: session
     position: 3
-    depends_on: [settings, tutor]
+    depends_on: [settings/codec, tutor]
   - name: terminal
     position: 4
-    depends_on: [about, agent, repository/analyzer, repository/reader, session, settings, tutor]
+    depends_on: [about, agent, repository/analyzer, repository/reader, session, settings/codec, tutor]

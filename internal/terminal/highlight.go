@@ -5,7 +5,7 @@ import (
 
 	"charm.land/lipgloss/v2"
 
-	"repo-tutor/internal/settings"
+	"repo-tutor/internal/settings/codec"
 )
 
 const (
@@ -19,9 +19,9 @@ type highlightColor struct {
 }
 
 var highlightColors = []highlightColor{
-	{settings.HighlightNone, "None", noHighlight},
+	{codec.HighlightNone, "None", noHighlight},
 	{"red", "Red", 1},
-	{settings.HighlightGreen, "Green", 2},
+	{codec.HighlightGreen, "Green", 2},
 	{"yellow", "Yellow", ansiYellow},
 	{"blue", "Blue", 4},
 	{"magenta", "Magenta", 5},
@@ -34,7 +34,7 @@ func highlightByID(id string) highlightColor {
 			return candidate
 		}
 	}
-	return highlightByID(settings.HighlightGreen)
+	return highlightByID(codec.HighlightGreen)
 }
 
 func (model interfaceModel) highlight(id string) color.Color {

@@ -7,20 +7,20 @@ import (
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/ansi"
 
-	"repo-tutor/internal/settings"
+	"repo-tutor/internal/settings/codec"
 )
 
 var tabHintSets = [][]keyHint{{{"Tab", "Next", false}}}
 
 var tabEdges = map[string][2]string{
-	settings.TabStyleSlanted: {"\ue0ba", "\ue0b8"},
-	settings.TabStyleRounded: {"\ue0b6", "\ue0b4"},
+	codec.TabStyleSlanted: {"\ue0ba", "\ue0b8"},
+	codec.TabStyleRounded: {"\ue0b6", "\ue0b4"},
 }
 
 var joinedSeparators = map[string]string{
-	settings.TabStyleJoinedSlanted: "\ue0bc",
-	settings.TabStyleJoinedRounded: "\ue0b4",
-	settings.TabStyleJoinedArrows:  "\ue0b0",
+	codec.TabStyleJoinedSlanted: "\ue0bc",
+	codec.TabStyleJoinedRounded: "\ue0b4",
+	codec.TabStyleJoinedArrows:  "\ue0b0",
 }
 
 var tabPages = []struct{ page, label string }{{"home", "Home"}, {"course", "Course"}, {"quiz", "Quiz"}, {"progress", "Progress"}}
@@ -43,7 +43,7 @@ func (model interfaceModel) drawnTabStyle(style string) string {
 	_, joined := joinedSeparators[style]
 	_, edged := tabEdges[style]
 	if (joined || edged) && !model.terminalColorsKnown() {
-		return settings.TabStyleBlock
+		return codec.TabStyleBlock
 	}
 	return style
 }
@@ -129,9 +129,9 @@ func (model interfaceModel) tabCells(style, active string) ([]string, string) {
 			rendered[index] = lipgloss.NewStyle().Underline(true).Render("[" + page.label + "]")
 		case model.noColor:
 			rendered[index] = label
-		case style == settings.TabStyleNone && current:
+		case style == codec.TabStyleNone && current:
 			rendered[index] = lipgloss.NewStyle().Foreground(palette.accent).Bold(true).Render(label)
-		case style == settings.TabStyleNone:
+		case style == codec.TabStyleNone:
 			rendered[index] = lipgloss.NewStyle().Faint(true).Render(label)
 		case !model.terminalColorsKnown() && current:
 			rendered[index] = lipgloss.NewStyle().Foreground(palette.accent).Reverse(true).Bold(true).Render(label)
@@ -163,11 +163,11 @@ const (
 )
 
 var ruleReaches = map[string]ruleReach{
-	settings.TabStyleSlanted:       ruleWholeCell,
-	settings.TabStyleRounded:       ruleNone,
-	settings.TabStyleJoinedSlanted: ruleLeftSeparatorAndLabel,
-	settings.TabStyleJoinedRounded: ruleLeftSeparatorAndLabel,
-	settings.TabStyleJoinedArrows:  ruleLeftSeparatorAndLabel,
+	codec.TabStyleSlanted:       ruleWholeCell,
+	codec.TabStyleRounded:       ruleNone,
+	codec.TabStyleJoinedSlanted: ruleLeftSeparatorAndLabel,
+	codec.TabStyleJoinedRounded: ruleLeftSeparatorAndLabel,
+	codec.TabStyleJoinedArrows:  ruleLeftSeparatorAndLabel,
 }
 
 func (model interfaceModel) ruleReach() ruleReach {

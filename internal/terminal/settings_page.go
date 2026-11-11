@@ -9,7 +9,7 @@ import (
 	"charm.land/lipgloss/v2"
 
 	"repo-tutor/internal/session"
-	"repo-tutor/internal/settings"
+	"repo-tutor/internal/settings/codec"
 )
 
 const (
@@ -27,16 +27,16 @@ const (
 
 type settingChoice struct {
 	group, label, note string
-	selected           func(settings.Settings) bool
-	apply              func(settings.Settings) settings.Settings
+	selected           func(codec.Settings) bool
+	apply              func(codec.Settings) codec.Settings
 	style, highlight   string
 }
 
 func tabStyleChoice(style, label, note string) settingChoice {
 	return settingChoice{
 		group: "TAB STYLE", label: label, note: note, style: style,
-		selected: func(current settings.Settings) bool { return current.TabStyle == style },
-		apply: func(current settings.Settings) settings.Settings {
+		selected: func(current codec.Settings) bool { return current.TabStyle == style },
+		apply: func(current codec.Settings) codec.Settings {
 			current.TabStyle = style
 			return current
 		},
@@ -46,8 +46,8 @@ func tabStyleChoice(style, label, note string) settingChoice {
 func markdownChoice(rendered bool, label string) settingChoice {
 	return settingChoice{
 		group: "MARKDOWN FILES OPEN", label: label,
-		selected: func(current settings.Settings) bool { return current.MarkdownOpensRendered == rendered },
-		apply: func(current settings.Settings) settings.Settings {
+		selected: func(current codec.Settings) bool { return current.MarkdownOpensRendered == rendered },
+		apply: func(current codec.Settings) codec.Settings {
 			current.MarkdownOpensRendered = rendered
 			return current
 		},
@@ -57,8 +57,8 @@ func markdownChoice(rendered bool, label string) settingChoice {
 func quizLengthChoice(length int) settingChoice {
 	return settingChoice{
 		group: "QUIZ LENGTH", label: fmt.Sprintf("%d questions", length),
-		selected: func(current settings.Settings) bool { return current.QuizLength == length },
-		apply: func(current settings.Settings) settings.Settings {
+		selected: func(current codec.Settings) bool { return current.QuizLength == length },
+		apply: func(current codec.Settings) codec.Settings {
 			current.QuizLength = length
 			return current
 		},
@@ -75,8 +75,8 @@ func examLengthLabel(length int) string {
 func examLengthChoice(length int) settingChoice {
 	return settingChoice{
 		group: "EXAM LENGTH", label: examLengthLabel(length),
-		selected: func(current settings.Settings) bool { return current.ExamLength == length },
-		apply: func(current settings.Settings) settings.Settings {
+		selected: func(current codec.Settings) bool { return current.ExamLength == length },
+		apply: func(current codec.Settings) codec.Settings {
 			current.ExamLength = length
 			return current
 		},
@@ -86,8 +86,8 @@ func examLengthChoice(length int) settingChoice {
 func highlightChoice(brand highlightColor) settingChoice {
 	return settingChoice{
 		group: "HIGHLIGHT COLOR", label: brand.label, highlight: brand.id,
-		selected: func(current settings.Settings) bool { return current.Highlight == brand.id },
-		apply: func(current settings.Settings) settings.Settings {
+		selected: func(current codec.Settings) bool { return current.Highlight == brand.id },
+		apply: func(current codec.Settings) codec.Settings {
 			current.Highlight = brand.id
 			return current
 		},
@@ -96,20 +96,20 @@ func highlightChoice(brand highlightColor) settingChoice {
 
 func settingChoices() []settingChoice {
 	choices := []settingChoice{
-		tabStyleChoice(settings.TabStyleNone, "None", ""),
-		tabStyleChoice(settings.TabStyleBlock, "Block", ""),
-		tabStyleChoice(settings.TabStyleSlanted, "Slanted", powerlineNote),
-		tabStyleChoice(settings.TabStyleRounded, "Rounded", powerlineNote),
-		tabStyleChoice(settings.TabStyleJoinedSlanted, "Joined slants", powerlineNote),
-		tabStyleChoice(settings.TabStyleJoinedRounded, "Joined rounds", powerlineNote),
-		tabStyleChoice(settings.TabStyleJoinedArrows, "Joined arrows", powerlineNote),
+		tabStyleChoice(codec.TabStyleNone, "None", ""),
+		tabStyleChoice(codec.TabStyleBlock, "Block", ""),
+		tabStyleChoice(codec.TabStyleSlanted, "Slanted", powerlineNote),
+		tabStyleChoice(codec.TabStyleRounded, "Rounded", powerlineNote),
+		tabStyleChoice(codec.TabStyleJoinedSlanted, "Joined slants", powerlineNote),
+		tabStyleChoice(codec.TabStyleJoinedRounded, "Joined rounds", powerlineNote),
+		tabStyleChoice(codec.TabStyleJoinedArrows, "Joined arrows", powerlineNote),
 		markdownChoice(true, "Rendered"),
 		markdownChoice(false, "Source"),
 	}
-	for _, length := range settings.QuizLengths {
+	for _, length := range codec.QuizLengths {
 		choices = append(choices, quizLengthChoice(length))
 	}
-	for _, length := range settings.ExamLengths {
+	for _, length := range codec.ExamLengths {
 		choices = append(choices, examLengthChoice(length))
 	}
 	for _, brand := range highlightColors {

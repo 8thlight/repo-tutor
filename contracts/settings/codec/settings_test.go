@@ -1,4 +1,4 @@
-package settings_test
+package codec_test
 
 import (
 	"bytes"
@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	contract "repo-tutor/contracts/settings"
+	contract "repo-tutor/contracts/settings/codec"
 )
 
 type fileValues struct {

@@ -2,7 +2,7 @@
 category: ux
 status: accepted
 approval: person
-affects: [about, settings, terminal]
+affects: [about, settings/codec, terminal]
 builds-on: ['0220', '0250', '0490']
 supersedes: ['0240']
 partly-supersedes: ['0100', '0210']

@@ -2,7 +2,7 @@
 category: ux
 status: accepted
 approval: person
-affects: [session, settings, terminal]
+affects: [session, settings/codec, terminal]
 partly-superseded-by: ['0300', '0350']
 ---
 

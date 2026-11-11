@@ -7,11 +7,11 @@ import (
 	"testing"
 
 	"repo-tutor/internal/session"
-	"repo-tutor/internal/settings"
+	"repo-tutor/internal/settings/codec"
 )
 
-func withTabStyle(style string) func(settings.Settings) settings.Settings {
-	return func(current settings.Settings) settings.Settings {
+func withTabStyle(style string) func(codec.Settings) codec.Settings {
+	return func(current codec.Settings) codec.Settings {
 		current.TabStyle = style
 		return current
 	}
@@ -19,7 +19,7 @@ func withTabStyle(style string) func(settings.Settings) settings.Settings {
 
 func TestMissingSettingsFileGivesDefaultsWithoutNotice(t *testing.T) {
 	got, status, err := session.LoadSettings(t.TempDir())
-	if err != nil || got != settings.Defaults() || status != (settings.Status{}) {
+	if err != nil || got != codec.Defaults() || status != (codec.Status{}) {
 		t.Fatalf("got %+v %+v %v", got, status, err)
 	}
 }
@@ -37,7 +37,7 @@ func TestChangeSettingsSavesAndLoadsBack(t *testing.T) {
 
 func TestChangeSettingsKeepsFieldsAnotherTutorChanged(t *testing.T) {
 	base := t.TempDir()
-	session.ChangeSettings(base, func(current settings.Settings) settings.Settings {
+	session.ChangeSettings(base, func(current codec.Settings) codec.Settings {
 		current.MarkdownOpensRendered = false
 		return current
 	})

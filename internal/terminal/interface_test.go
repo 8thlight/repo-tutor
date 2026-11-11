@@ -14,7 +14,7 @@ import (
 
 	"repo-tutor/internal/repository/analyzer"
 	"repo-tutor/internal/session"
-	"repo-tutor/internal/settings"
+	"repo-tutor/internal/settings/codec"
 	"repo-tutor/internal/tutor"
 )
 
@@ -42,7 +42,7 @@ func interfaceFixture() interfaceModel {
 	snapshot.Root = "/work/repowise"
 	reply := tutor.Reply{Explanation: "The **CLI** is the front door to the repository. It hands work to the `core` package.\n\n- Start with the entry point.\n- Follow one operation into the core.", Question: "Which package would you inspect to change a calculation?", Assessment: "none", Citations: []analyzer.Location{{Path: "main.go", Line: 2}}}
 	state := session.State{Version: session.Version, Repository: snapshot.Root, Agent: "codex", Goal: "Understand the architecture and make a small change.", Topic: tutor.Overview, Question: reply.Question, Progress: map[string]tutor.Progress{tutor.Overview: {Lessons: 1}}, Turns: []session.Turn{{Topic: tutor.Overview, Action: "lesson", Reply: reply}}}
-	application := application{snapshot: snapshot, course: tutor.Course(snapshot), state: state, timeout: 3 * time.Minute, settings: settings.Defaults(), settingsBase: testSettingsBase}
+	application := application{snapshot: snapshot, course: tutor.Course(snapshot), state: state, timeout: 3 * time.Minute, settings: codec.Defaults(), settingsBase: testSettingsBase}
 	return newInterface(context.Background(), application, func(context.Context, session.State, string, string, string) (session.State, error) { return state, nil }, true)
 }
 

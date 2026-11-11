@@ -1,8 +1,8 @@
 # Settings contract
 
-Status: approved. Component: `settings`. Issue: none yet.
+Status: approved. Component: `settings/codec`. Issue: none yet.
 
-The settings component turns the bytes of `settings.json` into the learner's settings, and the settings back into bytes. It also holds the defaults and the choices the Settings page offers. It is a pure function: it reads no file, keeps no state, and does not change its arguments. The `session` driver reads and writes the file, as [0220](../../docs/decisions/0220-settings-file.md) says. The choices come from [0230](../../docs/decisions/0230-settings-page.md), [0250](../../docs/decisions/0250-joined-tab-styles.md), [0300](../../docs/decisions/0300-course-flow.md), [0450](../../docs/decisions/0450-exam.md), and [0500](../../docs/decisions/0500-use-the-terminal-colors.md).
+The settings component turns the bytes of `settings.json` into the learner's settings, and the settings back into bytes. It also holds the defaults and the choices the Settings page offers. It is a pure function: it reads no file, keeps no state, and does not change its arguments. The `session` driver reads and writes the file, as [0220](../../../docs/decisions/0220-settings-file.md) says. The choices come from [0230](../../../docs/decisions/0230-settings-page.md), [0250](../../../docs/decisions/0250-joined-tab-styles.md), [0300](../../../docs/decisions/0300-course-flow.md), [0450](../../../docs/decisions/0450-exam.md), and [0500](../../../docs/decisions/0500-use-the-terminal-colors.md).
 
 ## Interface
 
