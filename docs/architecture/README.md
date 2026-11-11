@@ -7,7 +7,7 @@ The binary scans a repository, orders topics, and runs tutor turns through an ag
 | `internal/repository/analyzer` | Build the snapshot from a source: packages and imports, declarations, the fingerprint, and ranked reading hints, with pure functions |
 | `internal/repository/reader` | Read a directory within size limits, drop ignored files, and read the Git change log, without writing |
 | `internal/tutor` | Order topics, select source excerpts, build turn prompts, validate structured replies, and update progress with pure functions |
-| `internal/agent` | Run Claude or Codex headless, consume their event streams, and normalize completed replies |
+| `internal/agent/runner` | Run Claude or Codex headless, consume their event streams, and normalize completed replies |
 | `internal/session` | Lock, load, archive, and atomically save one session per repository, and load and change the user settings file |
 | `internal/settings/codec` | The settings value, its defaults, and a decoder and encoder with no input or output |
 | `internal/about` | Build facts, the splash, and the third-party license notices |

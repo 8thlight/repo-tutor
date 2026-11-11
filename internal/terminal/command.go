@@ -16,7 +16,7 @@ import (
 	"github.com/charmbracelet/x/term"
 
 	"repo-tutor/internal/about"
-	"repo-tutor/internal/agent"
+	"repo-tutor/internal/agent/runner"
 	"repo-tutor/internal/repository/analyzer"
 	"repo-tutor/internal/repository/reader"
 	"repo-tutor/internal/session"
@@ -269,7 +269,7 @@ func study(ctx context.Context, arguments []string, input io.Reader, output, dia
 		}
 		*preference = state.Agent
 	}
-	chosen, err := agent.Choose(*preference)
+	chosen, err := runner.Choose(*preference)
 	if err != nil {
 		return err
 	}

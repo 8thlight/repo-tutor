@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"repo-tutor/internal/agent"
+	"repo-tutor/internal/agent/runner"
 	"repo-tutor/internal/repository/analyzer"
 	"repo-tutor/internal/session"
 	"repo-tutor/internal/settings/codec"
@@ -157,7 +157,7 @@ func (application application) ask(ctx context.Context, request tutor.Request, s
 	prepared := tutor.Prepare(application.snapshot, request)
 	turnContext, cancel := context.WithTimeout(ctx, application.timeout)
 	defer cancel()
-	result, err := agent.Run(turnContext, agent.Request{
+	result, err := runner.Run(turnContext, runner.Request{
 		Agent: application.state.Agent, Model: application.state.Model,
 		Workspace: filepath.Join(application.store.Directory, "agent"),
 		SessionID: sessionID, Prompt: prepared.Prompt,

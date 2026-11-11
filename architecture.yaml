@@ -21,7 +21,7 @@ banned_in_core:
   - environment
 
 drivers:
-  - agent
+  - agent/runner
   - repository/reader
   - session
   - terminal
@@ -42,7 +42,7 @@ components:
   - name: tutor
     position: 2
     depends_on: [repository/analyzer]
-  - name: agent
+  - name: agent/runner
     position: 3
     depends_on: [tutor]
   - name: session
@@ -50,4 +50,4 @@ components:
     depends_on: [settings/codec, tutor]
   - name: terminal
     position: 4
-    depends_on: [about, agent, repository/analyzer, repository/reader, session, settings/codec, tutor]
+    depends_on: [about, agent/runner, repository/analyzer, repository/reader, session, settings/codec, tutor]

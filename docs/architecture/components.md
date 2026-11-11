@@ -23,7 +23,7 @@ Each driver does input or output on its own, and the entry point passes it what 
 | -- | -- | -- | -- |
 | `repository/reader` | The learner's repository: file names, file text up to 512 KiB a file and 64 MiB in all | Nothing, and never into the repository | `git check-ignore` and `git log` in the repository, which only read |
 | `session` | `XDG_STATE_HOME` or the user's configuration directory, and the state directory: `settings.json`, and in the repository's folder `session.json`, cached lessons | `settings.json`, and in the repository's folder `session.json`, `previous.json`, cached lessons, and `session.lock`. A damaged `settings.json` is renamed to `settings.json.bad`. Old cached lessons are removed | Nothing |
-| `agent` | The agent CLI's standard output and standard error | `reply.schema.json` in the agent working folder for Codex. The agent working folder is inside the repository's session folder | The agent CLI, `claude` or `codex`, with the prompt on standard input and the agent working folder as its directory |
+| `agent/runner` | The agent CLI's standard output and standard error | `reply.schema.json` in the agent working folder for Codex. The agent working folder is inside the repository's session folder | The agent CLI, `claude` or `codex`, with the prompt on standard input and the agent working folder as its directory |
 | `terminal` | Standard input, the terminal's size and colors, `TERM`, `NO_COLOR`, and the environment that picks the color profile. Command line flags | Standard output and standard error | `claude --version` and `codex --version` for `doctor` |
 
 The binary entry point, `binary`, holds `main`. It connects standard streams and signals to `terminal`, and it chooses the exit code.
@@ -31,8 +31,8 @@ The binary entry point, `binary`, holds `main`. It connects standard streams and
 ## Rules these tables carry
 
 - **The repository is read only.** No component writes into it, as 0590 requires. The reader's `git` commands only read. The agent runs in the agent working folder, and Codex has a read-only sandbox with its shell tool off while Claude runs with no tools.
-- **All learner data lives in one place.** Only `session` writes under the state directory, apart from the agent working folder that `agent` fills with the reply schema. About lists these places, as 0600 requires.
-- **The binary never calls a model API.** `agent` starts the learner's installed CLI, as 0010 requires.
+- **All learner data lives in one place.** Only `session` writes under the state directory, apart from the agent working folder that `agent/runner` fills with the reply schema. About lists these places, as 0600 requires.
+- **The binary never calls a model API.** `agent/runner` starts the learner's installed CLI, as 0010 requires.
 - **The network is not used by this program.** The agent CLI may use it, outside this program's control.
 - **Core components use no clock, randomness, or environment.** A time or a path arrives as an argument.
 
