@@ -40,7 +40,7 @@ func TestLinkerVersionOverridesBuildInfo(t *testing.T) {
 
 func TestNoticesAreCurrent(t *testing.T) {
 	generated := filepath.Join(t.TempDir(), "NOTICES.txt")
-	command := exec.Command("go", "run", "./internal/about/generate", generated)
+	command := exec.Command("go", "run", "./tools/about/generate", generated)
 	command.Dir = "../.."
 	if output, err := command.CombinedOutput(); err != nil {
 		t.Fatalf("%v\n%s", err, output)

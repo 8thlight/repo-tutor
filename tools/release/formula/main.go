@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"repo-tutor/internal/release"
+	"repo-tutor/tools/release"
 )
 
 func main() {

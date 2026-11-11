@@ -38,7 +38,7 @@ test:
     go test -race -count=1 ./...
 
 notices:
-    go run ./internal/about/generate internal/about/NOTICES.txt
+    go run ./tools/about/generate internal/about/NOTICES.txt
 
 screenshots:
     #!/usr/bin/env bash
@@ -73,7 +73,7 @@ build:
     CGO_ENABLED=0 go build -trimpath -ldflags "-X repo-tutor/internal/about.version=${VERSION:-}" -o output/repo-tutor ./binary
 
 release version:
-    bash "{{ justfile_directory() }}/internal/release/release.sh" {{ version }}
+    bash "{{ justfile_directory() }}/tools/release/release.sh" {{ version }}
 
 build-release-archives version:
     rm -rf output/release
@@ -90,7 +90,7 @@ build-release-archives version:
     cd output/release && shasum -a 256 *.tar.gz > checksums.txt
 
 render-homebrew-formula version:
-    go run ./internal/release/formula output/release/checksums.txt {{ version }} > output/release/repo-tutor.rb
+    go run ./tools/release/formula output/release/checksums.txt {{ version }} > output/release/repo-tutor.rb
 
 update-homebrew-tap version branch:
     #!/usr/bin/env bash
