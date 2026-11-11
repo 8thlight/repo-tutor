@@ -7,27 +7,39 @@ approvals:
     kind: person
     name: dnawara
   date: 2026-11-10
-- gate: acceptance
-  unit: acceptance
-  hash: sha256:f68e33024b871321344a2ca58ba8846a0cd55f33f8b9a5abe9bcf21d7a6047ef
+- gate: contracts
+  unit: contracts/settings/codec
+  hash: sha256:fe5d04ef67e284355780ff498d354ea954305ba2f3e7643e670197c49cb09c67
   approver:
     kind: agent
     harness: claude
-    session: subagent-4258FE0D-0F13-4F0A-A88F-A6B577512F1D
+    session: subagent-B1F222EE-03DD-4DD6-8FFF-24301D7EF6E8
   author:
     kind: agent
     harness: claude
-    session: main-a4b765a7
+    session: main-cc90e89f
+  date: 2026-11-10
+- gate: acceptance
+  unit: acceptance
+  hash: sha256:cd22aa6b3f8135ce250b7d764309b4836005ef77cbff4e1c52491409d9588cc2
+  approver:
+    kind: agent
+    harness: claude
+    session: subagent-B1F222EE-03DD-4DD6-8FFF-24301D7EF6E8
+  author:
+    kind: agent
+    harness: claude
+    session: main-cc90e89f
   date: 2026-11-10
 - gate: architecture
   unit: architecture.yaml
-  hash: sha256:d13246c45cceed9de1c023a49d8162a86d29938b3a490b5d993ff1f7ddf6c335
+  hash: sha256:b791129f53587c47cc15608399808244de4d2c3793a2676f6f2810d09b02ab07
   approver:
     kind: agent
     harness: claude
-    session: subagent-4258FE0D-0F13-4F0A-A88F-A6B577512F1D
+    session: subagent-B1F222EE-03DD-4DD6-8FFF-24301D7EF6E8
   author:
     kind: agent
     harness: claude
-    session: main-a4b765a7
+    session: main-cc90e89f
   date: 2026-11-10
