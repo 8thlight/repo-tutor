@@ -1,13 +1,6 @@
 # Managed by approve.py. Each entry records one approval of one unit, with a hash of its content.
 approvals:
 - gate: contracts
-  unit: contracts/settings
-  hash: sha256:1c7b91b691893ddd249aae011826862ba155f4fadfb2ee92d7f5d21b139184ed
-  approver:
-    kind: person
-    name: dnawara
-  date: 2026-11-10
-- gate: contracts
   unit: contracts/settings/codec
   hash: sha256:fe5d04ef67e284355780ff498d354ea954305ba2f3e7643e670197c49cb09c67
   approver:
