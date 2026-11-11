@@ -30,14 +30,6 @@ func TestBuildFactsComeFromBuildInfoAndDegradeToUnknown(t *testing.T) {
 	}
 }
 
-func TestLinkerVersionOverridesBuildInfo(t *testing.T) {
-	version = "v0.2.0"
-	t.Cleanup(func() { version = "" })
-	if got := Read().Version; got != "v0.2.0" {
-		t.Fatalf("version %q, want the linker value", got)
-	}
-}
-
 func TestNoticesAreCurrent(t *testing.T) {
 	generated := filepath.Join(t.TempDir(), "NOTICES.txt")
 	command := exec.Command("go", "run", "./tools/about/generate", generated)

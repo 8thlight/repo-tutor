@@ -34,7 +34,7 @@ var screenshotThemes = map[string]tuitest.Colors{
 func buildForScreenshots(t *testing.T) string {
 	t.Helper()
 	target := filepath.Join(t.TempDir(), "repo-tutor")
-	flags := "-X repo-tutor/internal/about.version=" + screenshotVersion
+	flags := "-X repo-tutor/internal/about/reader.version=" + screenshotVersion
 	if output, err := exec.Command("go", "build", "-buildvcs=false", "-ldflags", flags, "-o", target, "../binary").CombinedOutput(); err != nil {
 		t.Fatalf("build: %v\n%s", err, output)
 	}

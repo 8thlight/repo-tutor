@@ -13,6 +13,7 @@ import (
 	"github.com/charmbracelet/x/ansi"
 
 	"repo-tutor/internal/about"
+	aboutreader "repo-tutor/internal/about/reader"
 	"repo-tutor/internal/repository/analyzer"
 	sessionstore "repo-tutor/internal/session/store"
 	"repo-tutor/internal/tutor"
@@ -348,7 +349,7 @@ func (model interfaceModel) aboutText() string {
 	if modelName == "" {
 		modelName = "default model"
 	}
-	facts := about.Read().Lines()
+	facts := aboutreader.Read().Lines()
 	facts[0] = lipgloss.NewStyle().Bold(true).Render(facts[0])
 	text := strings.Join(facts, "\n") + "\n\n" + fmt.Sprintf("This session uses %s (%s).", state.Agent, modelName) + "\n\n" +
 		heading.Render("DATA LOCATIONS") + "\n\n" +

@@ -21,6 +21,7 @@ banned_in_core:
   - environment
 
 drivers:
+  - about/reader
   - agent/runner
   - file/writer
   - lesson/pruner
@@ -42,6 +43,9 @@ components:
   - name: settings/codec
     position: 1
     depends_on: []
+  - name: about/reader
+    position: 2
+    depends_on: [about]
   - name: repository/reader
     position: 2
     depends_on: [repository/analyzer]
@@ -62,4 +66,4 @@ components:
     depends_on: [session/store]
   - name: terminal
     position: 5
-    depends_on: [about, agent/runner, lesson/pruner, repository/analyzer, repository/reader, session/store, settings/codec, settings/store, tutor]
+    depends_on: [about, about/reader, agent/runner, lesson/pruner, repository/analyzer, repository/reader, session/store, settings/codec, settings/store, tutor]

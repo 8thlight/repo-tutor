@@ -13,7 +13,7 @@ These components are pure functions over values. They read and write nothing out
 | `tutor` | Nothing | Nothing | Creates topics, prompts, and validated replies from a snapshot and progress. Returns progress as a new value |
 | `about` | Embedded splash and notices | Nothing | Creates the build text from build facts. See the note below |
 
-`about.Read` reads the running program's build information, which is the one input that is not an argument. `about.FromBuildInfo` holds the logic and is pure. The split of the two is the same move that separated the reader from the analyzer, and it has not been made.
+`about.FromBuildInfo` takes the build information as an argument and is pure. `about/reader` reads the running program's build information, which is the one input that is not an argument, and applies the release version. The split is made, in the same way the reader was separated from the analyzer.
 
 ## Drivers
 
@@ -21,6 +21,7 @@ Each driver does input or output on its own, and the entry point passes it what 
 
 | Component | Reads | Writes | Runs |
 | -- | -- | -- | -- |
+| `about/reader` | The running program's build information | Nothing | Nothing |
 | `repository/reader` | The learner's repository: file names, file text up to 512 KiB a file and 64 MiB in all | Nothing, and never into the repository | `git check-ignore` and `git log` in the repository, which only read |
 | `file/writer` | Nothing | One file in the directory it is given, through a temporary file in that directory that is renamed over the target. The temporary file is removed on failure | Nothing |
 | `session/store` | `XDG_STATE_HOME` or the user's configuration directory, and in the repository's folder `session.json` and the list of cached lessons | In the repository's folder `session.json`, `previous.json`, cached lessons, and `session.lock` | Nothing |

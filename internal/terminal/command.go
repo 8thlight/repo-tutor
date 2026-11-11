@@ -16,6 +16,7 @@ import (
 	"github.com/charmbracelet/x/term"
 
 	"repo-tutor/internal/about"
+	aboutreader "repo-tutor/internal/about/reader"
 	"repo-tutor/internal/agent/runner"
 	"repo-tutor/internal/lesson/pruner"
 	"repo-tutor/internal/repository/analyzer"
@@ -67,7 +68,7 @@ func Run(ctx context.Context, arguments []string, input io.Reader, output io.Wri
 				fmt.Fprint(output, about.Notices())
 				return nil
 			}
-			fmt.Fprint(output, about.Read().Text())
+			fmt.Fprint(output, aboutreader.Read().Text())
 			return nil
 		case "scan", "tutor", "doctor":
 			command, arguments = arguments[0], arguments[1:]

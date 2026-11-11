@@ -4,7 +4,6 @@ import (
 	_ "embed"
 	"fmt"
 	"regexp"
-	"runtime"
 	"runtime/debug"
 	"strings"
 )
@@ -53,17 +52,6 @@ type Build struct {
 	Modified  bool
 	GoVersion string
 	System    string
-}
-
-var version string
-
-func Read() Build {
-	info, found := debug.ReadBuildInfo()
-	build := FromBuildInfo(info, found, runtime.GOOS, runtime.GOARCH)
-	if version != "" {
-		build.Version = version
-	}
-	return build
 }
 
 func FromBuildInfo(info *debug.BuildInfo, found bool, goos, goarch string) Build {

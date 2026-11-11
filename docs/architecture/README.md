@@ -13,7 +13,8 @@ The binary scans a repository, orders topics, and runs tutor turns through an ag
 | `internal/settings/store` | Load and change the user settings file in the state directory, and move an unreadable file aside |
 | `internal/lesson/pruner` | Remove old cached lessons of other goals from a session folder |
 | `internal/settings/codec` | The settings value, its defaults, and a decoder and encoder with no input or output |
-| `internal/about` | Build facts, the splash, and the third-party license notices |
+| `internal/about` | Build facts, the splash, and the third-party license notices, with no input or output |
+| `internal/about/reader` | Read the running program's build information and apply the version the release build sets |
 | `internal/terminal` | Run the Bubble Tea workspace or the plain loop, parse plain-mode commands, display lessons and quizzes, and browse sources |
 | `binary` | Connect standard streams and cancellation to the terminal driver |
 

@@ -26,7 +26,7 @@
           subPackages = [ "binary" ];
           env.CGO_ENABLED = 0;
           doCheck = false;
-          ldflags = [ "-X repo-tutor/internal/about.version=v${releaseVersion}" ];
+          ldflags = [ "-X repo-tutor/internal/about/reader.version=v${releaseVersion}" ];
           postInstall = "mv $out/bin/binary $out/bin/repo-tutor";
           meta.mainProgram = "repo-tutor";
         };

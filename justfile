@@ -70,7 +70,7 @@ check-screenshots:
     fi
 
 build:
-    CGO_ENABLED=0 go build -trimpath -ldflags "-X repo-tutor/internal/about.version=${VERSION:-}" -o output/repo-tutor ./binary
+    CGO_ENABLED=0 go build -trimpath -ldflags "-X repo-tutor/internal/about/reader.version=${VERSION:-}" -o output/repo-tutor ./binary
 
 release version:
     bash "{{ justfile_directory() }}/tools/release/release.sh" {{ version }}
@@ -82,7 +82,7 @@ build-release-archives version:
         os=${target%/*}; arch=${target#*/}; \
         name=repo-tutor_{{ version }}_${os}_${arch}; \
         mkdir -p output/release/$name; \
-        CGO_ENABLED=0 GOOS=$os GOARCH=$arch go build -trimpath -ldflags "-X repo-tutor/internal/about.version={{ version }}" -o output/release/$name/repo-tutor ./binary; \
+        CGO_ENABLED=0 GOOS=$os GOARCH=$arch go build -trimpath -ldflags "-X repo-tutor/internal/about/reader.version={{ version }}" -o output/release/$name/repo-tutor ./binary; \
         cp LICENSE output/release/$name/LICENSE; \
         tar -C output/release -czf output/release/$name.tar.gz $name; \
         rm -r output/release/$name; \
